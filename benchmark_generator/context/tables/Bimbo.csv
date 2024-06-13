@@ -1,6 +1,0 @@
-agent ID | channel ID | client ID | number of demands | product delivered next cycle | unit delivered next cycle | number of records | product ID | route ID | week number | total sales | units sold
-4046 | 1 | 834884 | 1 | 0 | 0 | 1 | 30532 | 2132 | 7 | 7.78 | 1
-1453 | 1 | 66194 | 6 | 0 | 0 | 1 | 43209 | 1111 | 6 | 40.56 | 6
-1351 | 1 | 120449 | 1 | 0 | 0 | 1 | 1150 | 1278 | 3 | 13.96 | 1
-4010 | 1 | 652103 | 2 | 0 | 0 | 1 | 43200 | 1227 | 6 | 36.48 | 2
-1216 | 1 | 176450 | 4 | 0 | 0 | 1 | 43069 | 4421 | 3 | 29.64 | 4

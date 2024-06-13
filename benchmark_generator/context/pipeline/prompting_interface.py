@@ -14,7 +14,7 @@ def is_within_context_length(tokenizer, conversation, context_length: int):
             conversation, tokenize=True, add_generation_prompt=True
         )
     )
-    return conv_len <= context_length
+    return conv_len <= (context_length)
 
 def validate_generation_configs(generation_configs):
     if generation_configs["top_k"] == 0:
@@ -30,7 +30,7 @@ def prompt_pipeline(
     pipe,
     conversation,
     context_length=8192,
-    max_new_tokens=1024,
+    max_new_tokens=512,
     do_sample=False,
     top_k=0,
     top_p=1.0,
