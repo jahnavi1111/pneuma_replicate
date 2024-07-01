@@ -11,27 +11,16 @@ class CsvDataSource:
         - data_source (str): path to the data source with CSV files inside.
         """
         self._data_source = data_source
-        self.csv_file_names = [f for f in sorted(os.listdir(self._data_source)) if f.endswith('.csv')]
-        self.random_states = range(len(self.csv_file_names))
+        self.csv_file_names = [
+            f for f in sorted(os.listdir(self._data_source)) if f.endswith(".csv")
+        ]
+        self.random_states = range(
+            len(self.csv_file_names)
+        )  # for randomly selecting 5 rows
 
     def __iter__(self):
         self.pointer = 0
         return self
-    
-    def get_table_content(self, table_name: str):
-        for i in range(len(self.csv_file_names)):
-            if self.csv_file_names[i] == table_name:
-                csv_file_name = f"{self._data_source}/{table_name}"
-                df = pd.read_csv(csv_file_name)
-                df = df.sample(min(len(df),5), random_state=self.random_states[i])
-
-                rows = [' | '.join(df.columns)]
-                for _, row in df.iterrows():
-                    row_string = ' | '.join(row.astype(str))
-                    rows.append(row_string)
-
-                content = self._annotate_rows(rows)
-                return (csv_file_name, content)
 
     def __next__(self):
         """
@@ -42,11 +31,11 @@ class CsvDataSource:
 
         csv_file_name = f"{self._data_source}/{self.csv_file_names[self.pointer]}"
         df = pd.read_csv(csv_file_name)
-        df = df.sample(min(len(df),5), random_state=self.random_states[self.pointer])
-        rows = [' | '.join(df.columns)]
+        df = df.sample(min(len(df), 5), random_state=self.random_states[self.pointer])
 
+        rows = [" | ".join(df.columns)]
         for _, row in df.iterrows():
-            row_string = ' | '.join(row.astype(str))
+            row_string = " | ".join(row.astype(str))
             rows.append(row_string)
 
         content = self._annotate_rows(rows)
@@ -79,12 +68,15 @@ class CsvDataSource:
         Re-assign the data source
         """
         self._data_source = data_source
-        self.csv_file_names = [f for f in os.listdir(self._data_source) if f.endswith('.csv')]
+        self.csv_file_names = [
+            f for f in os.listdir(self._data_source) if f.endswith(".csv")
+        ]
+        self.random_states = range(
+            len(self.csv_file_names)
+        )  # for randomly selecting 5 rows
 
 
 if __name__ == "__main__":
-    # Test the iterator.
-    # These codes assume the root folder as the current working directory.
     csv_data_source = CsvDataSource("processed_tables")
     csv_iterator = iter(csv_data_source)
     table = next(csv_iterator)
