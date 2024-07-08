@@ -5,7 +5,17 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Run Registration",
+            "name": "Reg Setup",
+            "type": "debugpy",
+            "python": "${workspaceFolder}/modules/env/Scripts/python.exe",
+            "request": "launch",
+            "cwd": "${fileDirname}",
+            "program": "registration.py",
+            "console": "integratedTerminal",
+            "args": "setup --db_path=storage.db",
+        },
+        {
+            "name": "Reg CSV Read",
             "type": "debugpy",
             "python": "${workspaceFolder}/modules/env/Scripts/python.exe",
             "request": "launch",
