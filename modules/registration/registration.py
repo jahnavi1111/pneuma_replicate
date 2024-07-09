@@ -87,6 +87,28 @@ class Registration:
 
         return f"Context ID: {context_id}"
 
+    def add_summary(self, table_id: str, summary_path: str):
+        with open(summary_path, "r") as f:
+            summary = f.read()
+
+        table_name = self.connection.sql(
+            f"SELECT table_name FROM table_status WHERE id = '{table_id}'"
+        ).fetchone()[0]
+
+        summary_id = self.connection.sql(
+            f"""INSERT INTO table_summaries (table_id, table_name, summaries)
+            VALUES ('{table_id}', '{table_name}', '{summary}')
+            RETURNING id"""
+        ).fetchone()[0]
+
+        self.connection.sql(
+            f"""UPDATE table_status
+            SET summary_count = summary_count + 1
+            WHERE id = '{table_id}'"""
+        )
+
+        return f"Summary ID: {summary_id}"
+
 
 if __name__ == "__main__":
     fire.Fire(Registration)
