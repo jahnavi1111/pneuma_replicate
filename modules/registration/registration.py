@@ -28,11 +28,10 @@ class Registration:
         # DuckDB does not support "ON DELETE CASCADE" so be careful with deletions.
         self.connection.sql(
             """CREATE OR REPLACE TABLE table_contexts (
+                id INTEGER DEFAULT nextval('id_seq') PRIMARY KEY,
                 table_id VARCHAR NOT NULL REFERENCES table_status(id),
-                id INTEGER DEFAULT nextval('id_seq'),
                 table_name VARCHAR,
                 context VARCHAR,
-                PRIMARY KEY (table_id, id),
                 )
             """
         )
@@ -40,11 +39,10 @@ class Registration:
         # DuckDB does not support "ON DELETE CASCADE" so be careful with deletions.
         self.connection.sql(
             """CREATE OR REPLACE TABLE table_summaries (
+                id INTEGER DEFAULT nextval('id_seq') PRIMARY KEY,
                 table_id VARCHAR NOT NULL REFERENCES table_status(id),
-                id INTEGER DEFAULT nextval('id_seq'),
                 table_name VARCHAR,
                 summaries VARCHAR,
-                PRIMARY KEY (table_id, id),
                 )
             """
         )
@@ -61,8 +59,28 @@ class Registration:
         )
         self.connection.sql(
             f"""INSERT INTO table_status (id, table_name, status)
-            VALUES ('{name}', '{name}', 'ready')"""
+            VALUES ('{csv_path}', '{name}', 'ready')"""
         )
+        return f"Table ID: {csv_path}"
+
+    def add_context(self, table_id: str, txt_path: str):
+        with open(txt_path, "r") as f:
+            context = f.read()
+
+        # get table name from the table_status tables by table_id
+        table_name = self.connection.sql(
+            f"SELECT table_name FROM table_status WHERE id = '{table_id}'"
+        ).fetchone()[0]
+        self.connection.sql(
+            f"""INSERT INTO table_contexts (table_id, table_name, context)
+            VALUES ('{table_id}', '{table_name}', '{context}')"""
+        )
+        self.connection.sql(
+            f"""UPDATE table_status
+            SET context_count = context_count + 1
+            WHERE id = '{table_id}'"""
+        )
+        return f"Context ID: {table_id}"
 
 
 if __name__ == "__main__":

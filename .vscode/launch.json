@@ -22,7 +22,17 @@
             "cwd": "${fileDirname}",
             "program": "registration.py",
             "console": "integratedTerminal",
-            "args": "read_csv ../../data_src/benchmarks/context/chicago-open-data/BX1_chicago.csv --db_path=storage.db",
+            "args": "read_csv --db_path=storage.db ../../data_src/benchmarks/context/chicago-open-data/BX1_chicago.csv",
+        },
+        {
+            "name": "Reg Context Add",
+            "type": "debugpy",
+            "python": "${workspaceFolder}/modules/env/Scripts/python.exe",
+            "request": "launch",
+            "cwd": "${fileDirname}",
+            "program": "registration.py",
+            "console": "integratedTerminal",
+            "args": "add_context --db_path=storage.db ../../data_src/benchmarks/context/chicago-open-data/BX1_chicago.csv test_context.txt",
         }
     ]
 }
