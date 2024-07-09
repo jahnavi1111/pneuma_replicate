@@ -32,7 +32,7 @@
             "cwd": "${fileDirname}",
             "program": "registration.py",
             "console": "integratedTerminal",
-            "args": "add_context --db_path=storage.db ../../data_src/benchmarks/context/chicago-open-data/BX1_chicago.csv test_context.txt",
+            "args": "add_context --db_path=storage.db ../../data_src/benchmarks/context/chicago-open-data/BX1_chicago.csv ./testing_data/test_context.txt",
         }
     ]
 }

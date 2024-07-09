@@ -57,30 +57,35 @@ class Registration:
                 header=True
             )"""
         )
+
         self.connection.sql(
             f"""INSERT INTO table_status (id, table_name, status)
             VALUES ('{csv_path}', '{name}', 'ready')"""
         )
+
         return f"Table ID: {csv_path}"
 
-    def add_context(self, table_id: str, txt_path: str):
-        with open(txt_path, "r") as f:
+    def add_context(self, table_id: str, context_path: str):
+        with open(context_path, "r") as f:
             context = f.read()
 
-        # get table name from the table_status tables by table_id
         table_name = self.connection.sql(
             f"SELECT table_name FROM table_status WHERE id = '{table_id}'"
         ).fetchone()[0]
-        self.connection.sql(
+
+        context_id = self.connection.sql(
             f"""INSERT INTO table_contexts (table_id, table_name, context)
-            VALUES ('{table_id}', '{table_name}', '{context}')"""
-        )
+            VALUES ('{table_id}', '{table_name}', '{context}')
+            RETURNING id"""
+        ).fetchone()[0]
+
         self.connection.sql(
             f"""UPDATE table_status
             SET context_count = context_count + 1
             WHERE id = '{table_id}'"""
         )
-        return f"Context ID: {table_id}"
+
+        return f"Context ID: {context_id}"
 
 
 if __name__ == "__main__":
