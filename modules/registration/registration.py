@@ -30,7 +30,6 @@ class Registration:
             """CREATE OR REPLACE TABLE table_contexts (
                 id INTEGER DEFAULT nextval('id_seq') PRIMARY KEY,
                 table_id VARCHAR NOT NULL REFERENCES table_status(id),
-                table_name VARCHAR,
                 context VARCHAR,
                 )
             """
@@ -41,8 +40,7 @@ class Registration:
             """CREATE OR REPLACE TABLE table_summaries (
                 id INTEGER DEFAULT nextval('id_seq') PRIMARY KEY,
                 table_id VARCHAR NOT NULL REFERENCES table_status(id),
-                table_name VARCHAR,
-                summaries VARCHAR,
+                summary VARCHAR,
                 )
             """
         )
