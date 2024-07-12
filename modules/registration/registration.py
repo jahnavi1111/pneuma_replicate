@@ -72,7 +72,9 @@ class Registration:
         if self.connection.sql(
             f"SELECT * FROM table_status WHERE hash = '{table_hash}'"
         ).fetchone():
-            return f"This table already exists in the database."
+            return "This table already exists in the database."
+
+        self.connection.register(csv_path, table)
 
         self.connection.sql(
             f"""INSERT INTO table_status (id, table_name, status, creator, hash)
