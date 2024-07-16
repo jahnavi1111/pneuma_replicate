@@ -92,8 +92,8 @@ class Registration:
         ).fetchone()[0]
 
         context_id = self.connection.sql(
-            f"""INSERT INTO table_contexts (table_id, table_name, context)
-            VALUES ('{table_id}', '{table_name}', '{context}')
+            f"""INSERT INTO table_contexts (table_id, context)
+            VALUES ('{table_id}', '{context}')
             RETURNING id"""
         ).fetchone()[0]
 
@@ -114,8 +114,8 @@ class Registration:
         ).fetchone()[0]
 
         summary_id = self.connection.sql(
-            f"""INSERT INTO table_summaries (table_id, table_name, summaries)
-            VALUES ('{table_id}', '{table_name}', '{summary}')
+            f"""INSERT INTO table_summaries (table_id, summary)
+            VALUES ('{table_id}', '{summary}')
             RETURNING id"""
         ).fetchone()[0]
 
