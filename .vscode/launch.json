@@ -12,7 +12,7 @@
             "cwd": "${fileDirname}",
             "program": "registration.py",
             "console": "integratedTerminal",
-            "args": "setup --db_path=storage.db",
+            "args": "setup --db_path=../storage.db",
         },
         {
             "name": "Reg CSV Read",
@@ -22,7 +22,7 @@
             "cwd": "${fileDirname}",
             "program": "registration.py",
             "console": "integratedTerminal",
-            "args": "read_csv --db_path=storage.db ../../data_src/benchmarks/context/chicago-open-data/BX1_chicago.csv",
+            "args": "read_csv --db_path=../storage.db ../../data_src/benchmarks/context/chicago-open-data/BX1_chicago.csv",
         },
         {
             "name": "Reg Context Add",
@@ -32,7 +32,7 @@
             "cwd": "${fileDirname}",
             "program": "registration.py",
             "console": "integratedTerminal",
-            "args": "add_context --db_path=storage.db ../../data_src/benchmarks/context/chicago-open-data/BX1_chicago.csv ../sample_data/sample_context.txt",
+            "args": "add_context --db_path=../storage.db ../../data_src/benchmarks/context/chicago-open-data/BX1_chicago.csv ../sample_data/sample_context.txt",
         },
         {
             "name": "Reg Summary Add",
@@ -42,7 +42,17 @@
             "cwd": "${fileDirname}",
             "program": "registration.py",
             "console": "integratedTerminal",
-            "args": "add_summary --db_path=storage.db ../../data_src/benchmarks/context/chicago-open-data/BX1_chicago.csv ../sample_data/sample_summary.txt",
+            "args": "add_summary --db_path=../storage.db ../../data_src/benchmarks/context/chicago-open-data/BX1_chicago.csv ../sample_data/sample_summary.txt",
+        },
+        {
+            "name": "Sum Summarize",
+            "type": "debugpy",
+            "python": "${workspaceFolder}/modules/env/Scripts/python.exe",
+            "request": "launch",
+            "cwd": "${fileDirname}",
+            "program": "summarizer.py",
+            "console": "integratedTerminal",
+            "args": "summarize --db_path=../storage.db ../../data_src/benchmarks/context/chicago-open-data/BX1_chicago.csv",
         },
     ]
 }
