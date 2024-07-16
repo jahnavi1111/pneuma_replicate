@@ -87,10 +87,6 @@ class Registration:
         with open(context_path, "r") as f:
             context = f.read()
 
-        table_name = self.connection.sql(
-            f"SELECT table_name FROM table_status WHERE id = '{table_id}'"
-        ).fetchone()[0]
-
         context_id = self.connection.sql(
             f"""INSERT INTO table_contexts (table_id, context)
             VALUES ('{table_id}', '{context}')
@@ -108,10 +104,6 @@ class Registration:
     def add_summary(self, table_id: str, summary_path: str):
         with open(summary_path, "r") as f:
             summary = f.read()
-
-        table_name = self.connection.sql(
-            f"SELECT table_name FROM table_status WHERE id = '{table_id}'"
-        ).fetchone()[0]
 
         summary_id = self.connection.sql(
             f"""INSERT INTO table_summaries (table_id, summary)
