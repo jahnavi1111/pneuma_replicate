@@ -31,7 +31,7 @@ class Registration:
             """CREATE OR REPLACE TABLE table_contexts (
                 id INTEGER DEFAULT nextval('id_seq') PRIMARY KEY,
                 table_id VARCHAR NOT NULL REFERENCES table_status(id),
-                context VARCHAR,
+                context STRUCT(payload VARCHAR),
                 )
             """
         )
@@ -41,7 +41,7 @@ class Registration:
             """CREATE OR REPLACE TABLE table_summaries (
                 id INTEGER DEFAULT nextval('id_seq') PRIMARY KEY,
                 table_id VARCHAR NOT NULL REFERENCES table_status(id),
-                summary VARCHAR,
+                summary STRUCT (payload VARCHAR),
                 )
             """
         )
@@ -87,7 +87,7 @@ class Registration:
 
         context_id = self.connection.sql(
             f"""INSERT INTO table_contexts (table_id, context)
-            VALUES ('{table_id}', '{context}')
+            VALUES ( '{table_id}', {{'payload': '{context}'}} )
             RETURNING id"""
         ).fetchone()[0]
 
@@ -99,7 +99,7 @@ class Registration:
 
         summary_id = self.connection.sql(
             f"""INSERT INTO table_summaries (table_id, summary)
-            VALUES ('{table_id}', '{summary}')
+            VALUES ( '{table_id}', {{'payload': '{summary}'}} )
             RETURNING id"""
         ).fetchone()[0]
 
