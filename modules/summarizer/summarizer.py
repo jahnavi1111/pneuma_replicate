@@ -20,12 +20,6 @@ class Summarizer:
             RETURNING id"""
         ).fetchone()[0]
 
-        self.connection.sql(
-            f"""UPDATE table_status
-            SET summary_count = summary_count + 1
-            WHERE id = '{table_id}'"""
-        )
-
         return f"Summary ID: {summary_id}"
 
 

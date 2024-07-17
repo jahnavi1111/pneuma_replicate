@@ -18,8 +18,6 @@ class Registration:
                 time_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 creator VARCHAR NOT NULL,
                 hash VARCHAR NOT NULL,
-                context_count INTEGER NOT NULL DEFAULT 0 CHECK (context_count >= 0),
-                summary_count INTEGER NOT NULL DEFAULT 0 CHECK (summary_count >= 0)
                 )
             """
         )
@@ -93,12 +91,6 @@ class Registration:
             RETURNING id"""
         ).fetchone()[0]
 
-        self.connection.sql(
-            f"""UPDATE table_status
-            SET context_count = context_count + 1
-            WHERE id = '{table_id}'"""
-        )
-
         return f"Context ID: {context_id}"
 
     def add_summary(self, table_id: str, summary_path: str):
@@ -110,12 +102,6 @@ class Registration:
             VALUES ('{table_id}', '{summary}')
             RETURNING id"""
         ).fetchone()[0]
-
-        self.connection.sql(
-            f"""UPDATE table_status
-            SET summary_count = summary_count + 1
-            WHERE id = '{table_id}'"""
-        )
 
         return f"Summary ID: {summary_id}"
 
