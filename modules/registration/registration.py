@@ -16,10 +16,8 @@ class Registration:
         self.connection.sql("INSTALL httpfs")
         self.connection.sql("LOAD httpfs")
 
-        # We would probably want to use "CREATE IF NOT EXISTS", but we use "CREATE OR REPLACE"
-        # for now so changes while developing are immediately reflected in the database.
         self.connection.sql(
-            """CREATE OR REPLACE TABLE table_status (
+            """CREATE TABLE IF NOT EXISTS table_status (
                 id VARCHAR PRIMARY KEY,
                 table_name VARCHAR NOT NULL,
                 status VARCHAR NOT NULL,
