@@ -13,8 +13,8 @@ class Registration:
         self.connection = duckdb.connect(db_path)
 
     def setup(self):
-        self.connection.sql("INSTALL httpfs")
-        self.connection.sql("LOAD httpfs")
+        self.connection.execute("INSTALL httpfs")
+        self.connection.execute("LOAD httpfs")
 
         self.connection.sql(
             """CREATE TABLE IF NOT EXISTS table_status (
@@ -52,7 +52,27 @@ class Registration:
             """
         )
 
-    def read_file(self, path: str, creator: str, file_type: str = "csv"):
+    def read_table(
+        self,
+        path: str,
+        creator: str,
+        file_type: str = "csv",
+        source: str = "file",
+        s3_region: str = None,
+        s3_access_key: str = None,
+        s3_secret_access_key: str = None,
+    ):
+        if source == "s3":
+            self.connection.execute(
+                f"""
+            SET s3_region='{s3_region}';
+            SET s3_access_key_id='{s3_access_key}';
+            SET s3_secret_access_key='{s3_secret_access_key}';
+            """
+            )
+        elif source != "file":
+            return "Invalid source. Please use 'file' or 's3'."
+
         if file_type == "csv":
             name = path.split("/")[-1][:-4]
             table = self.connection.sql(

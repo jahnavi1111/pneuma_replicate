@@ -22,7 +22,17 @@
             "cwd": "${fileDirname}",
             "program": "registration.py",
             "console": "integratedTerminal",
-            "args": "read_file --db_path=../storage.db ../sample_data/5cq6-qygt.csv david csv",
+            "args": "read_table --db_path=../storage.db ../sample_data/5cq6-qygt.csv david csv",
+        },
+        {
+            "name": "Reg S3 Read",
+            "type": "debugpy",
+            "python": "${workspaceFolder}/modules/env/Scripts/python.exe",
+            "request": "launch",
+            "cwd": "${fileDirname}",
+            "program": "registration.py",
+            "console": "integratedTerminal",
+            "args": "read_table --db_path=../storage.db [S3 URI] david csv s3 [REGION] [ACCESS KEY] [SECRET KEY]",
         },
         {
             "name": "Reg Context Add",
