@@ -1,5 +1,10 @@
+import sys
+
 import duckdb
 import fire
+
+sys.path.append("..")
+from utils.table_status import TableStatus
 
 
 class Registration:
@@ -8,6 +13,9 @@ class Registration:
         self.connection = duckdb.connect(db_path)
 
     def setup(self):
+        self.connection.sql("INSTALL httpfs")
+        self.connection.sql("LOAD httpfs")
+
         # We would probably want to use "CREATE IF NOT EXISTS", but we use "CREATE OR REPLACE"
         # for now so changes while developing are immediately reflected in the database.
         self.connection.sql(
@@ -46,25 +54,41 @@ class Registration:
             """
         )
 
-    def read_csv(self, csv_path: str):
-        name = csv_path.split("/")[-1][:-4]
-        table = self.connection.sql(
-            f"""SELECT *
+    def read_file(self, path: str, creator: str, file_type: str = "csv"):
+        if file_type == "csv":
+            name = path.split("/")[-1][:-4]
+            table = self.connection.sql(
+                f"""SELECT *
+                    FROM read_csv(
+                        '{path}',
+                        auto_detect=True,
+                        header=True
+                    )"""
+            )
+            table_hash = self.connection.sql(
+                f"""SELECT md5(string_agg(tbl::text, ''))
                 FROM read_csv(
-                '{csv_path}',
-                auto_detect=True,
-                header=True
-            )"""
-        )
-
-        table_hash = self.connection.sql(
-            f"""SELECT md5(string_agg(tbl::text, ''))s
-                FROM read_csv(
-                '{csv_path}',
-                auto_detect=True,
-                header=True
-            ) AS tbl"""
-        ).fetchone()[0]
+                    '{path}',
+                    auto_detect=True,
+                    header=True
+                ) AS tbl"""
+            ).fetchone()[0]
+        elif file_type == "parquet":
+            name = path.split("/")[-1][:-8]
+            table = self.connection.sql(
+                f"""SELECT *
+                FROM read_parquet(
+                    '{path}'
+                )"""
+            )
+            table_hash = self.connection.sql(
+                f"""SELECT md5(string_agg(tbl::text, ''))
+                FROM read_parquet(
+                    '{path}'
+                ) AS tbl"""
+            ).fetchone()[0]
+        else:
+            return "Invalid file type. Please use 'csv' or 'parquet'."
 
         # Check if table with the same hash already exist
         if self.connection.sql(
@@ -72,14 +96,14 @@ class Registration:
         ).fetchone():
             return "This table already exists in the database."
 
-        self.connection.register(csv_path, table)
+        self.connection.register(path, table)
 
         self.connection.sql(
             f"""INSERT INTO table_status (id, table_name, status, creator, hash)
-            VALUES ('{csv_path}', '{name}', 'ready', 'fake creator', '{table_hash}')"""
+            VALUES ('{path}', '{name}', '{TableStatus.REGISTERED}', '{creator}', '{table_hash}')"""
         )
 
-        return f"Table with ID: {csv_path} has been added to the database."
+        return f"Table with ID: {path} has been added to the database."
 
     def add_context(self, table_id: str, context_path: str):
         with open(context_path, "r") as f:

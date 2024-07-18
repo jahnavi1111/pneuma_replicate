@@ -15,14 +15,14 @@
             "args": "setup --db_path=../storage.db",
         },
         {
-            "name": "Reg CSV Read",
+            "name": "Reg File Read",
             "type": "debugpy",
             "python": "${workspaceFolder}/modules/env/Scripts/python.exe",
             "request": "launch",
             "cwd": "${fileDirname}",
             "program": "registration.py",
             "console": "integratedTerminal",
-            "args": "read_csv --db_path=../storage.db ../../data_src/benchmarks/context/chicago-open-data/BX1_chicago.csv",
+            "args": "read_file --db_path=../storage.db ../sample_data/5cq6-qygt.csv david csv",
         },
         {
             "name": "Reg Context Add",
@@ -32,7 +32,7 @@
             "cwd": "${fileDirname}",
             "program": "registration.py",
             "console": "integratedTerminal",
-            "args": "add_context --db_path=../storage.db ../../data_src/benchmarks/context/chicago-open-data/BX1_chicago.csv ../sample_data/sample_context.txt",
+            "args": "add_context --db_path=../storage.db ../sample_data/5cq6-qygt.csv ../sample_data/sample_context.txt",
         },
         {
             "name": "Reg Summary Add",
