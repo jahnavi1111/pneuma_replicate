@@ -1,9 +1,10 @@
 import sys
+from pathlib import Path
 
 import duckdb
 import fire
 
-sys.path.append("..")
+sys.path.append(str(Path(__file__).resolve().parent.parent))
 from utils.table_status import TableStatus
 
 
