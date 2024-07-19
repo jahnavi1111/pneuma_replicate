@@ -35,13 +35,12 @@ This module is used to load data from various sources and context into DuckDB. T
 **Example Usage**: `registration.py setup --db_path=../storage.db`
 
 ### Read Table
-**Usage**: `registration.py read_table --db_path=PATH/TO/DATABASE_NAME.db [OPTION]... PATH_TO_FILE.(csv/parquet) CREATOR_NAME FILE_TYPE`
+**Usage**: `registration.py read_table --db_path=PATH/TO/DATABASE_NAME.db [OPTION]... PATH_TO_FILE.(csv/parquet) CREATOR_NAME`
 
 **Description**: Reads a table, formatted in CSV or PARQUET, from the local filesystem or an online storage bucket. If a file in a storage bucket is public, it can be read like a local file.
 
 - PATH_TO_FILE can be a path in the local filesystem or a bucket URI
 - CREATOR_NAME is the name of the person who runs this command (TODO: Authenticate automatically)
-- FILE_TYPE is either **csv** or **parquet**.
 
 **Options**:
 - --s3_region=REGION

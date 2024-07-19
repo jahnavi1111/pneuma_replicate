@@ -1,3 +1,4 @@
+import os
 import sys
 from pathlib import Path
 
@@ -57,7 +58,6 @@ class Registration:
         self,
         path: str,
         creator: str,
-        file_type: str = "csv",
         source: str = "file",
         s3_region: str = None,
         s3_access_key: str = None,
@@ -73,6 +73,9 @@ class Registration:
             )
         elif source != "file":
             return "Invalid source. Please use 'file' or 's3'."
+
+        # Index -1 to get the file extension, then slice [1:] to remove the dot.
+        file_type = os.path.splitext(path)[-1][1:]
 
         if file_type == "csv":
             name = path.split("/")[-1][:-4]
