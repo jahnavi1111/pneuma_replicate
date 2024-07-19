@@ -36,7 +36,7 @@ class Registration:
 
         # DuckDB does not support "ON DELETE CASCADE" so be careful with deletions.
         self.connection.sql(
-            """CREATE OR REPLACE TABLE table_contexts (
+            """CREATE TABLE IF NOT EXISTS table_contexts (
                 id INTEGER DEFAULT nextval('id_seq') PRIMARY KEY,
                 table_id VARCHAR NOT NULL REFERENCES table_status(id),
                 context STRUCT(payload VARCHAR),
@@ -46,10 +46,22 @@ class Registration:
 
         # DuckDB does not support "ON DELETE CASCADE" so be careful with deletions.
         self.connection.sql(
-            """CREATE OR REPLACE TABLE table_summaries (
+            """CREATE TABLE IF NOT EXISTS table_summaries (
                 id INTEGER DEFAULT nextval('id_seq') PRIMARY KEY,
                 table_id VARCHAR NOT NULL REFERENCES table_status(id),
                 summary STRUCT (payload VARCHAR),
+                )
+            """
+        )
+
+        # TODO: Adjust the response column to the actual response type.
+        self.connection.sql(
+            """CREATE TABLE IF NOT EXISTS query_history (
+                time TIMESTAMP DEFAULT CURRENT_TIMESTAMP PRIMARY KEY,
+                table_id VARCHAR NOT NULL REFERENCES table_status(id), 
+                query VARCHAR NOT NULL,
+                response VARCHAR NOT NULL,
+                querant VARCHAR NOT NULL
                 )
             """
         )
