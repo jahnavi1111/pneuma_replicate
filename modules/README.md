@@ -2,10 +2,24 @@
 
 Pneuma is built in several modules, each of which can be run independently. More details can be found [here](https://docs.google.com/document/d/16MsdIs80NssVtIhMq4r0RxXSpTKts_1MyyU2gf6ncpc).
 
-## Setup
-This setup guide is written on a Windows environment with Python version 3.10.6
+## Table of Contents
+1. [Getting Started](#getting-started)
+2. [Registration Module](#registration-module)
+    1. [Setup](#setup)
+    2. [Read Table](#read-table)
+    3. [Add Context](#add-context)
+    4. [Add Summary](#add-summary)
+3. [Summarizer Module](#summarizer-module)
+    1. [Summarize](#summarize)
+4. [Index Generation Module](#index-generation-module)
+5. [Query Module](#query-module)
 
-Clonethe repository.
+## Getting Started
+This setup guide is written on a Windows environment with Python version 3.10.6.
+
+TODO: For the summarizer module, additional setup (not written here yet) to access models is needed.
+
+Clone the repository.
 ```shell
 git clone https://github.com/TheDataStation/Pneuma
 cd modules
@@ -28,16 +42,25 @@ pip install -r requirements.txt
 This module is used to load data from various sources and context into DuckDB. Transformations, such as sorting rows, filtering out repeated values, etc. will also be done.
 
 ### Setup 
-**Usage**: `registration.py setup --db_path=PATH/TO/DATABASE_NAME.db`
+**Usage**: 
+```shell
+registration.py setup --db_path=PATH/TO/DATABASE_NAME.db
+```
 
 **Description**: Initializes the database schema. Creates a FILE_NAME.db file in the specified path.
 
-**Example Usage**: `registration.py setup --db_path=../storage.db`
+**Example Usage**: 
+```shell
+registration.py setup --db_path=../storage.db
+```
 
 ### Read Table
-**Usage**: `registration.py read_table --db_path=PATH/TO/DATABASE_NAME.db [OPTION]... PATH_TO_FILE.(csv/parquet) CREATOR_NAME`
+**Usage**: 
+```shell
+registration.py read_table --db_path=PATH/TO/DATABASE_NAME.db [OPTION]... PATH_TO_FILE.(csv/parquet) CREATOR_NAME
+```
 
-**Description**: Reads a table, formatted in CSV or PARQUET, from the local filesystem or an online storage bucket. If a file in a storage bucket is public, it can be read like a local file.
+**Description**: Reads a table, formatted in CSV or PARQUET, from the local filesystem or an online storage bucket. If a file in a storage bucket is public, it can be read like a local file. The path of the table will be used as the ID.
 
 - PATH_TO_FILE can be a path in the local filesystem or a bucket URI
 - CREATOR_NAME is the name of the person who runs this command (TODO: Authenticate automatically)
@@ -55,18 +78,55 @@ This module is used to load data from various sources and context into DuckDB. T
 
     AWS secret access key ID
 
-**Examples Usage**: `registration.py read_table --db_path=../storage.db ../sample_data/5cq6-qygt.csv david csv`
+**Examples Usage**: 
+```shell
+registration.py read_table --db_path=../storage.db ../sample_data/5cq6-qygt.csv david csv
+```
 
 ### Add Context
-**Usage**: `registration.py add_context --db_path=PATH/TO/DATABASE_NAME.db TABLE_ID PATH_TO_FILE.txt`
+**Usage**: 
+```shell
+registration.py add_context --db_path=PATH/TO/DATABASE_NAME.db TABLE_ID PATH_TO_FILE.txt
+```
 
 **Description**: Creates a context entry for the specified table.
 
-**Example Usage**: `registration.py add_context --db_path=../storage.db ../sample_data/5cq6-qygt.csv ../sample_data/sample_context.txt`
+**Example Usage**: 
+```shell
+registration.py add_context --db_path=../storage.db ../sample_data/5cq6-qygt.csv ../sample_data/sample_context.txt
+```
 
 ### Add Summary
-**Usage**: `registration.py add_summary --db_path=PATH/TO/DATABASE_NAME.db TABLE_ID PATH_TO_FILE.txt`
+**Usage**: 
+```shell
+registration.py add_summary --db_path=PATH/TO/DATABASE_NAME.db TABLE_ID PATH_TO_FILE.txt
+```
 
 **Description**: Creates a context entry for the specified table.
 
-**Example Usage**: `registration.py add_context --db_path=../storage.db ../sample_data/5cq6-qygt.csv ../sample_data/sample_summary.txt`
+**Example Usage**: 
+```shell
+registration.py add_context --db_path=../storage.db ../sample_data/5cq6-qygt.csv ../sample_data/sample_summary.txt
+```
+
+## Summarizer Module
+The summarized module generates content summaries of registered tables, which will then be stored in an index. These summaries will be useful for answering users' content-related questions
+
+### Summarize
+**Usage**: 
+```shell
+summarizer.py summarize --db_path=PATH/TO/DATABASE_NAME.db TABLE_ID
+```
+
+**Description**: Generates summary entries for the specified table.
+
+**Example Usage**: 
+```shell
+summarizer.py summarize --db_path=PATH/TO/DATABASE_NAME.db ../sample_data/5cq6-qygt.csv
+```
+
+## Index Generation Module
+Text
+
+## Query Module
+Text
