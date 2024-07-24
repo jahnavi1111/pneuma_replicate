@@ -16,11 +16,11 @@ from benchmark_generator.context.utils.prompting_interface import prompt_pipelin
 
 
 class Summarizer:
-    def __init__(self, db_path: str):
+    def __init__(self, db_path: str, hf_token: str = ""):
         self.db_path = db_path
         self.connection = duckdb.connect(db_path)
         self.pipe = initialize_pipeline(
-            "meta-llama/Meta-Llama-3-8B-Instruct", torch.bfloat16
+            "meta-llama/Meta-Llama-3-8B-Instruct", torch.bfloat16, hf_token
         )
 
     def summarize(self, table_id: str):

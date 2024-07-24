@@ -17,28 +17,30 @@ Pneuma is built in several modules, each of which can be run independently. More
 ## Getting Started
 This setup guide is written on a Windows environment with Python version 3.10.6.
 
+**Private/Gated models Access**
+
 For the summarizer module, you may want to access private/gated models such as `Meta-Llama-3-8B-Instruct`, as used in the paper. To do this, create a user access token in HuggingFace, then login using the following commands:
 ```shell
 pip install -U "huggingface_hub[cli]"
 huggingface-cli login [your_token]
 ```
 
-Alternatively, you can pass the token directly when calling `initialize_pipeline` (`benchmark_generator/context/utils/pipeline_initializer.py`).
+Alternatively, you can pass the token directly, as instructed in [Summarize](#summarize).
 
-Clone the repository.
+**Clone the repository.**
 ```shell
 git clone https://github.com/TheDataStation/Pneuma
 cd modules
 ```
 
-(Recommended but not required) Create a virtual environment.
+**(Recommended but not required) Create a virtual environment.**
 
 ```
 python -m venv venv
 env\Scripts\activate.bat
 ```
 
-Install required Python modules.
+**Install required Python modules.**
 
 ```
 pip install -r requirements.txt
@@ -121,10 +123,13 @@ The summarized module generates content summaries of registered tables, which wi
 ### Summarize
 **Usage**: 
 ```shell
-summarizer.py summarize --db_path=PATH/TO/DATABASE_NAME.db TABLE_ID
+summarizer.py summarize --db_path=PATH/TO/DATABASE_NAME.db [OPTION]... TABLE_ID
 ```
 
 **Description**: Generates summary entries for the specified table.
+
+**Options**:
+- --hf_token: User access token from HuggingFace to access gated models. This option is not needed if you have been authenticated using huggingface-cli.
 
 **Example Usage**: 
 ```shell
