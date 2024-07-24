@@ -1,3 +1,4 @@
+import json
 import os
 import sys
 from pathlib import Path
@@ -32,14 +33,14 @@ class Registration:
 
         # Arbitrary auto-incrementing id for contexts and summaries.
         # Change to "CREATE IF NOT EXISTS" on production.
-        self.connection.sql("CREATE OR REPLACE SEQUENCE id_seq START 1")
+        self.connection.sql("CREATE SEQUENCE IF NOT EXISTS id_seq START 1")
 
         # DuckDB does not support "ON DELETE CASCADE" so be careful with deletions.
         self.connection.sql(
             """CREATE TABLE IF NOT EXISTS table_contexts (
                 id INTEGER DEFAULT nextval('id_seq') PRIMARY KEY,
                 table_id VARCHAR NOT NULL REFERENCES table_status(id),
-                context STRUCT(payload VARCHAR),
+                context JSON NOT NULL
                 )
             """
         )
@@ -49,7 +50,7 @@ class Registration:
             """CREATE TABLE IF NOT EXISTS table_summaries (
                 id INTEGER DEFAULT nextval('id_seq') PRIMARY KEY,
                 table_id VARCHAR NOT NULL REFERENCES table_status(id),
-                summary STRUCT (payload VARCHAR),
+                summary JSON NOT NULL
                 )
             """
         )
@@ -143,9 +144,13 @@ class Registration:
         with open(context_path, "r") as f:
             context = f.read()
 
+        context_dict = {
+            "payload": context.strip(),
+        }
+
         context_id = self.connection.sql(
             f"""INSERT INTO table_contexts (table_id, context)
-            VALUES ( '{table_id}', {{'payload': '{context}'}} )
+            VALUES ( '{table_id}', '{json.dumps(context_dict)}' )
             RETURNING id"""
         ).fetchone()[0]
 
@@ -155,9 +160,13 @@ class Registration:
         with open(summary_path, "r") as f:
             summary = f.read()
 
+        summary_dict = {
+            "payload": summary.strip(),
+        }
+
         summary_id = self.connection.sql(
             f"""INSERT INTO table_summaries (table_id, summary)
-            VALUES ( '{table_id}', {{'payload': '{summary}'}} )
+            VALUES ( '{table_id}', '{json.dumps(summary_dict)}' )
             RETURNING id"""
         ).fetchone()[0]
 

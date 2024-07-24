@@ -1,3 +1,4 @@
+import json
 import math
 import random
 import sys
@@ -27,11 +28,14 @@ class Summarizer:
         table_df = self.connection.sql(f"SELECT * FROM '{table_id}'").to_df()
 
         summaries = self.produce_summaries(table_df)
+        # summaries = ["one", "two", "three"]
 
         insert_df = pd.DataFrame.from_dict(
             {
                 "table_id": [table_id] * len(summaries),
-                "summary": [{"payload": summary} for summary in summaries],
+                "summary": [
+                    json.dumps({"payload": summary.strip()}) for summary in summaries
+                ],
             }
         )
 
@@ -41,8 +45,10 @@ class Summarizer:
             RETURNING id"""
         ).fetchall()
 
-        return f"{len(insert_df)} summaries has been added \
-            with IDs: {', '.join([str(i[0]) for i in summary_ids])}"
+        return (
+            f"Total of {len(insert_df)} summaries has been added "
+            f"with IDs: {', '.join([str(i[0]) for i in summary_ids])}"
+        )
 
     def produce_summaries(
         self,
