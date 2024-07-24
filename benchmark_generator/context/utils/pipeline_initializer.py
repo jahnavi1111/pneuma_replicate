@@ -1,18 +1,19 @@
 from transformers import pipeline
 
 
-def initialize_pipeline(model_path: str, torch_dtype):
+def initialize_pipeline(model_path: str, torch_dtype, hf_token=""):
     """
     Initialize a text generation pipeline
 
     ### Parameters:
-    - model_path (str): The path of a model and tokenizer's weights.
+    - model_path (str): The path of a model and tokenizer's weights
 
     ### Returns:
-    - pipe (TextGenerationPipeline): The pipeline for text generation.
+    - pipe (TextGenerationPipeline): The pipeline for text generation
+    - hf_token (str): HuggingFace token to access gated model
     """
     pipe = pipeline(
-        "text-generation", model=model_path, device_map="auto", torch_dtype=torch_dtype
+        "text-generation", model=model_path, device_map="auto", torch_dtype=torch_dtype, token=hf_token
     )
     return pipe
 

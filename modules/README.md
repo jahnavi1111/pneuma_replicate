@@ -17,7 +17,13 @@ Pneuma is built in several modules, each of which can be run independently. More
 ## Getting Started
 This setup guide is written on a Windows environment with Python version 3.10.6.
 
-TODO: For the summarizer module, additional setup (not written here yet) to access models is needed.
+For the summarizer module, you may want to access private/gated models such as `Meta-Llama-3-8B-Instruct`, as used in the paper. To do this, create a user access token in HuggingFace, then login using the following commands:
+```shell
+pip install -U "huggingface_hub[cli]"
+huggingface-cli login [your_token]
+```
+
+Alternatively, you can pass the token directly when calling `initialize_pipeline` (`benchmark_generator/context/utils/pipeline_initializer.py`).
 
 Clone the repository.
 ```shell
