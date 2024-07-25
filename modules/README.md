@@ -137,7 +137,20 @@ summarizer.py summarize --db_path=PATH/TO/DATABASE_NAME.db ../sample_data/5cq6-q
 ```
 
 ## Index Generation Module
-Text
+We store registered context and generated summaries as documents in a searchable (vector) index, enabling the retrieval of the most relevant documents quickly and accurately. Given a set of tables, this module generates an index.
+
+### Generate Index
+**Usage**:
+```shell
+index_generator.py generate_index --db_path=PATH/TO/DATABASE_NAME.db INDEX_NAME 'TABLE_ID1','TABLEID2','TABLEID3',...
+```
+
+**Description**: Generates an index with the name INDEX_NAME containing context and summary entries from the tables listed.
+
+**Example Usage**
+```shell
+index_generator.py generate_index --db_path=PATH/TO/DATABASE_NAME.db sample_index '../sample_data/5cq6-qygt.csv','../sample_data/5n77-2d6a.csv'
+```
 
 ## Query Module
 Text
