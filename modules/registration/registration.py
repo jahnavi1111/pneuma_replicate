@@ -55,6 +55,24 @@ class Registration:
             """
         )
 
+        self.connection.sql(
+            """CREATE TABLE IF NOT EXISTS indexes (
+                id INTEGER default nextval('id_seq') PRIMARY KEY,
+                name VARCHAR NOT NULL,
+                location VARCHAR NOT NULL,
+                )
+            """
+        )
+
+        self.connection.sql(
+            """CREATE TABLE IF NOT EXISTS index_table_mappings (
+                index_id INTEGER NOT NULL REFERENCES indexes(id),
+                table_id VARCHAR NOT NULL REFERENCES table_status(id),
+                PRIMARY KEY (index_id, table_id)
+                )
+            """
+        )
+
         # TODO: Adjust the response column to the actual response type.
         self.connection.sql(
             """CREATE TABLE IF NOT EXISTS query_history (
