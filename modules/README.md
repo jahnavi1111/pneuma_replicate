@@ -59,7 +59,7 @@ registration.py setup --db_path=PATH/TO/DATABASE_NAME.db
 
 **Example Usage**: 
 ```shell
-registration.py setup --db_path=../storage.db
+registration.py setup --db_path=../out/storage.db
 ```
 
 ### Read Table
@@ -88,7 +88,7 @@ registration.py read_table --db_path=PATH/TO/DATABASE_NAME.db [OPTION]... PATH_T
 
 **Examples Usage**: 
 ```shell
-registration.py read_table --db_path=../storage.db ../sample_data/5cq6-qygt.csv david csv
+registration.py read_table --db_path=../out/storage.db ../sample_data/5cq6-qygt.csv david csv
 ```
 
 ### Add Context
@@ -101,7 +101,7 @@ registration.py add_context --db_path=PATH/TO/DATABASE_NAME.db TABLE_ID PATH_TO_
 
 **Example Usage**: 
 ```shell
-registration.py add_context --db_path=../storage.db ../sample_data/5cq6-qygt.csv ../sample_data/sample_context.txt
+registration.py add_context --db_path=../out/storage.db ../sample_data/5cq6-qygt.csv ../sample_data/sample_context.txt
 ```
 
 ### Add Summary
@@ -114,7 +114,7 @@ registration.py add_summary --db_path=PATH/TO/DATABASE_NAME.db TABLE_ID PATH_TO_
 
 **Example Usage**: 
 ```shell
-registration.py add_context --db_path=../storage.db ../sample_data/5cq6-qygt.csv ../sample_data/sample_summary.txt
+registration.py add_context --db_path=../out/storage.db ../sample_data/5cq6-qygt.csv ../sample_data/sample_summary.txt
 ```
 
 ## Summarizer Module
@@ -133,7 +133,7 @@ summarizer.py summarize --db_path=PATH/TO/DATABASE_NAME.db [OPTION]... TABLE_ID
 
 **Example Usage**: 
 ```shell
-summarizer.py summarize --db_path=PATH/TO/DATABASE_NAME.db ../sample_data/5cq6-qygt.csv
+summarizer.py summarize --db_path=../out/storage.db ../sample_data/5cq6-qygt.csv
 ```
 
 ## Index Generation Module
@@ -149,7 +149,7 @@ index_generator.py generate_index --db_path=PATH/TO/DATABASE_NAME.db INDEX_NAME 
 
 **Example Usage**
 ```shell
-index_generator.py generate_index --db_path=PATH/TO/DATABASE_NAME.db sample_index '../sample_data/5cq6-qygt.csv','../sample_data/5n77-2d6a.csv'
+index_generator.py generate_index --db_path=../out/storage.db sample_index '../sample_data/5cq6-qygt.csv','../sample_data/5n77-2d6a.csv'
 ```
 
 ## Query Module

@@ -177,3 +177,5 @@ pyrightconfig.json
 
 *.db
 scratch.py
+
+out/
