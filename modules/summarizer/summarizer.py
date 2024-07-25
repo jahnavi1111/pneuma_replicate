@@ -2,6 +2,7 @@ import json
 import math
 import random
 import sys
+from pathlib import Path
 
 import duckdb
 import fire
@@ -9,10 +10,12 @@ import pandas as pd
 import torch
 
 sys.path.append("../..")
-
 # Repackage this when the module is ready
 from benchmark_generator.context.utils.pipeline_initializer import initialize_pipeline
 from benchmark_generator.context.utils.prompting_interface import prompt_pipeline
+
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+from utils.table_status import TableStatus
 
 
 class Summarizer:
@@ -44,6 +47,12 @@ class Summarizer:
             SELECT * FROM insert_df
             RETURNING id"""
         ).fetchall()
+
+        self.connection.sql(
+            f"""UPDATE table_status
+            SET status = '{TableStatus.SUMMARIZED}'
+            WHERE id = '{table_id}'"""
+        )
 
         return (
             f"Total of {len(insert_df)} summaries has been added "
