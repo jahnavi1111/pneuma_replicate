@@ -149,7 +149,11 @@ class Registration:
         ).fetchone():
             return "This table already exists in the database."
 
-        self.connection.register(path, table)
+        # The double quote is necessary to consider the path, which may contain
+        # full stop that may mess with schema as a single string. Having single quote
+        # inside breaks the query, so having the double quote INSIDE the single quote
+        # is the only way to make it work.
+        table.create(f'"{path}"')
 
         self.connection.sql(
             f"""INSERT INTO table_status (id, table_name, status, creator, hash)
