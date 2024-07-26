@@ -20,9 +20,17 @@ class Query:
         self.chroma_client = chromadb.PersistentClient(self.index_location)
 
     def query(self, index_name: str, query: str, k: int = 10):
-        print(index_name)
-        print(query)
-        print(k)
+        try:
+            chroma_collection = self.chroma_client.get_collection(index_name)
+        except ValueError:
+            return f"Index with name {index_name} does not exist."
+
+        query_embedding = self.embedding_model.encode(query).tolist()
+        response = chroma_collection.query(
+            query_embeddings=[query_embedding], n_results=k
+        )
+
+        return response
 
 
 if __name__ == "__main__":
