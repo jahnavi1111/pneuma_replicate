@@ -27,6 +27,7 @@ class IndexGenerator:
         if isinstance(table_ids, str):
             table_ids = (table_ids,)
 
+        documents = []
         embeddings = []
         metadatas = []
         ids = []
@@ -45,9 +46,11 @@ class IndexGenerator:
             for entry in contexts + summaries:
                 entry_id = entry[0]
                 content = json.loads(entry[1])
+                payload = content["payload"]
 
-                embedding = self.embedding_model.encode(content["payload"])
+                embedding = self.embedding_model.encode(payload)
 
+                documents.append(payload)
                 embeddings.append(embedding.tolist())
                 metadatas.append({"table": table_id})
                 ids.append(str(entry_id))
@@ -59,7 +62,9 @@ class IndexGenerator:
         except UniqueConstraintError:
             return f"Index with name {index_name} already exists."
 
-        chroma_collection.add(embeddings=embeddings, metadatas=metadatas, ids=ids)
+        chroma_collection.add(
+            documents=documents, embeddings=embeddings, metadatas=metadatas, ids=ids
+        )
 
         # If we decide to use DuckDB's vector store, we don't need to store
         # this data.
