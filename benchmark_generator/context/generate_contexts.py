@@ -1,9 +1,9 @@
 # Optional (only if we need to choose among multiple GPUs)
 ###########################################################
-# import os
-# os.environ["CUDA_VISIBLE_DEVICES"] = "1"
-# import setproctitle
-# setproctitle.setproctitle("python")
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "7"
+import setproctitle
+setproctitle.setproctitle("python")
 ###########################################################
 import pandas as pd
 import torch
@@ -11,13 +11,14 @@ import torch
 from utils.pipeline_initializer import initialize_pipeline
 from utils.prompting_interface import prompt_pipeline
 from utils.csv_data_source import CsvDataSource
+from tqdm import tqdm
 
 with open("questions.txt") as file:
     questions = [question.strip() for question in file.readlines()]
 
 
-def get_generative_prompt(dataset: str, question: str):
-    return f"""Given this dataset:
+def get_generative_prompt(dataset: str, question: str, num_of_rows: int):
+    return f"""Given this dataset with its sample rows (out of {num_of_rows} rows):
 */
 {dataset}
 */
@@ -30,23 +31,22 @@ Assume you are the creator of the dataset and have all the necessary information
 2. Relevance: The answer must directly provide the information requested in the question without any extraneous details."""
 
 
-pipe = initialize_pipeline("meta-llama/Meta-Llama-3-8B-Instruct", torch.bfloat16)
+pipe = initialize_pipeline("mistralai/Mistral-Nemo-Instruct-2407", torch.bfloat16)
 
 
 def generate_contexts(benchmark_name: str, data_src: str, generation_params={}):
     csv_data_source = CsvDataSource(data_src)  # Adjust the csv source names
-    for table in iter(csv_data_source):
+    for table in tqdm(iter(csv_data_source), desc="Processing tables"):
         try:
             benchmark = pd.read_csv(benchmark_name)
         except FileNotFoundError:
-            benchmark = pd.DataFrame(columns=["table", "context_question", "context"])
+            benchmark = pd.DataFrame(columns=["id", "table", "context_question", "context"])
         csv_file_name = table[0]
-        print(f"Processing table {csv_file_name}")
         dataset = "\n".join(table[1])
-        for i in range(len(questions)):
-            print(f"Processing question {i}")
+        num_of_rows = table[2]
+        for i in tqdm(range(len(questions)), desc="Iterating questions"):
             question = questions[i]
-            prompt = get_generative_prompt(dataset, question)
+            prompt = get_generative_prompt(dataset, question, num_of_rows)
             conversation = [{"role": "user", "content": prompt}]
             values = {"table": [csv_file_name[:-4]], "context_question": [question]}
 
@@ -54,11 +54,12 @@ def generate_contexts(benchmark_name: str, data_src: str, generation_params={}):
             if benchmark[["table", "context_question"]].isin(values).all(axis=1).any():
                 continue
 
-            answer = prompt_pipeline(pipe, conversation, **generation_params)[-1][
-                "content"
-            ]
+            answer = prompt_pipeline(
+                pipe, conversation, context_length=128000, **generation_params
+            )[-1]["content"]
             row = pd.DataFrame(
                 {
+                    "id": [f"{csv_file_name[:-4]}_{i}"],
                     "table": [csv_file_name[:-4]],
                     "context_question": [question],
                     "context": [answer],
@@ -68,9 +69,8 @@ def generate_contexts(benchmark_name: str, data_src: str, generation_params={}):
             benchmark.to_csv(benchmark_name, index=False)
 
 
-name = "contexts_public_bi.csv"  # Adjust the benchmark name
+name = "contexts_chicago.csv"  # Adjust the contexts name
 generate_contexts(
     name,
-    "public_bi_benchmark",  # Adjust data source path
-    {"temperature": None, "top_p": None}
+    "pneuma_chicago_10K",  # Adjust data source path
 )

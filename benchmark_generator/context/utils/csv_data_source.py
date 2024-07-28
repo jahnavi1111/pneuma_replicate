@@ -16,7 +16,7 @@ class CsvDataSource:
         ]
         self.random_states = range(
             len(self.csv_file_names)
-        )  # for randomly selecting 5 rows
+        )  # for randomly selecting rows
 
     def __iter__(self):
         self.pointer = 0
@@ -31,7 +31,7 @@ class CsvDataSource:
 
         csv_file_name = f"{self._data_source}/{self.csv_file_names[self.pointer]}"
         df = pd.read_csv(csv_file_name)
-        df = df.sample(min(len(df), 5), random_state=self.random_states[self.pointer])
+        df = df.sample(min(len(df), 2), random_state=self.random_states[self.pointer])
 
         rows = [" | ".join(df.columns)]
         for _, row in df.iterrows():
@@ -40,7 +40,7 @@ class CsvDataSource:
 
         content = self._annotate_rows(rows)
         self.pointer += 1
-        return (csv_file_name, content)
+        return (csv_file_name, content, len(df))
 
     def _annotate_rows(self, rows):
         """
@@ -73,7 +73,7 @@ class CsvDataSource:
         ]
         self.random_states = range(
             len(self.csv_file_names)
-        )  # for randomly selecting 5 rows
+        )  # for randomly selecting rows
 
 
 if __name__ == "__main__":
