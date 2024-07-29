@@ -61,9 +61,12 @@ class Summarizer:
             WHERE id = '{table_id}'"""
         )
 
+        self.connection.sql(f'DROP TABLE "{table_id}"')
+
         return (
             f"Total of {len(insert_df)} summaries has been added "
-            f"with IDs: {', '.join([str(i[0]) for i in summary_ids])}"
+            f"with IDs: {', '.join([str(i[0]) for i in summary_ids])}.\n"
+            f"Table with ID: {table_id} has been removed from the database."
         )
 
     def produce_summaries(
