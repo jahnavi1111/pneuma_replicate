@@ -12,6 +12,7 @@ from utils.table_status import TableStatus
 
 class Registration:
     def __init__(self, db_path: str):
+        os.makedirs("../out", exist_ok=True)
         self.db_path = db_path
         self.connection = duckdb.connect(db_path)
 
