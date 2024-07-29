@@ -22,16 +22,23 @@ class Summarizer:
     def __init__(self, db_path: str, hf_token: str = ""):
         self.db_path = db_path
         self.connection = duckdb.connect(db_path)
-        self.pipe = initialize_pipeline(
-            "meta-llama/Meta-Llama-3-8B-Instruct", torch.bfloat16, hf_token
-        )
+
+        # self.pipe = initialize_pipeline(
+        #     "meta-llama/Meta-Llama-3-8B-Instruct", torch.bfloat16, hf_token
+        # )
+
+        # Use small model for local testing
+        self.pipe = initialize_pipeline("TinyLlama/TinyLlama_v1.1", torch.bfloat16)
 
     def summarize(self, table_id: str):
         # get the table as df
         table_df = self.connection.sql(f"SELECT * FROM '{table_id}'").to_df()
 
-        summaries = self.produce_summaries(table_df)
-        # summaries = ["one", "two", "three"]
+        # summaries = self.produce_summaries(table_df)
+        summaries = [
+            "This summary is 'generated' one",
+            "This is the second 'generated' summary",
+        ]
 
         insert_df = pd.DataFrame.from_dict(
             {
