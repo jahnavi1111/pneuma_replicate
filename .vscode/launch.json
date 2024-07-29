@@ -25,6 +25,16 @@
             "args": "read_table --db_path=../out/storage.db ../sample_data/csv/5cq6-qygt.csv david",
         },
         {
+            "name": "Reg Folder Read",
+            "type": "debugpy",
+            "python": "${workspaceFolder}/modules/env/Scripts/python.exe",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/modules/registration",
+            "program": "registration.py",
+            "console": "integratedTerminal",
+            "args": "read_folder --db_path=../out/storage.db ../sample_data/csv/ david",
+        },
+        {
             "name": "Reg S3 Read",
             "type": "debugpy",
             "python": "${workspaceFolder}/modules/env/Scripts/python.exe",

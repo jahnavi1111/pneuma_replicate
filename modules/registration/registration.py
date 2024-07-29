@@ -163,6 +163,13 @@ class Registration:
 
         return f"Table with ID: {path} has been added to the database."
 
+    def read_folder(self, path: str, creator: str):
+        files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
+        for file in files:
+            print(f"Processing {file}...")
+            self.read_table(os.path.join(path, file), creator)
+        return f"{len(files)} files in folder {path} has been processed."
+
     def add_context(self, table_id: str, context_path: str):
         with open(context_path, "r") as f:
             context = f.read()
