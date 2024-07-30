@@ -31,12 +31,12 @@ class CsvDataSource:
 
         csv_file_name = f"{self._data_source}/{self.csv_file_names[self.pointer]}"
         df = pd.read_csv(csv_file_name)
-        df = df.sample(min(len(df), 2), random_state=self.random_states[self.pointer])
+        # df = df.sample(min(len(df), 1), random_state=self.random_states[self.pointer])
 
         rows = [" | ".join(df.columns)]
-        for _, row in df.iterrows():
-            row_string = " | ".join(row.astype(str))
-            rows.append(row_string)
+        # for _, row in df.iterrows():
+        #     row_string = " | ".join(row.astype(str))
+        #     rows.append(row_string)
 
         content = self._annotate_rows(rows)
         self.pointer += 1

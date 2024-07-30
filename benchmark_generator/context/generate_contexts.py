@@ -18,7 +18,7 @@ with open("questions.txt") as file:
 
 
 def get_generative_prompt(dataset: str, question: str, num_of_rows: int):
-    return f"""Given this dataset with its sample rows (out of {num_of_rows} rows):
+    return f"""Given a dataset, consisting of {num_of_rows} rows, with the following columns:
 */
 {dataset}
 */
