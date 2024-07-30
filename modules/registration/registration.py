@@ -86,28 +86,21 @@ class Registration:
             """
         )
 
-    def read_table(
+        return "Database Initialized."
+
+    def read_file(
         self,
         path: str,
         creator: str,
-        source: str = "file",
-        s3_region: str = None,
-        s3_access_key: str = None,
-        s3_secret_access_key: str = None,
     ):
-        if source == "s3":
-            self.connection.execute(
-                f"""
-            SET s3_region='{s3_region}';
-            SET s3_access_key_id='{s3_access_key}';
-            SET s3_secret_access_key='{s3_secret_access_key}';
-            """
-            )
-        elif source != "file":
-            return "Invalid source. Please use 'file' or 's3'."
-
         # Index -1 to get the file extension, then slice [1:] to remove the dot.
         file_type = os.path.splitext(path)[-1][1:]
+
+        if file_type not in ["csv", "parquet"]:
+            return {
+                "success": False,
+                "message": "Invalid file type. Please use 'csv' or 'parquet'.",
+            }
 
         if file_type == "csv":
             name = path.split("/")[-1][:-4]
@@ -141,14 +134,15 @@ class Registration:
                     '{path}'
                 ) AS tbl"""
             ).fetchone()[0]
-        else:
-            return "Invalid file type. Please use 'csv' or 'parquet'."
 
         # Check if table with the same hash already exist
         if self.connection.sql(
             f"SELECT * FROM table_status WHERE hash = '{table_hash}'"
         ).fetchone():
-            return "This table already exists in the database."
+            return {
+                "success": False,
+                "message": "This table already exists in the database.",
+            }
 
         # The double quote is necessary to consider the path, which may contain
         # full stop that may mess with schema as a single string. Having single quote
@@ -160,15 +154,48 @@ class Registration:
             f"""INSERT INTO table_status (id, table_name, status, creator, hash)
             VALUES ('{path}', '{name}', '{TableStatus.REGISTERED}', '{creator}', '{table_hash}')"""
         )
-
-        return f"Table with ID: {path} has been added to the database."
+        return {
+            "success": True,
+            "message": f"Table with ID: {path} has been added to the database.",
+        }
 
     def read_folder(self, path: str, creator: str):
         files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
         for file in files:
             print(f"Processing {file}...")
-            self.read_table(os.path.join(path, file), creator)
+            result = self.read_file(os.path.join(path, file), creator)
+            print(
+                f"Processing table {file} {'Succeeded' if result.get('success') else 'Failed'}: {result.get('message')}"
+            )
+
         return f"{len(files)} files in folder {path} has been processed."
+
+    def read_table(
+        self,
+        path: str,
+        creator: str,
+        source: str = "file",
+        s3_region: str = None,
+        s3_access_key: str = None,
+        s3_secret_access_key: str = None,
+    ):
+        if source == "s3":
+            self.connection.execute(
+                f"""
+            SET s3_region='{s3_region}';
+            SET s3_access_key_id='{s3_access_key}';
+            SET s3_secret_access_key='{s3_secret_access_key}';
+            """
+            )
+        elif source != "file":
+            return "Invalid source. Please use 'file' or 's3'."
+
+        if os.path.isfile(path):
+            return self.read_file(path, creator).get("message")
+        elif os.path.isdir(path):
+            return self.read_folder(path, creator)
+        else:
+            return f"Invalid path: {path}"
 
     def add_context(self, table_id: str, context_path: str):
         with open(context_path, "r") as f:

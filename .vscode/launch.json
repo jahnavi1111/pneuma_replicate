@@ -32,7 +32,7 @@
             "cwd": "${workspaceFolder}/modules/registration",
             "program": "registration.py",
             "console": "integratedTerminal",
-            "args": "read_folder --db_path=../out/storage.db ../sample_data/csv/ david",
+            "args": "read_table --db_path=../out/storage.db ../sample_data/csv/ david",
         },
         {
             "name": "Reg S3 Read",

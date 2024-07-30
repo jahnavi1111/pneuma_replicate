@@ -65,12 +65,12 @@ registration.py setup --db_path=../out/storage.db
 ### Read Table
 **Usage**: 
 ```shell
-registration.py read_table --db_path=PATH/TO/DATABASE_NAME.db [OPTION]... PATH_TO_FILE.(csv/parquet) CREATOR_NAME
+registration.py read_table --db_path=PATH/TO/DATABASE_NAME.db [OPTION]... (PATH_TO_FOLDER/PATH_TO_FILE.(csv/parquet)) CREATOR_NAME
 ```
 
 **Description**: Reads a table, formatted in CSV or PARQUET, from the local filesystem or an online storage bucket. If a file in a storage bucket is public, it can be read like a local file. The path of the table will be used as the ID.
 
-- PATH_TO_FILE can be a path in the local filesystem or a bucket URI.
+- PATH_TO_FOLDER / PATH_TO_FILE can be a path in the local filesystem or a bucket URI. If a folder path is inserted, all files in the folder will be processed.
 - CREATOR_NAME is the name of the person who runs this command (TODO: Authenticate automatically).
 
 **Options**:
