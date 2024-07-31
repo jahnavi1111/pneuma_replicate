@@ -11,8 +11,8 @@ from utils.table_status import TableStatus
 
 
 class Registration:
-    def __init__(self, db_path: str):
-        os.makedirs("../out", exist_ok=True)
+    def __init__(self, db_path: str, out_path: str = "../out"):
+        os.makedirs(out_path, exist_ok=True)
         self.db_path = db_path
         self.connection = duckdb.connect(db_path)
 
@@ -170,7 +170,7 @@ class Registration:
 
         return f"{len(files)} files in folder {path} has been processed."
 
-    def read_table(
+    def add_table(
         self,
         path: str,
         creator: str,

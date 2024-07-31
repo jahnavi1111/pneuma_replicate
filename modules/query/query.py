@@ -5,7 +5,7 @@ from sentence_transformers import SentenceTransformer
 
 
 class Query:
-    def __init__(self, db_path: str):
+    def __init__(self, db_path: str, index_location: str = "../out/indexes"):
         self.db_path = db_path
         self.connection = duckdb.connect(db_path)
         # self.embedding_model = SentenceTransformer(
@@ -16,7 +16,7 @@ class Query:
         self.embedding_model = SentenceTransformer(
             "BAAI/bge-small-en-v1.5", trust_remote_code=True
         )
-        self.index_location = "../out/indexes"
+        self.index_location = index_location
         self.chroma_client = chromadb.PersistentClient(self.index_location)
 
     def query(self, index_name: str, query: str, k: int = 10):

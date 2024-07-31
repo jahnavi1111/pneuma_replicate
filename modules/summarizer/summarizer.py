@@ -9,6 +9,9 @@ import fire
 import pandas as pd
 import torch
 
+# This is needed when importing this module from pneuma.py in a directory above
+sys.path.append("../")
+
 sys.path.append("../..")
 # Repackage this when the module is ready
 from benchmark_generator.context.utils.pipeline_initializer import initialize_pipeline
