@@ -88,7 +88,7 @@ class Registration:
 
         return "Database Initialized."
 
-    def read_file(
+    def read_table_file(
         self,
         path: str,
         creator: str,
@@ -159,11 +159,11 @@ class Registration:
             "message": f"Table with ID: {path} has been added to the database.",
         }
 
-    def read_folder(self, path: str, creator: str):
+    def read_table_folder(self, path: str, creator: str):
         files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
         for file in files:
             print(f"Processing {file}...")
-            result = self.read_file(os.path.join(path, file), creator)
+            result = self.read_table_file(os.path.join(path, file), creator)
             print(
                 f"Processing table {file} {'Succeeded' if result.get('success') else 'Failed'}: {result.get('message')}"
             )
@@ -191,13 +191,13 @@ class Registration:
             return "Invalid source. Please use 'file' or 's3'."
 
         if os.path.isfile(path):
-            return self.read_file(path, creator).get("message")
+            return self.read_table_file(path, creator).get("message")
         elif os.path.isdir(path):
-            return self.read_folder(path, creator)
+            return self.read_table_folder(path, creator)
         else:
             return f"Invalid path: {path}"
 
-    def add_context(self, table_id: str, context_path: str):
+    def read_context_file(self, table_id: str, context_path: str):
         with open(context_path, "r") as f:
             context = f.read()
 
@@ -213,7 +213,22 @@ class Registration:
 
         return f"Context ID: {context_id}"
 
-    def add_summary(self, table_id: str, summary_path: str):
+    def read_context_folder(self, table_id, path: str):
+        files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
+        for file in files:
+            print(f"Processing {file}...")
+            self.add_context(table_id, os.path.join(path, file))
+        return f"{len(files)} files in folder {path} has been processed."
+
+    def add_context(self, table_id: str, context_path: str):
+        if os.path.isfile(context_path):
+            return self.read_context_file(table_id, context_path)
+        elif os.path.isdir(context_path):
+            return self.read_context_folder(table_id, context_path)
+        else:
+            return f"Invalid path: {context_path}"
+
+    def read_summary_file(self, table_id: str, summary_path: str):
         with open(summary_path, "r") as f:
             summary = f.read()
 
@@ -228,6 +243,21 @@ class Registration:
         ).fetchone()[0]
 
         return f"Summary ID: {summary_id}"
+
+    def add_summary_folder(self, table_id, path: str):
+        files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
+        for file in files:
+            print(f"Processing {file}...")
+            self.add_summary(table_id, os.path.join(path, file))
+        return f"{len(files)} files in folder {path} has been processed."
+
+    def add_summary(self, table_id: str, summary_path: str):
+        if os.path.isfile(summary_path):
+            return self.read_summary_file(table_id, summary_path)
+        elif os.path.isdir(summary_path):
+            return self.add_summary_folder(table_id, summary_path)
+        else:
+            return f"Invalid path: {summary_path}"
 
 
 if __name__ == "__main__":

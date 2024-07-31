@@ -94,7 +94,7 @@ registration.py read_table --db_path=../out/storage.db ../sample_data/5cq6-qygt.
 ### Add Context
 **Usage**: 
 ```shell
-registration.py add_context --db_path=PATH/TO/DATABASE_NAME.db TABLE_ID PATH_TO_FILE.txt
+registration.py add_context --db_path=PATH/TO/DATABASE_NAME.db TABLE_ID (PATH_TO_FOLDER/PATH_TO_FILE.txt)
 ```
 
 **Description**: Creates a context entry for the specified table.
@@ -107,7 +107,7 @@ registration.py add_context --db_path=../out/storage.db ../sample_data/5cq6-qygt
 ### Add Summary
 **Usage**: 
 ```shell
-registration.py add_summary --db_path=PATH/TO/DATABASE_NAME.db TABLE_ID PATH_TO_FILE.txt
+registration.py add_summary --db_path=PATH/TO/DATABASE_NAME.db TABLE_ID (PATH_TO_FOLDER/PATH_TO_FILE.txt)
 ```
 
 **Description**: Creates a context entry for the specified table.
