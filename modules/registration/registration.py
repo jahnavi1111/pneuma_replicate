@@ -159,16 +159,25 @@ class Registration:
             "message": f"Table with ID: {path} has been added to the database.",
         }
 
-    def read_table_folder(self, path: str, creator: str):
-        files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
-        for file in files:
-            print(f"Processing {file}...")
-            result = self.read_table_file(os.path.join(path, file), creator)
-            print(
-                f"Processing table {file} {'Succeeded' if result.get('success') else 'Failed'}: {result.get('message')}"
-            )
+    def read_table_folder(self, folder_path: str, creator: str):
+        print(f"Reading folder {folder_path}...")
+        paths = [os.path.join(folder_path, f) for f in os.listdir(folder_path)]
+        file_count = 0
+        for path in paths:
+            print(f"Processing {path}...")
 
-        return f"{len(files)} files in folder {path} has been processed."
+            # If the path is a folder, recursively read the folder.
+            if os.path.isdir(path):
+                print(self.read_table_folder(path, creator))
+                continue
+
+            result = self.read_table_file(path, creator)
+            print(
+                f"Processing table {path} {'Succeeded' if result.get('success') else 'Failed'}: {result.get('message')}"
+            )
+            file_count += 1
+
+        return f"{file_count} files in folder {folder_path} has been processed."
 
     def add_table(
         self,

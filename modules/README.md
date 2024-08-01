@@ -88,7 +88,7 @@ registration.py read_table --db_path=PATH/TO/DATABASE_NAME.db [OPTION]... (PATH_
 
 **Examples Usage**: 
 ```shell
-registration.py read_table --db_path=../out/storage.db ../sample_data/5cq6-qygt.csv david csv
+registration.py add_table --db_path=../out/storage.db ../sample_data/5cq6-qygt.csv david csv
 ```
 
 ### Add Context
