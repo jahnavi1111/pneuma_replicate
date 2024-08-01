@@ -5,6 +5,7 @@ from pathlib import Path
 
 import duckdb
 import fire
+import pandas as pd
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from utils.table_status import TableStatus
@@ -208,7 +209,11 @@ class Registration:
         else:
             return f"Invalid path: {path}"
 
-    def insert_metadata(self, metadata_type: str, payload: dict, table_id: str):
+    def insert_metadata(self, metadata_type: str, metadata_content: str, table_id: str):
+        payload = {
+            "payload": metadata_content.strip(),
+        }
+
         if metadata_type == "context":
             metadata_id = self.connection.sql(
                 f"""INSERT INTO table_contexts (table_id, context)
@@ -237,16 +242,21 @@ class Registration:
 
         if file_type == "txt":
             with open(metadata_path, "r") as f:
-                metadata = f.read()
+                metadata_content = f.read()
 
-            metadata_dict = {
-                "payload": metadata.strip(),
-            }
-
-            return self.insert_metadata(metadata_type, metadata_dict, table_id)
+            return self.insert_metadata(metadata_type, metadata_content, table_id)
         elif file_type == "csv":
-            # TODO: Implement CSV reading.
-            pass
+            metadata_df = pd.read_csv(metadata_path)
+            # iterate over rows with iterrows()
+            for index, row in metadata_df.iterrows():
+                table_id = row["table_id"]
+                metadata_type = row["metadata_type"]
+                metadata_content = row["value"]
+                print(self.insert_metadata(metadata_type, metadata_content, table_id))
+            return {
+                "success": True,
+                "message": f"{len(metadata_df)} metadata entries has been added.",
+            }
 
     def read_metadata_folder(
         self, metadata_path: str, metadata_type: str, table_id: str
@@ -272,7 +282,9 @@ class Registration:
 
         return f"{file_count} files in folder {metadata_path} has been processed."
 
-    def add_metadata(self, metadata_path: str, metadata_type: str, table_id: str):
+    def add_metadata(
+        self, metadata_path: str, metadata_type: str = "", table_id: str = ""
+    ):
         if os.path.isfile(metadata_path):
             return self.read_metadata_file(metadata_path, metadata_type, table_id)
         elif os.path.isdir(metadata_path):

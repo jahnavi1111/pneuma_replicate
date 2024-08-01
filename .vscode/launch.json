@@ -65,6 +65,16 @@
             "args": "add_metadata --db_path=../out/storage.db ../sample_data/summary/sample_summary.txt summary ../sample_data/csv/5cq6-qygt.csv",
         },
         {
+            "name": "Reg Metadata CSV Add",
+            "type": "debugpy",
+            "python": "${workspaceFolder}/modules/env/Scripts/python.exe",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/modules/registration",
+            "program": "registration.py",
+            "console": "integratedTerminal",
+            "args": "add_metadata --db_path=../out/storage.db ../sample_data/metadata.csv",
+        },
+        {
             "name": "Sum Summarize",
             "type": "debugpy",
             "python": "${workspaceFolder}/modules/env/Scripts/python.exe",
