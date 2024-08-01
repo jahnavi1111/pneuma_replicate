@@ -1,9 +1,9 @@
 # Optional (only if we need to choose among multiple GPUs)
 ###########################################################
-import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "7"
-import setproctitle
-setproctitle.setproctitle("python")
+# import os
+# os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+# import setproctitle
+# setproctitle.setproctitle("python")
 ###########################################################
 import pandas as pd
 import torch
@@ -31,7 +31,7 @@ Assume you are the creator of the dataset and have all the necessary information
 2. Relevance: The answer must directly provide the information requested in the question without any extraneous details."""
 
 
-pipe = initialize_pipeline("mistralai/Mistral-Nemo-Instruct-2407", torch.bfloat16)
+pipe = initialize_pipeline("meta-llama/Meta-Llama-3-8B-Instruct", torch.bfloat16)
 
 
 def generate_contexts(benchmark_name: str, data_src: str, generation_params={}):
@@ -55,7 +55,7 @@ def generate_contexts(benchmark_name: str, data_src: str, generation_params={}):
                 continue
 
             answer = prompt_pipeline(
-                pipe, conversation, context_length=128000, **generation_params
+                pipe, conversation, context_length=8192, top_p=None, temperature=None, **generation_params
             )[-1]["content"]
             row = pd.DataFrame(
                 {
@@ -69,8 +69,8 @@ def generate_contexts(benchmark_name: str, data_src: str, generation_params={}):
             benchmark.to_csv(benchmark_name, index=False)
 
 
-name = "contexts_chicago.csv"  # Adjust the contexts name
+name = "contexts_public.csv"  # Adjust the contexts name
 generate_contexts(
     name,
-    "pneuma_chicago_10K",  # Adjust data source path
+    "public_bi_benchmark",  # Adjust data source path
 )
