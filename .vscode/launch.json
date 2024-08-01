@@ -52,7 +52,7 @@
             "cwd": "${workspaceFolder}/modules/registration",
             "program": "registration.py",
             "console": "integratedTerminal",
-            "args": "add_metadata --db_path=../out/storage.db context ../sample_data/context/sample_context.txt ../sample_data/csv/5cq6-qygt.csv",
+            "args": "add_metadata --db_path=../out/storage.db ../sample_data/context/sample_context.txt context ../sample_data/csv/5cq6-qygt.csv",
         },
         {
             "name": "Reg Summary Add",
@@ -62,7 +62,7 @@
             "cwd": "${workspaceFolder}/modules/registration",
             "program": "registration.py",
             "console": "integratedTerminal",
-            "args": "add_metadata --db_path=../out/storage.db summary ../sample_data/summary/sample_summary.txt ../sample_data/csv/5cq6-qygt.csv",
+            "args": "add_metadata --db_path=../out/storage.db ../sample_data/summary/sample_summary.txt summary ../sample_data/csv/5cq6-qygt.csv",
         },
         {
             "name": "Sum Summarize",

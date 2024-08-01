@@ -94,14 +94,14 @@ registration.py add_table --db_path=../out/storage.db ../sample_data/5cq6-qygt.c
 ### Add Metadata
 **Usage**: 
 ```shell
-registration.py add_metadata --db_path=PATH/TO/DATABASE_NAME.db (context/summary) (PATH_TO_FOLDER/PATH_TO_FILE.txt) [TABLE_ID]
+registration.py add_metadata --db_path=PATH/TO/DATABASE_NAME.db (PATH_TO_FOLDER/PATH_TO_FILE.txt) (context/summary) [TABLE_ID]
 ```
 
 **Description**: Creates a context or summary entry for the specified table.
 
 **Example Usage**: 
 ```shell
-registration.py add_metadata --db_path=../out/storage.db context ../sample_data/context/sample_context.txt ../sample_data/csv/5cq6-qygt.csv"
+registration.py add_metadata --db_path=../out/storage.db ../sample_data/context/sample_context.txt context ../sample_data/csv/5cq6-qygt.csv
 ```
 
 ## Summarizer Module

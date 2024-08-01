@@ -224,7 +224,7 @@ class Registration:
 
         return f"{metadata_type.capitalize()} ID: {metadata_id}"
 
-    def read_metadata_file(self, metadata_type: str, metadata_path: str, table_id: str):
+    def read_metadata_file(self, metadata_path: str, metadata_type: str, table_id: str):
         # Index -1 to get the file extension, then slice [1:] to remove the dot.
         file_type = os.path.splitext(metadata_path)[-1][1:]
 
@@ -249,7 +249,7 @@ class Registration:
             pass
 
     def read_metadata_folder(
-        self, metadata_type: str, metadata_path: str, table_id: str
+        self, metadata_path: str, metadata_type: str, table_id: str
     ):
         print(f"Reading metadata folder {metadata_path}...")
         paths = [os.path.join(metadata_path, f) for f in os.listdir(metadata_path)]
@@ -259,10 +259,10 @@ class Registration:
 
             # If the path is a folder, recursively read the folder.
             if os.path.isdir(path):
-                print(self.read_metadata_folder(metadata_type, path, table_id))
+                print(self.read_metadata_folder(path, metadata_type, table_id))
                 continue
 
-            result = self.read_metadata_file(metadata_type, path, table_id)
+            result = self.read_metadata_file(path, metadata_type, table_id)
             print(
                 f"Processing metadata {path} "
                 f"{'Succeeded' if result.get('success') else 'Failed'}: "
@@ -272,11 +272,11 @@ class Registration:
 
         return f"{file_count} files in folder {metadata_path} has been processed."
 
-    def add_metadata(self, metadata_type: str, metadata_path: str, table_id: str):
+    def add_metadata(self, metadata_path: str, metadata_type: str, table_id: str):
         if os.path.isfile(metadata_path):
-            return self.read_metadata_file(metadata_type, metadata_path, table_id)
+            return self.read_metadata_file(metadata_path, metadata_type, table_id)
         elif os.path.isdir(metadata_path):
-            return self.read_metadata_folder(metadata_type, metadata_path, table_id)
+            return self.read_metadata_folder(metadata_path, metadata_type, table_id)
         else:
             return f"Invalid path: {metadata_path}"
 
