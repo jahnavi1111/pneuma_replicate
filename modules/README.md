@@ -62,10 +62,10 @@ registration.py setup --db_path=PATH/TO/DATABASE_NAME.db
 registration.py setup --db_path=../out/storage.db
 ```
 
-### Read Table
+### Add Table
 **Usage**: 
 ```shell
-registration.py read_table --db_path=PATH/TO/DATABASE_NAME.db [OPTION]... (PATH_TO_FOLDER/PATH_TO_FILE.(csv/parquet)) CREATOR_NAME
+registration.py add_table --db_path=PATH/TO/DATABASE_NAME.db [OPTION]... (PATH_TO_FOLDER/PATH_TO_FILE.(csv/parquet)) CREATOR_NAME
 ```
 
 **Description**: Reads a table, formatted in CSV or PARQUET, from the local filesystem or an online storage bucket. If a file in a storage bucket is public, it can be read like a local file. The path of the table will be used as the ID.
@@ -91,30 +91,17 @@ registration.py read_table --db_path=PATH/TO/DATABASE_NAME.db [OPTION]... (PATH_
 registration.py add_table --db_path=../out/storage.db ../sample_data/5cq6-qygt.csv david csv
 ```
 
-### Add Context
+### Add Metadata
 **Usage**: 
 ```shell
-registration.py add_context --db_path=PATH/TO/DATABASE_NAME.db TABLE_ID (PATH_TO_FOLDER/PATH_TO_FILE.txt)
+registration.py add_metadata --db_path=PATH/TO/DATABASE_NAME.db (context/summary) (PATH_TO_FOLDER/PATH_TO_FILE.txt) [TABLE_ID]
 ```
 
-**Description**: Creates a context entry for the specified table.
+**Description**: Creates a context or summary entry for the specified table.
 
 **Example Usage**: 
 ```shell
-registration.py add_context --db_path=../out/storage.db ../sample_data/5cq6-qygt.csv ../sample_data/sample_context.txt
-```
-
-### Add Summary
-**Usage**: 
-```shell
-registration.py add_summary --db_path=PATH/TO/DATABASE_NAME.db TABLE_ID (PATH_TO_FOLDER/PATH_TO_FILE.txt)
-```
-
-**Description**: Creates a context entry for the specified table.
-
-**Example Usage**: 
-```shell
-registration.py add_context --db_path=../out/storage.db ../sample_data/5cq6-qygt.csv ../sample_data/sample_summary.txt
+registration.py add_metadata --db_path=../out/storage.db context ../sample_data/context/sample_context.txt ../sample_data/csv/5cq6-qygt.csv"
 ```
 
 ## Summarizer Module

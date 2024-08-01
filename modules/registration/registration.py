@@ -173,7 +173,9 @@ class Registration:
 
             result = self.read_table_file(path, creator)
             print(
-                f"Processing table {path} {'Succeeded' if result.get('success') else 'Failed'}: {result.get('message')}"
+                f"Processing table {path} "
+                f"{'Succeeded' if result.get('success') else 'Failed'}: "
+                f"{result.get('message')}"
             )
             file_count += 1
 
@@ -206,67 +208,77 @@ class Registration:
         else:
             return f"Invalid path: {path}"
 
-    def read_context_file(self, table_id: str, context_path: str):
-        with open(context_path, "r") as f:
-            context = f.read()
+    def insert_metadata(self, metadata_type: str, payload: dict, table_id: str):
+        if metadata_type == "context":
+            metadata_id = self.connection.sql(
+                f"""INSERT INTO table_contexts (table_id, context)
+                VALUES ('{table_id}', '{json.dumps(payload)}')
+                RETURNING id"""
+            ).fetchone()[0]
+        elif metadata_type == "summary":
+            metadata_id = self.connection.sql(
+                f"""INSERT INTO table_summaries (table_id, summary)
+                VALUES ('{table_id}', '{json.dumps(payload)}')
+                RETURNING id"""
+            ).fetchone()[0]
 
-        context_dict = {
-            "payload": context.strip(),
-        }
+        return f"{metadata_type.capitalize()} ID: {metadata_id}"
 
-        context_id = self.connection.sql(
-            f"""INSERT INTO table_contexts (table_id, context)
-            VALUES ( '{table_id}', '{json.dumps(context_dict)}' )
-            RETURNING id"""
-        ).fetchone()[0]
+    def read_metadata_file(self, metadata_type: str, metadata_path: str, table_id: str):
+        # Index -1 to get the file extension, then slice [1:] to remove the dot.
+        file_type = os.path.splitext(metadata_path)[-1][1:]
 
-        return f"Context ID: {context_id}"
+        if file_type not in ["txt", "csv"]:
+            print("A", file_type)
+            return {
+                "success": False,
+                "message": "Invalid file type. Please use 'txt' or 'csv'.",
+            }
 
-    def read_context_folder(self, table_id, path: str):
-        files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
-        for file in files:
-            print(f"Processing {file}...")
-            self.add_context(table_id, os.path.join(path, file))
-        return f"{len(files)} files in folder {path} has been processed."
+        if file_type == "txt":
+            with open(metadata_path, "r") as f:
+                metadata = f.read()
 
-    def add_context(self, table_id: str, context_path: str):
-        if os.path.isfile(context_path):
-            return self.read_context_file(table_id, context_path)
-        elif os.path.isdir(context_path):
-            return self.read_context_folder(table_id, context_path)
+            metadata_dict = {
+                "payload": metadata.strip(),
+            }
+
+            return self.insert_metadata(metadata_type, metadata_dict, table_id)
+        elif file_type == "csv":
+            # TODO: Implement CSV reading.
+            pass
+
+    def read_metadata_folder(
+        self, metadata_type: str, metadata_path: str, table_id: str
+    ):
+        print(f"Reading metadata folder {metadata_path}...")
+        paths = [os.path.join(metadata_path, f) for f in os.listdir(metadata_path)]
+        file_count = 0
+        for path in paths:
+            print(f"Processing {path}...")
+
+            # If the path is a folder, recursively read the folder.
+            if os.path.isdir(path):
+                print(self.read_metadata_folder(metadata_type, path, table_id))
+                continue
+
+            result = self.read_metadata_file(metadata_type, path, table_id)
+            print(
+                f"Processing metadata {path} "
+                f"{'Succeeded' if result.get('success') else 'Failed'}: "
+                f"{result.get('message')}"
+            )
+            file_count += 1
+
+        return f"{file_count} files in folder {metadata_path} has been processed."
+
+    def add_metadata(self, metadata_type: str, metadata_path: str, table_id: str):
+        if os.path.isfile(metadata_path):
+            return self.read_metadata_file(metadata_type, metadata_path, table_id)
+        elif os.path.isdir(metadata_path):
+            return self.read_metadata_folder(metadata_type, metadata_path, table_id)
         else:
-            return f"Invalid path: {context_path}"
-
-    def read_summary_file(self, table_id: str, summary_path: str):
-        with open(summary_path, "r") as f:
-            summary = f.read()
-
-        summary_dict = {
-            "payload": summary.strip(),
-        }
-
-        summary_id = self.connection.sql(
-            f"""INSERT INTO table_summaries (table_id, summary)
-            VALUES ( '{table_id}', '{json.dumps(summary_dict)}' )
-            RETURNING id"""
-        ).fetchone()[0]
-
-        return f"Summary ID: {summary_id}"
-
-    def add_summary_folder(self, table_id, path: str):
-        files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
-        for file in files:
-            print(f"Processing {file}...")
-            self.add_summary(table_id, os.path.join(path, file))
-        return f"{len(files)} files in folder {path} has been processed."
-
-    def add_summary(self, table_id: str, summary_path: str):
-        if os.path.isfile(summary_path):
-            return self.read_summary_file(table_id, summary_path)
-        elif os.path.isdir(summary_path):
-            return self.add_summary_folder(table_id, summary_path)
-        else:
-            return f"Invalid path: {summary_path}"
+            return f"Invalid path: {metadata_path}"
 
 
 if __name__ == "__main__":
