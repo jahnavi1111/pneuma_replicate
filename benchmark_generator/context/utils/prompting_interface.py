@@ -5,6 +5,17 @@ import logging
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger("prompting_interface.py")
 
+def truncate_text(tokenizer, conversation, context_length: int, max_new_tokens: int):
+    base = [{"role": "user", "content": ""}]
+    base_len = len(
+        tokenizer.apply_chat_template(
+            base, tokenize=True, add_generation_prompt=True
+        )
+    )
+    max_tokens = context_length - base_len - max_new_tokens
+    tokens = tokenizer.tokenize(conversation[0]["content"])[:max_tokens]
+    return tokenizer.convert_tokens_to_string(tokens)
+
 
 def is_within_context_length(tokenizer, conversation, context_length: int):
     """
@@ -68,15 +79,12 @@ def prompt_pipeline(
     }
     validate_generation_configs(generation_configs)
     try:
-        if is_within_context_length(pipe.tokenizer, conversation, context_length):
-            set_seed(42)  # Enhance reproducibility for when using sampling
-            conversation = pipe(conversation, **generation_configs)[0]["generated_text"]
-            return conversation
-        else:
-            logger.warning(
-                "The conversation is more than what the model can handle. Skip processing."
-            )
-            return [{"role": "user", "content": ""}]
+        if not is_within_context_length(pipe.tokenizer, conversation, context_length):
+            truncated_prompt = truncate_text(pipe.tokenizer, conversation, context_length, max_new_tokens)
+            conversation[0]["content"] = truncated_prompt
+        set_seed(42)  # Enhance reproducibility for when using sampling
+        conversation = pipe(conversation, truncation=True, **generation_configs)[0]["generated_text"]
+        return conversation
     except:
         logger.warning(
             "Something wrong is happening. Skip processing."

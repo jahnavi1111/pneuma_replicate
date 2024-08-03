@@ -1,7 +1,7 @@
 from transformers import pipeline
 
 
-def initialize_pipeline(model_path: str, torch_dtype, hf_token=""):
+def initialize_pipeline(model_path: str, torch_dtype, context_length=8192, hf_token=""):
     """
     Initialize a text generation pipeline
 
@@ -15,6 +15,7 @@ def initialize_pipeline(model_path: str, torch_dtype, hf_token=""):
     pipe = pipeline(
         "text-generation", model=model_path, device_map="auto", torch_dtype=torch_dtype, token=hf_token
     )
+    pipe.tokenizer.model_max_length = context_length
     return pipe
 
 
