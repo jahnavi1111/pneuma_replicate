@@ -1,10 +1,8 @@
 # Select GPU (if necessary)
-import os
-
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-import setproctitle
-
-setproctitle.setproctitle("python")
+# import os
+# os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+# import setproctitle
+# setproctitle.setproctitle("python")
 
 import pandas as pd
 import torch
@@ -16,17 +14,15 @@ from tqdm import tqdm
 from benchmark_generator.context.utils.pipeline_initializer import initialize_pipeline
 from benchmark_generator.context.utils.prompting_interface import prompt_pipeline
 
-pipe = initialize_pipeline("meta-llama/Meta-Llama-3-8B-Instruct", torch.bfloat16, "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")
+pipe = initialize_pipeline("meta-llama/Meta-Llama-3-8B-Instruct", torch.bfloat16)
 
 
 def get_col_description_prompt(columns: str, column: str):
-    prompt = f"""A dataset has the following columns:
+    return f"""A table has the following columns:
 /*
 {columns}
 */
 Describe briefly what the {column} column represents. If not possible, simply state "No description.\""""
-
-    return prompt
 
 
 def generate_descriptions(src_path: str, descriptions_path: str):
@@ -40,12 +36,11 @@ def generate_descriptions(src_path: str, descriptions_path: str):
         df = pd.read_csv(f"{src_path}/{table}.csv")
         cols = df.columns
         for col in cols:
-            sample_size = min(len(df[col].dropna()), 5)
-            values = df[col].dropna().sample(sample_size, random_state=42).to_list()
             prompt = get_col_description_prompt(" | ".join(cols), col)
+            conversation = [{"role": "user", "content": prompt}]
             description = prompt_pipeline(
                 pipe,
-                [{"role": "user", "content": prompt}],
+                conversation,
                 temperature=None,
                 top_p=None,
                 max_new_tokens=400,
@@ -61,6 +56,6 @@ def generate_descriptions(src_path: str, descriptions_path: str):
 
 
 # Adjust paths
-src_path = "../data_src/tables/public_bi_benchmark"
+src_path = "public_bi_benchmark"
 descriptions_path = "public_cols"
 generate_descriptions(src_path, descriptions_path)
