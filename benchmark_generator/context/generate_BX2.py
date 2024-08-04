@@ -1,9 +1,9 @@
 # Optional (only if we need to choose among multiple GPUs)
 ###########################################################
-# import os
-# os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-# import setproctitle
-# setproctitle.setproctitle("python")
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+import setproctitle
+setproctitle.setproctitle("python")
 ###########################################################
 import pandas as pd
 import torch

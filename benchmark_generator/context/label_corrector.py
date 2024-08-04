@@ -1,9 +1,9 @@
 # Optional (only if we need to choose among multiple GPUs)
 ###########################################################
-# import os
-# os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-# import setproctitle
-# setproctitle.setproctitle("python")
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "7"
+import setproctitle
+setproctitle.setproctitle("python")
 ###########################################################
 import pandas as pd
 import torch
@@ -20,11 +20,12 @@ def get_prompt(context: str, question: str):
 
 Question:"{question}"
 
-The context describes a specific dataset that we have access to. Does this dataset answer the question? Begin your response with yes/no."""
+The context describes a specific table that we have access to. Does this table answer the question? Begin your response with yes/no."""
 
-bx1 = pd.read_csv("BX1_public.csv")  # Adjust BX1 name
-bx1_corrected_name = "BX1_public_corrected.csv"
-contexts = pd.read_csv("contexts_public.csv")  # Adjust contexts name
+bx1_name = "BX1_chicago"  # Adjust BX1 name
+bx1 = pd.read_csv(f"{bx1_name}.csv")
+bx1_corrected_name = f"{bx1_name}_corrected.csv"
+contexts = pd.read_csv("contexts_chicago.csv")  # Adjust contexts name
 
 questions_to_get_contexts = []
 for i in range(len(bx1)):

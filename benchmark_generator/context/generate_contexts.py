@@ -1,9 +1,9 @@
 # Optional (only if we need to choose among multiple GPUs)
 ###########################################################
-# import os
-# os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-# import setproctitle
-# setproctitle.setproctitle("python")
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "7"
+import setproctitle
+setproctitle.setproctitle("python")
 ###########################################################
 import pandas as pd
 import torch
@@ -17,16 +17,16 @@ with open("questions.txt") as file:
     questions = [question.strip() for question in file.readlines()]
 
 
-def get_generative_prompt(dataset: str, question: str, num_of_rows: int):
-    return f"""Given a dataset, consisting of {num_of_rows} rows, with the following columns:
-*/
-{dataset}
+def get_generative_prompt(table: str, question: str, num_of_rows: int):
+    return f"""Given a table with the following sample rows (out of {num_of_rows} rows):
+/*
+{table}
 */
 and this question:
 /*
 {question}
 */
-Assume you are the creator of the dataset and have all the necessary information to respond to the question. Generate a concise answer to the question based on the dataset, satisfying the following criteria:
+Assume you are the creator of the table and have all the necessary information to respond to the question. Generate a concise answer to the question based on the table, satisfying the following criteria:
 1. Completeness: The answer must definitively and comprehensively address all parts of the question.
 2. Relevance: The answer must directly provide the information requested in the question without any extraneous details."""
 
@@ -69,8 +69,8 @@ def generate_contexts(benchmark_name: str, data_src: str, generation_params={}):
             benchmark.to_csv(benchmark_name, index=False)
 
 
-name = "contexts_public.csv"  # Adjust the contexts name
+name = "contexts_chembl.csv"  # Adjust the contexts name
 generate_contexts(
     name,
-    "public_bi_benchmark",  # Adjust data source path
+    "pneuma_chembl_10K",  # Adjust data source path
 )
