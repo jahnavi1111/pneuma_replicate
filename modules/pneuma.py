@@ -1,10 +1,7 @@
-import sys
-
 import duckdb
 from index_generator.index_generator import IndexGenerator
 from query.query import Query
 from registration.registration import Registration
-
 from summarizer.summarizer import Summarizer
 
 
@@ -21,7 +18,7 @@ class Pneuma:
 
         self.connection = duckdb.connect(self.db_path)
 
-        self.registration.setup()
+        print(self.registration.setup())
 
     def add_table(
         self,
@@ -37,10 +34,10 @@ class Pneuma:
         )
 
     def add_context(self, table_id: str, context_path: str):
-        return self.registration.add_context(table_id, context_path)
+        return self.registration.add_metadata(context_path, "context", table_id)
 
     def add_summary(self, table_id: str, summary_path: str):
-        return self.registration.add_summary(table_id, summary_path)
+        return self.registration.add_metadata(summary_path, "summary", table_id)
 
     def summarize(self, table_id: str = ""):
         return self.summarizer.summarize(table_id)
