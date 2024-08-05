@@ -1,7 +1,13 @@
+import sys
+from pathlib import Path
+
 import chromadb
 import duckdb
 import fire
 from sentence_transformers import SentenceTransformer
+
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+from utils.response import Response, ResponseStatus
 
 
 class Query:
@@ -30,7 +36,11 @@ class Query:
             query_embeddings=[query_embedding], n_results=k
         )
 
-        return response
+        return Response(
+            status=ResponseStatus.SUCCESS,
+            message=f"Query successful for index {index_name}.",
+            data=response,
+        ).to_json()
 
 
 if __name__ == "__main__":

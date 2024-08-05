@@ -1,4 +1,6 @@
 import json
+import sys
+from pathlib import Path
 
 import chromadb
 import duckdb
@@ -6,6 +8,9 @@ import fire
 import pandas as pd
 from chromadb.db.base import UniqueConstraintError
 from sentence_transformers import SentenceTransformer
+
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+from utils.response import Response, ResponseStatus
 
 
 class IndexGenerator:
@@ -87,7 +92,10 @@ class IndexGenerator:
             SELECT * FROM insert_df""",
         )
 
-        return f"Index named {index_name} with id {index_id} has been created with {len(insert_df)} tables."
+        return Response(
+            status=ResponseStatus.SUCCESS,
+            message=f"Index named {index_name} with id {index_id} has been created with {len(insert_df)} tables.",
+        ).to_json()
 
 
 if __name__ == "__main__":
