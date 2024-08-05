@@ -89,13 +89,13 @@ class Registration:
                 """
             )
             return Response(
-                ResponseStatus.SUCCESS,
-                "Database Initialized.",
+                status=ResponseStatus.SUCCESS,
+                message="Database Initialized.",
             ).to_json()
         except Exception as e:
             return Response(
-                ResponseStatus.ERROR,
-                f"Error initializing database: {e}",
+                status=ResponseStatus.ERROR,
+                message=f"Error initializing database: {e}",
             ).to_json()
 
     def add_table(
@@ -124,8 +124,8 @@ class Registration:
             return self.__read_table_folder(path, creator).to_json()
         else:
             return Response(
-                ResponseStatus.ERROR,
-                f"Invalid path: {path}",
+                status=ResponseStatus.ERROR,
+                message=f"Invalid path: {path}",
             ).to_json()
 
     def add_metadata(
@@ -141,8 +141,8 @@ class Registration:
             ).to_json()
         else:
             return Response(
-                ResponseStatus.ERROR,
-                f"Invalid path: {metadata_path}",
+                status=ResponseStatus.ERROR,
+                message=f"Invalid path: {metadata_path}",
             ).to_json()
 
     def __read_table_file(
@@ -155,8 +155,8 @@ class Registration:
 
         if file_type not in ["csv", "parquet"]:
             return Response(
-                ResponseStatus.ERROR,
-                "Invalid file type. Please use 'csv' or 'parquet'.",
+                status=ResponseStatus.ERROR,
+                message="Invalid file type. Please use 'csv' or 'parquet'.",
             )
 
         if file_type == "csv":
@@ -197,8 +197,8 @@ class Registration:
             f"SELECT * FROM table_status WHERE hash = '{table_hash}'"
         ).fetchone():
             return Response(
-                ResponseStatus.ERROR,
-                "This table already exists in the database.",
+                status=ResponseStatus.ERROR,
+                message="This table already exists in the database.",
             )
 
         # The double quote is necessary to consider the path, which may contain
@@ -212,8 +212,8 @@ class Registration:
             VALUES ('{path}', '{name}', '{TableStatus.REGISTERED}', '{creator}', '{table_hash}')"""
         )
         return Response(
-            ResponseStatus.SUCCESS,
-            f"Table with ID: {path} has been added to the database.",
+            status=ResponseStatus.SUCCESS,
+            message=f"Table with ID: {path} has been added to the database.",
         )
 
     def __read_table_folder(self, folder_path: str, creator: str):
@@ -235,8 +235,8 @@ class Registration:
             file_count += 1
 
         return Response(
-            ResponseStatus.SUCCESS,
-            f"{file_count} files in folder {folder_path} has been processed.",
+            status=ResponseStatus.SUCCESS,
+            message=f"{file_count} files in folder {folder_path} has been processed.",
         )
 
     def __insert_metadata(
@@ -260,7 +260,8 @@ class Registration:
             ).fetchone()[0]
 
         return Response(
-            ResponseStatus.SUCCESS, f"{metadata_type.capitalize()} ID: {metadata_id}"
+            status=ResponseStatus.SUCCESS,
+            message=f"{metadata_type.capitalize()} ID: {metadata_id}",
         )
 
     def __read_metadata_file(
@@ -271,8 +272,8 @@ class Registration:
 
         if file_type not in ["txt", "csv"]:
             return Response(
-                ResponseStatus.ERROR,
-                "Invalid file type. Please use 'txt' or 'csv'.",
+                status=ResponseStatus.ERROR,
+                message="Invalid file type. Please use 'txt' or 'csv'.",
             )
 
         if file_type == "txt":
@@ -293,8 +294,8 @@ class Registration:
                     ).message
                 )
             return Response(
-                ResponseStatus.SUCCESS,
-                f"{len(metadata_df)} metadata entries has been added.",
+                status=ResponseStatus.SUCCESS,
+                message=f"{len(metadata_df)} metadata entries has been added.",
             )
 
     def __read_metadata_folder(
@@ -320,8 +321,8 @@ class Registration:
             file_count += 1
 
         return Response(
-            ResponseStatus.SUCCESS,
-            f"{file_count} files in folder {metadata_path} has been processed.",
+            status=ResponseStatus.SUCCESS,
+            message=f"{file_count} files in folder {metadata_path} has been processed.",
         )
 
 

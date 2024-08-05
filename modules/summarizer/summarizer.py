@@ -68,8 +68,8 @@ class Summarizer:
         self.connection.sql(f'DROP TABLE "{table_id}"')
 
         return Response(
-            ResponseStatus.SUCCESS,
-            f"Total of {len(insert_df)} summaries has been added "
+            status=ResponseStatus.SUCCESS,
+            message=f"Total of {len(insert_df)} summaries has been added "
             f"with IDs: {', '.join([str(i[0]) for i in summary_ids])}.\n"
             f"Table with ID: {table_id} has been removed from the database.",
         ).to_json()
