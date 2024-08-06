@@ -28,9 +28,19 @@ class IndexGenerator:
         self.index_location = index_location
         self.chroma_client = chromadb.PersistentClient(self.index_location)
 
-    def generate_index(self, index_name: str, table_ids: list | tuple):
-        if isinstance(table_ids, str):
+    def generate_index(self, index_name: str, table_ids: list | tuple = None):
+        if table_ids is None:
+            print("No table ids provided. Generating index for all tables...")
+            table_ids = [
+                entry[0]
+                for entry in self.connection.sql(
+                    "SELECT id FROM table_status"
+                ).fetchall()
+            ]
+        elif isinstance(table_ids, str):
             table_ids = (table_ids,)
+
+        print(f"Generating index for {len(table_ids)} tables...")
 
         documents = []
         embeddings = []
@@ -38,6 +48,7 @@ class IndexGenerator:
         ids = []
 
         for table_id in table_ids:
+            print(f"Processing table {table_id}...")
             contexts = self.connection.sql(
                 f"""SELECT id, context FROM table_contexts
                 WHERE table_id='{table_id}'"""
@@ -47,7 +58,6 @@ class IndexGenerator:
                 f"""SELECT id, summary FROM table_summaries
                 WHERE table_id='{table_id}'"""
             ).fetchall()
-
             for entry in contexts + summaries:
                 entry_id = entry[0]
                 content = json.loads(entry[1])
@@ -60,12 +70,21 @@ class IndexGenerator:
                 metadatas.append({"table": table_id})
                 ids.append(str(entry_id))
 
+        if len(documents) == 0:
+            return Response(
+                status=ResponseStatus.ERROR,
+                message="No context and summary entries found for the given table ids.",
+            ).to_json()
+
         try:
             chroma_collection = self.chroma_client.create_collection(
                 name=index_name, metadata={"hnsw:space": "cosine"}
             )
         except UniqueConstraintError:
-            return f"Index with name {index_name} already exists."
+            return Response(
+                status=ResponseStatus.ERROR,
+                message=f"Index named {index_name} already exists.",
+            ).to_json()
 
         chroma_collection.add(
             documents=documents, embeddings=embeddings, metadatas=metadatas, ids=ids

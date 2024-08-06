@@ -85,6 +85,16 @@
             "args": "summarize --db_path=../out/storage.db ../sample_data/csv/5cq6-qygt.csv",
         },
         {
+            "name": "Sum Summarize All",
+            "type": "debugpy",
+            "python": "${workspaceFolder}/modules/env/Scripts/python.exe",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/modules/summarizer",
+            "program": "summarizer.py",
+            "console": "integratedTerminal",
+            "args": "summarize --db_path=../out/storage.db",
+        },
+        {
             "name": "Idx Generate",
             "type": "debugpy",
             "python": "${workspaceFolder}/modules/env/Scripts/python.exe",
@@ -93,6 +103,16 @@
             "program": "index_generator.py",
             "console": "integratedTerminal",
             "args": "generate_index --db_path=../out/storage.db sample_index '../sample_data/csv/5cq6-qygt.csv','../sample_data/csv/5n77-2d6a.csv'",
+        },
+        {
+            "name": "Idx Generate All",
+            "type": "debugpy",
+            "python": "${workspaceFolder}/modules/env/Scripts/python.exe",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/modules/index_generator",
+            "program": "index_generator.py",
+            "console": "integratedTerminal",
+            "args": "generate_index --db_path=../out/storage.db complete_index",
         },
         {
             "name": "Qry Query",
