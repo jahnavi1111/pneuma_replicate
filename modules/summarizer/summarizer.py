@@ -34,7 +34,58 @@ class Summarizer:
         # Use small model for local testing
         self.pipe = initialize_pipeline("TinyLlama/TinyLlama_v1.1", torch.bfloat16)
 
-    def summarize(self, table_id: str):
+    def summarize(self, table_id: str = None):
+        if table_id is None or table_id == "":
+            print("Generating summaries for all unsummarized tables...")
+            table_ids = [
+                entry[0]
+                for entry in self.connection.sql(
+                    f"""SELECT id FROM table_status
+                WHERE status = '{TableStatus.REGISTERED}'"""
+                ).fetchall()
+            ]
+            print(f"Found {len(table_ids)} unsummarized tables.")
+
+            all_summary_ids = []
+            for table_id in table_ids:
+                print(f"Summarizing table with ID: {table_id}")
+                table_df = self.connection.sql(f"SELECT * FROM '{table_id}'").to_df()
+
+                # summaries = self.produce_summaries(table_id)
+                summaries = [
+                    "This summary is 'generated' one",
+                    "This is the second 'generated' summary",
+                ]
+
+                insert_df = pd.DataFrame.from_dict(
+                    {
+                        "table_id": [table_id] * len(summaries),
+                        "summary": [
+                            json.dumps({"payload": summary.strip()})
+                            for summary in summaries
+                        ],
+                    }
+                )
+
+                summary_ids = self.connection.sql(
+                    """INSERT INTO table_summaries (table_id, summary)
+                    SELECT * FROM insert_df
+                    RETURNING id"""
+                ).fetchall()
+
+                self.connection.sql(
+                    f"""UPDATE table_status
+                    SET status = '{TableStatus.SUMMARIZED}'
+                    WHERE id = '{table_id}'"""
+                )
+                all_summary_ids.extend(summary_ids)
+
+            return Response(
+                status=ResponseStatus.SUCCESS,
+                message=f"Total of {len(all_summary_ids)} summaries has been added "
+                f"with IDs: {', '.join([str(i[0]) for i in all_summary_ids])}.\n",
+            ).to_json()
+
         # get the table as df
         table_df = self.connection.sql(f"SELECT * FROM '{table_id}'").to_df()
 
@@ -65,13 +116,10 @@ class Summarizer:
             WHERE id = '{table_id}'"""
         )
 
-        self.connection.sql(f'DROP TABLE "{table_id}"')
-
         return Response(
             status=ResponseStatus.SUCCESS,
             message=f"Total of {len(insert_df)} summaries has been added "
-            f"with IDs: {', '.join([str(i[0]) for i in summary_ids])}.\n"
-            f"Table with ID: {table_id} has been removed from the database.",
+            f"with IDs: {', '.join([str(i[0]) for i in summary_ids])}.\n",
         ).to_json()
 
     def produce_summaries(
