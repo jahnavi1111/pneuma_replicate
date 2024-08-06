@@ -42,6 +42,9 @@ class Pneuma:
     def summarize(self, table_id: str = ""):
         return self.summarizer.summarize(table_id)
 
+    def purge_tables(self):
+        return self.summarizer.purge_tables()
+
     def generate_index(self, index_name: str, table_ids: list | tuple):
         return self.index_generator.generate_index(index_name, table_ids)
 

@@ -95,6 +95,16 @@
             "args": "summarize --db_path=../out/storage.db",
         },
         {
+            "name": "Sum Purge Tables",
+            "type": "debugpy",
+            "python": "${workspaceFolder}/modules/env/Scripts/python.exe",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/modules/summarizer",
+            "program": "summarizer.py",
+            "console": "integratedTerminal",
+            "args": "purge_tables --db_path=../out/storage.db",
+        },
+        {
             "name": "Idx Generate",
             "type": "debugpy",
             "python": "${workspaceFolder}/modules/env/Scripts/python.exe",

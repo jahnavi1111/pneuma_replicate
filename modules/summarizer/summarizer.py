@@ -59,6 +59,29 @@ class Summarizer:
             f"with IDs: {', '.join([str(i[0]) for i in all_summary_ids])}.\n",
         ).to_json()
 
+    def purge_tables(self):
+        # drop summarized tables
+        summarized_table_ids = [
+            entry[0]
+            for entry in self.connection.sql(
+                f"SELECT id FROM table_status WHERE status = '{TableStatus.SUMMARIZED}'"
+            ).fetchall()
+        ]
+
+        for table_id in summarized_table_ids:
+            print(f"Dropping table with ID: {table_id}")
+            self.connection.sql(f'DROP TABLE "{table_id}"')
+            self.connection.sql(
+                f"""UPDATE table_status
+                SET status = '{TableStatus.DELETED}'
+                WHERE id = '{table_id}'"""
+            )
+
+        return Response(
+            status=ResponseStatus.SUCCESS,
+            message=f"Total of {len(summarized_table_ids)} tables have been purged.\n",
+        ).to_json()
+
     def __summarize_table_by_id(self, table_id: str):
         status = self.connection.sql(
             f"SELECT status FROM table_status WHERE id = '{table_id}'"
