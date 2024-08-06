@@ -41,52 +41,32 @@ class Summarizer:
                 entry[0]
                 for entry in self.connection.sql(
                     f"""SELECT id FROM table_status
-                WHERE status = '{TableStatus.REGISTERED}'"""
+                    WHERE status = '{TableStatus.REGISTERED}'"""
                 ).fetchall()
             ]
             print(f"Found {len(table_ids)} unsummarized tables.")
+        else:
+            table_ids = [table_id]
 
-            all_summary_ids = []
-            for table_id in table_ids:
-                print(f"Summarizing table with ID: {table_id}")
-                table_df = self.connection.sql(f"SELECT * FROM '{table_id}'").to_df()
+        all_summary_ids = []
+        for table_id in table_ids:
+            print(f"Summarizing table with ID: {table_id}")
+            all_summary_ids.extend(self.__summarize_table_by_id(table_id))
 
-                # summaries = self.produce_summaries(table_id)
-                summaries = [
-                    "This summary is 'generated' one",
-                    "This is the second 'generated' summary",
-                ]
+        return Response(
+            status=ResponseStatus.SUCCESS,
+            message=f"Total of {len(all_summary_ids)} summaries has been added "
+            f"with IDs: {', '.join([str(i[0]) for i in all_summary_ids])}.\n",
+        ).to_json()
 
-                insert_df = pd.DataFrame.from_dict(
-                    {
-                        "table_id": [table_id] * len(summaries),
-                        "summary": [
-                            json.dumps({"payload": summary.strip()})
-                            for summary in summaries
-                        ],
-                    }
-                )
+    def __summarize_table_by_id(self, table_id: str):
+        status = self.connection.sql(
+            f"SELECT status FROM table_status WHERE id = '{table_id}'"
+        ).fetchone()[0]
+        if status == str(TableStatus.SUMMARIZED) or status == str(TableStatus.DELETED):
+            print(f"Table with ID {table_id} has already been summarized.")
+            return []
 
-                summary_ids = self.connection.sql(
-                    """INSERT INTO table_summaries (table_id, summary)
-                    SELECT * FROM insert_df
-                    RETURNING id"""
-                ).fetchall()
-
-                self.connection.sql(
-                    f"""UPDATE table_status
-                    SET status = '{TableStatus.SUMMARIZED}'
-                    WHERE id = '{table_id}'"""
-                )
-                all_summary_ids.extend(summary_ids)
-
-            return Response(
-                status=ResponseStatus.SUCCESS,
-                message=f"Total of {len(all_summary_ids)} summaries has been added "
-                f"with IDs: {', '.join([str(i[0]) for i in all_summary_ids])}.\n",
-            ).to_json()
-
-        # get the table as df
         table_df = self.connection.sql(f"SELECT * FROM '{table_id}'").to_df()
 
         # summaries = self.produce_summaries(table_df)
@@ -116,11 +96,7 @@ class Summarizer:
             WHERE id = '{table_id}'"""
         )
 
-        return Response(
-            status=ResponseStatus.SUCCESS,
-            message=f"Total of {len(insert_df)} summaries has been added "
-            f"with IDs: {', '.join([str(i[0]) for i in summary_ids])}.\n",
-        ).to_json()
+        return summary_ids
 
     def produce_summaries(
         self,
