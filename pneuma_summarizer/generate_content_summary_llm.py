@@ -1,12 +1,8 @@
-# Select GPU (if necessary)
-# import os
-# os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-# import setproctitle
-# setproctitle.setproctitle("python")
-
+import os
+import sys
+import json
 import pandas as pd
 import torch
-import sys
 
 sys.path.append("..")
 
@@ -14,7 +10,19 @@ from tqdm import tqdm
 from benchmark_generator.context.utils.pipeline_initializer import initialize_pipeline
 from benchmark_generator.context.utils.prompting_interface import prompt_pipeline
 
+# Select GPU (if necessary)
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+import setproctitle
+setproctitle.setproctitle("python")
+
 pipe = initialize_pipeline("meta-llama/Meta-Llama-3-8B-Instruct", torch.bfloat16)
+
+
+def write_jsonl(data: list[dict[str, str]], file_path: str):
+    with open(file_path, "w", encoding="utf-8") as file:
+        for item in data:
+            file.write(json.dumps(item))
+            file.write("\n")
 
 
 def get_col_description_prompt(columns: str, column: str):
@@ -26,9 +34,8 @@ Describe briefly what the {column} column represents. If not possible, simply st
 
 
 def generate_descriptions(src_path: str, descriptions_path: str):
-    tables = [file[:-4] for file in os.listdir(src_path)]
-    tables.sort()
-    cols_descriptions = pd.DataFrame(columns=["table", "description"])
+    tables = sorted([file[:-4] for file in os.listdir(src_path)])
+    summaries: list[dict[str, str]] = []
 
     bar = tqdm(tables)
     for table in bar:
@@ -37,25 +44,23 @@ def generate_descriptions(src_path: str, descriptions_path: str):
         cols = df.columns
         for col in cols:
             prompt = get_col_description_prompt(" | ".join(cols), col)
-            conversation = [{"role": "user", "content": prompt}]
             description = prompt_pipeline(
                 pipe,
-                conversation,
+                [[{"role": "user", "content": prompt}]],
                 temperature=None,
                 top_p=None,
                 max_new_tokens=400,
-            )[-1]["content"]
+            )[0][-1]["content"]
 
             new_row = {
                 "table": table,
-                "description": f"{col}: {description}",
+                "summary": f"{col}: {description}",
             }
-
-            cols_descriptions = cols_descriptions._append(new_row, ignore_index=True)
-            cols_descriptions.to_csv(f"{descriptions_path}.csv", index=False)
+            summaries.append(new_row)
+            write_jsonl(summaries, f"{descriptions_path}.jsonl")
 
 
 # Adjust paths
-src_path = "public_bi_benchmark"
-descriptions_path = "public_cols"
+src_path = "../data_src/tables/pneuma_public_bi"
+descriptions_path = "public_narrations"
 generate_descriptions(src_path, descriptions_path)
