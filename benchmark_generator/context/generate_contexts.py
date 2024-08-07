@@ -56,7 +56,7 @@ def generate_contexts(benchmark_name: str, data_src: str, generation_params={}):
 
             answer = prompt_pipeline(
                 pipe, conversation, context_length=8192, top_p=None, temperature=None, **generation_params
-            )[-1]["content"]
+            )[0][-1]["content"]
             row = pd.DataFrame(
                 {
                     "id": [f"{csv_file_name[:-4]}_{i}"],

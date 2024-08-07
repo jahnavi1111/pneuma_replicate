@@ -49,7 +49,7 @@ for i in tqdm(range(len(context_sources))):
         conversation,
         temperature=None,
         top_p=None
-    )[-1]["content"].split("Question: ")[-1]
+    )[0][-1]["content"].split("Question: ")[-1]
     new_row = pd.DataFrame(
         {"context_id": [context_id], "question": [model_output], "answer_tables": [[table]]}
     )

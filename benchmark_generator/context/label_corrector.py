@@ -60,7 +60,7 @@ for i in tqdm(range(len(bx1))):
         conversation = [{"role": "user", "content": prompt}]
         model_output = prompt_pipeline(
             pipe, conversation, max_new_tokens=4, temperature=None, top_p=None
-        )[-1]["content"]
+        )[0][-1]["content"]
         if model_output.strip().lower().startswith("yes") or model_output.strip().lower().startswith("**yes"):
             answer_tables.append(context_table)
 

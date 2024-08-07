@@ -39,7 +39,7 @@ for i in tqdm(range(len(bx1))):
         conversation,
         temperature=None,
         top_p=None
-    )[-1]["content"].split("Question: ")[-1]
+    )[0][-1]["content"].split("Question: ")[-1]
     new_row = pd.DataFrame(
         {
             "context_id": [context_id],
