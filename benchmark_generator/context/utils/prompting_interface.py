@@ -131,12 +131,14 @@ def prompt_pipeline(
             conversation, truncation=True, batch_size=batch_size, **generation_configs
         )
         conversations = []
+        if isinstance(answers[0], dict):
+            answers = [answers]
         for answer in answers:
             conversations.append(answer[0]["generated_text"])
         return conversations
     except Exception as error:
         logger.warning(error)
-        return [{"role": "user", "content": ""}]
+        return [[{"role": "user", "content": ""}]]
 
 
 if __name__ == "__main__":
