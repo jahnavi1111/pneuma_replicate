@@ -51,6 +51,9 @@ class Pneuma:
     def query_index(self, index_name: str, query: str, k: int = 10):
         return self.query.query(index_name, query, k)
 
+    def sanity_check(self):
+        return "This works!"
+
 
 def main():
     pneuma = Pneuma()

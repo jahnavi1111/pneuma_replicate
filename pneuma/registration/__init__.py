@@ -1,1 +1,1 @@
-from registration import Registration
+from .registration import Registration

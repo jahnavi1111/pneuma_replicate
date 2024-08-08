@@ -1,1 +1,1 @@
-from index_generator import IndexGenerator
+from .index_generator import IndexGenerator
