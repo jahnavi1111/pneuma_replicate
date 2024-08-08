@@ -1,4 +1,5 @@
 import duckdb
+import fire
 from index_generator.index_generator import IndexGenerator
 from query.query import Query
 from registration.registration import Registration
@@ -56,8 +57,8 @@ class Pneuma:
 
 
 def main():
-    pneuma = Pneuma()
-    print("Hello world")
+    print("Hello From Pneuma Main")
+    fire.Fire(Pneuma)
 
 
 if __name__ == "__main__":

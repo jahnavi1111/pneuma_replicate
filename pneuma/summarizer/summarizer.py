@@ -12,10 +12,8 @@ import torch
 # This is needed when importing this module from pneuma.py in a directory above
 sys.path.append("../")
 
-sys.path.append("../..")
-# Repackage this when the module is ready
-from benchmark_generator.context.utils.pipeline_initializer import initialize_pipeline
-from benchmark_generator.context.utils.prompting_interface import prompt_pipeline
+from .pipeline_initializer import initialize_pipeline
+from .prompting_interface import prompt_pipeline
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from utils.response import Response, ResponseStatus
