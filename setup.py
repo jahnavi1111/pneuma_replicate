@@ -12,11 +12,11 @@ def read_file(file):
 
 
 LONG_DESCRIPTION = read_file("README.md")
-VERSION = read_file("./VERSION")
+VERSION = read_file("VERSION")
 requirements = read_requirements("pneuma/requirements.txt")
 
 setup(
-    name="pneuma",
+    name="pneuma_wip",
     version=VERSION,
     author="University of Chicago",
     author_email="davidalexander@uchicago.edu",
@@ -27,5 +27,5 @@ setup(
     license="TODO License",
     packages=find_packages(include=["pneuma", "pneuma.*"]),
     entry_points={"console_scripts": ["pneuma=pneuma.pneuma:main"]},
-    # install_requires=requirements,
+    install_requires=requirements,
 )
