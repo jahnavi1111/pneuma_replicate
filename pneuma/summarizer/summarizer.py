@@ -9,11 +9,15 @@ import fire
 import pandas as pd
 import torch
 
-# This is needed when importing this module from pneuma.py in a directory above
-sys.path.append("../")
-
-from .pipeline_initializer import initialize_pipeline
-from .prompting_interface import prompt_pipeline
+# I don't know why the imports has to be like this, but this is how I made it work.
+try:
+    # When running as a standalone script, the imports should be as follows
+    from pipeline_initializer import initialize_pipeline  # pylint: disable=import-error
+    from prompting_interface import prompt_pipeline  # pylint: disable=import-error
+except ModuleNotFoundError:
+    # When running as a pip-installed pneuma CLI application, the imports should be as follows
+    from .pipeline_initializer import initialize_pipeline
+    from .prompting_interface import prompt_pipeline
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from utils.response import Response, ResponseStatus
