@@ -3,6 +3,8 @@ These are the links to download the datasets:
 - [Public BI Benchmark](https://storage.googleapis.com/pneuma_open/pneuma_public_bi.tar)
 - [Chicago Open Data](https://storage.googleapis.com/pneuma_open/pneuma_chicago_10K.tar)
 - [Chembl](https://storage.googleapis.com/pneuma_open/pneuma_chembl_10K.tar)
+- [FetaQA](https://storage.googleapis.com/pneuma_open/pneuma_fetaqa.tar)
+- [Adventure Works](https://storage.googleapis.com/pneuma_open/pneuma_adventure_works.tar)
 
 Download a dataset using this command:
 
