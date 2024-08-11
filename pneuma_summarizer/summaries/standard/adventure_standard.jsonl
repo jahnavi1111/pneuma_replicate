@@ -1,0 +1,88 @@
+{"table": "table_1", "summary": "CountryRegionCode | Name | ModifiedDate"}
+{"table": "table_10", "summary": "JobCandidateID | Edu.Level | Edu.StartDate | Edu.EndDate | Edu.Degree | Edu.Major | Edu.Minor | Edu.GPA | Edu.GPAScale | Edu.School | Edu.Loc.CountryRegion | Edu.Loc.State | Edu.Loc.City"}
+{"table": "table_11", "summary": "CurrencyCode | Name | ModifiedDate"}
+{"table": "table_12", "summary": "CountryRegionCode | CurrencyCode | ModifiedDate"}
+{"table": "table_13", "summary": "BusinessEntityID | PasswordHash | PasswordSalt | rowguid | ModifiedDate"}
+{"table": "table_14", "summary": "ProductModelID | ProductDescriptionID | CultureID | ModifiedDate"}
+{"table": "table_15", "summary": "BusinessEntityID | Name | SalesPersonID | Demographics | rowguid | ModifiedDate"}
+{"table": "table_16", "summary": "JobCandidateID | BusinessEntityID | Name.Prefix | Name.First | Name.Middle | Name.Last | Name.Suffix | Skills | Addr.Type | Addr.Loc.CountryRegion | Addr.Loc.State | Addr.Loc.City | Addr.PostalCode | EMail | WebSite | ModifiedDate"}
+{"table": "table_17", "summary": "SalesOrderID | SalesReasonID | ModifiedDate"}
+{"table": "table_18", "summary": "BusinessEntityID | QuotaDate | SalesQuota | rowguid | ModifiedDate"}
+{"table": "table_19", "summary": "StateProvinceID | StateProvinceCode | CountryRegionCode | IsOnlyStateProvinceFlag | Name | TerritoryID | rowguid | ModifiedDate"}
+{"table": "table_2", "summary": "BusinessEntityID | TerritoryID | StartDate | EndDate | rowguid | ModifiedDate"}
+{"table": "table_20", "summary": "IllustrationID | Diagram | ModifiedDate"}
+{"table": "table_21", "summary": "BusinessEntityID | NationalIDNumber | LoginID | OrganizationNode | OrganizationLevel | JobTitle | BirthDate | MaritalStatus | Gender | HireDate | SalariedFlag | VacationHours | SickLeaveHours | CurrentFlag | rowguid | ModifiedDate"}
+{"table": "table_22", "summary": "CreditCardID | CardType | CardNumber | ExpMonth | ExpYear | ModifiedDate"}
+{"table": "table_23", "summary": "ProductID | DocumentNode | ModifiedDate"}
+{"table": "table_24", "summary": "BusinessEntityID | Name | AnnualSales | AnnualRevenue | BankName | BusinessType | YearOpened | Specialty | SquareFeet | Brands | Internet | NumberEmployees"}
+{"table": "table_25", "summary": "TransactionID | ProductID | ReferenceOrderID | ReferenceOrderLineID | TransactionDate | TransactionType | Quantity | ActualCost | ModifiedDate"}
+{"table": "table_26", "summary": "BusinessEntityID | Name | ContactType | Title | FirstName | MiddleName | LastName | Suffix | PhoneNumber | PhoneNumberType | EmailAddress | EmailPromotion"}
+{"table": "table_27", "summary": "BusinessEntityID | PersonID | ContactTypeID | rowguid | ModifiedDate"}
+{"table": "table_28", "summary": "ShipMethodID | Name | ShipBase | ShipRate | rowguid | ModifiedDate"}
+{"table": "table_29", "summary": "CustomerID | PersonID | StoreID | TerritoryID | AccountNumber | rowguid | ModifiedDate"}
+{"table": "table_3", "summary": "BusinessEntityID | FirstName | MiddleName | LastName | TelephoneNumber | TelephoneSpecialInstructions | Street | City | StateProvince | PostalCode | CountryRegion | HomeAddressSpecialInstructions | EMailAddress | EMailSpecialInstructions | EMailTelephoneNumber | rowguid | ModifiedDate"}
+{"table": "table_30", "summary": "ShiftID | Name | StartTime | EndTime | ModifiedDate"}
+{"table": "table_31", "summary": "BusinessEntityID | CreditCardID | ModifiedDate"}
+{"table": "table_32", "summary": "WorkOrderID | ProductID | OperationSequence | LocationID | ScheduledStartDate | ScheduledEndDate | ActualStartDate | ActualEndDate | ActualResourceHrs | PlannedCost | ActualCost | ModifiedDate"}
+{"table": "table_33", "summary": "ScrapReasonID | Name | ModifiedDate"}
+{"table": "table_34", "summary": "ProductID | Name | ProductNumber | MakeFlag | FinishedGoodsFlag | Color | SafetyStockLevel | ReorderPoint | StandardCost | ListPrice | Size | SizeUnitMeasureCode | WeightUnitMeasureCode | Weight | DaysToManufacture | ProductLine | Class | Style | ProductSubcategoryID | ProductModelID | SellStartDate | SellEndDate | DiscontinuedDate | rowguid | ModifiedDate"}
+{"table": "table_35", "summary": "ProductID | Name | ProductModel | CultureID | Description"}
+{"table": "table_36", "summary": "ProductDescriptionID | Description | rowguid | ModifiedDate"}
+{"table": "table_37", "summary": "ProductModelID | IllustrationID | ModifiedDate"}
+{"table": "table_38", "summary": "PhoneNumberTypeID | Name | ModifiedDate"}
+{"table": "table_39", "summary": "ProductCategoryID | Name | rowguid | ModifiedDate"}
+{"table": "table_4", "summary": "BusinessEntityID | Title | FirstName | MiddleName | LastName | Suffix | JobTitle | PhoneNumber | PhoneNumberType | EmailAddress | EmailPromotion | AddressLine1 | AddressLine2 | City | StateProvinceName | PostalCode | CountryRegionName | TerritoryName | TerritoryGroup | SalesQuota | SalesYTD | SalesLastYear"}
+{"table": "table_40", "summary": "BusinessEntityID | TotalPurchaseYTD | DateFirstPurchase | BirthDate | MaritalStatus | YearlyIncome | Gender | TotalChildren | NumberChildrenAtHome | Education | Occupation | HomeOwnerFlag | NumberCarsOwned"}
+{"table": "table_41", "summary": "JobCandidateID | BusinessEntityID | Resume | ModifiedDate"}
+{"table": "table_42", "summary": "BusinessEntityID | Title | FirstName | MiddleName | LastName | Suffix | JobTitle | PhoneNumber | PhoneNumberType | EmailAddress | EmailPromotion | AddressLine1 | AddressLine2 | City | StateProvinceName | PostalCode | CountryRegionName | AdditionalContactInfo"}
+{"table": "table_43", "summary": "ProductModelID | Name | Instructions | LocationID | SetupHours | MachineHours | LaborHours | LotSize | Step | rowguid | ModifiedDate"}
+{"table": "table_44", "summary": "ContactTypeID | Name | ModifiedDate"}
+{"table": "table_45", "summary": "AddressID | AddressLine1 | AddressLine2 | City | StateProvinceID | PostalCode | SpatialLocation | rowguid | ModifiedDate"}
+{"table": "table_46", "summary": "ProductID | BusinessEntityID | AverageLeadTime | StandardPrice | LastReceiptCost | LastReceiptDate | MinOrderQty | MaxOrderQty | OnOrderQty | UnitMeasureCode | ModifiedDate"}
+{"table": "table_47", "summary": "DepartmentID | Name | GroupName | ModifiedDate"}
+{"table": "table_48", "summary": "SalesOrderID | SalesOrderDetailID | CarrierTrackingNumber | OrderQty | ProductID | SpecialOfferID | UnitPrice | UnitPriceDiscount | LineTotal | rowguid | ModifiedDate"}
+{"table": "table_49", "summary": "AddressTypeID | Name | rowguid | ModifiedDate"}
+{"table": "table_5", "summary": "BusinessEntityID | Title | FirstName | MiddleName | LastName | Suffix | Shift | Department | GroupName | StartDate | EndDate"}
+{"table": "table_50", "summary": "JobCandidateID | Emp.StartDate | Emp.EndDate | Emp.OrgName | Emp.JobTitle | Emp.Responsibility | Emp.FunctionCategory | Emp.IndustryCategory | Emp.Loc.CountryRegion | Emp.Loc.State | Emp.Loc.City"}
+{"table": "table_51", "summary": "SpecialOfferID | Description | DiscountPct | Type | Category | StartDate | EndDate | MinQty | MaxQty | rowguid | ModifiedDate"}
+{"table": "table_52", "summary": "BusinessEntityID | TerritoryID | SalesQuota | Bonus | CommissionPct | SalesYTD | SalesLastYear | rowguid | ModifiedDate"}
+{"table": "table_53", "summary": "PurchaseOrderID | PurchaseOrderDetailID | DueDate | OrderQty | ProductID | UnitPrice | LineTotal | ReceivedQty | RejectedQty | StockedQty | ModifiedDate"}
+{"table": "table_54", "summary": "WorkOrderID | ProductID | OrderQty | StockedQty | ScrappedQty | StartDate | EndDate | DueDate | ScrapReasonID | ModifiedDate"}
+{"table": "table_55", "summary": "ProductReviewID | ProductID | ReviewerName | ReviewDate | EmailAddress | Rating | Comments | ModifiedDate"}
+{"table": "table_56", "summary": "BusinessEntityID | AccountNumber | Name | CreditRating | PreferredVendorStatus | ActiveFlag | PurchasingWebServiceURL | ModifiedDate"}
+{"table": "table_57", "summary": "SalesPersonID | FullName | JobTitle | SalesTerritory | 2002 | 2003 | 2004"}
+{"table": "table_58", "summary": "BusinessEntityID | Name | AddressType | AddressLine1 | AddressLine2 | City | StateProvinceName | PostalCode | CountryRegionName"}
+{"table": "table_59", "summary": "BusinessEntityID | Name | ContactType | Title | FirstName | MiddleName | LastName | Suffix | PhoneNumber | PhoneNumberType | EmailAddress | EmailPromotion"}
+{"table": "table_6", "summary": "SalesOrderID | RevisionNumber | OrderDate | DueDate | ShipDate | Status | OnlineOrderFlag | SalesOrderNumber | PurchaseOrderNumber | AccountNumber | CustomerID | SalesPersonID | TerritoryID | BillToAddressID | ShipToAddressID | ShipMethodID | CreditCardID | CreditCardApprovalCode | CurrencyRateID | SubTotal | TaxAmt | Freight | TotalDue | Comment | rowguid | ModifiedDate"}
+{"table": "table_60", "summary": "UnitMeasureCode | Name | ModifiedDate"}
+{"table": "table_61", "summary": "BusinessEntityID | PersonType | NameStyle | Title | FirstName | MiddleName | LastName | Suffix | EmailPromotion | AdditionalContactInfo | Demographics | rowguid | ModifiedDate"}
+{"table": "table_62", "summary": "BusinessEntityID | RateChangeDate | Rate | PayFrequency | ModifiedDate"}
+{"table": "table_63", "summary": "SpecialOfferID | ProductID | rowguid | ModifiedDate"}
+{"table": "table_64", "summary": "BillOfMaterialsID | ProductAssemblyID | ComponentID | StartDate | EndDate | UnitMeasureCode | BOMLevel | PerAssemblyQty | ModifiedDate"}
+{"table": "table_65", "summary": "ProductSubcategoryID | ProductCategoryID | Name | rowguid | ModifiedDate"}
+{"table": "table_66", "summary": "BusinessEntityID | PhoneNumber | PhoneNumberTypeID | ModifiedDate"}
+{"table": "table_67", "summary": "ProductID | ProductPhotoID | Primary | ModifiedDate"}
+{"table": "table_68", "summary": "ProductModelID | Name | CatalogDescription | Instructions | rowguid | ModifiedDate"}
+{"table": "table_69", "summary": "BusinessEntityID | AddressID | AddressTypeID | rowguid | ModifiedDate"}
+{"table": "table_7", "summary": "CurrencyRateID | CurrencyRateDate | FromCurrencyCode | ToCurrencyCode | AverageRate | EndOfDayRate | ModifiedDate"}
+{"table": "table_70", "summary": "TerritoryID | Name | CountryRegionCode | Group | SalesYTD | SalesLastYear | CostYTD | CostLastYear | rowguid | ModifiedDate"}
+{"table": "table_71", "summary": "BusinessEntityID | Title | FirstName | MiddleName | LastName | Suffix | JobTitle | Department | GroupName | StartDate"}
+{"table": "table_72", "summary": "BusinessEntityID | Title | FirstName | MiddleName | LastName | Suffix | PhoneNumber | PhoneNumberType | EmailAddress | EmailPromotion | AddressType | AddressLine1 | AddressLine2 | City | StateProvinceName | PostalCode | CountryRegionName | Demographics"}
+{"table": "table_73", "summary": "SalesTaxRateID | StateProvinceID | TaxType | TaxRate | Name | rowguid | ModifiedDate"}
+{"table": "table_74", "summary": "BusinessEntityID | EmailAddressID | EmailAddress | rowguid | ModifiedDate"}
+{"table": "table_75", "summary": "ProductModelID | Name | Summary | Manufacturer | Copyright | ProductURL | WarrantyPeriod | WarrantyDescription | NoOfYears | MaintenanceDescription | Wheel | Saddle | Pedal | BikeFrame | Crankset | PictureAngle | PictureSize | ProductPhotoID | Material | Color | ProductLine | Style | RiderExperience | rowguid | ModifiedDate"}
+{"table": "table_76", "summary": "ProductID | LocationID | Shelf | Bin | Quantity | rowguid | ModifiedDate"}
+{"table": "table_77", "summary": "ProductPhotoID | ThumbNailPhoto | ThumbnailPhotoFileName | LargePhoto | LargePhotoFileName | ModifiedDate"}
+{"table": "table_78", "summary": "ProductID | StartDate | EndDate | StandardCost | ModifiedDate"}
+{"table": "table_79", "summary": "BusinessEntityID | DepartmentID | ShiftID | StartDate | EndDate | ModifiedDate"}
+{"table": "table_8", "summary": "SalesReasonID | Name | ReasonType | ModifiedDate"}
+{"table": "table_80", "summary": "BusinessEntityID | Name | AddressType | AddressLine1 | AddressLine2 | City | StateProvinceName | PostalCode | CountryRegionName"}
+{"table": "table_81", "summary": "DocumentNode | DocumentLevel | Title | Owner | FolderFlag | FileName | FileExtension | Revision | ChangeNumber | Status | DocumentSummary | Document | rowguid | ModifiedDate"}
+{"table": "table_82", "summary": "ProductID | StartDate | EndDate | ListPrice | ModifiedDate"}
+{"table": "table_83", "summary": "ShoppingCartItemID | ShoppingCartID | Quantity | ProductID | DateCreated | ModifiedDate"}
+{"table": "table_84", "summary": "BusinessEntityID | rowguid | ModifiedDate"}
+{"table": "table_85", "summary": "StateProvinceID | StateProvinceCode | IsOnlyStateProvinceFlag | StateProvinceName | TerritoryID | CountryRegionCode | CountryRegionName"}
+{"table": "table_86", "summary": "LocationID | Name | CostRate | Availability | ModifiedDate"}
+{"table": "table_87", "summary": "CultureID | Name | ModifiedDate"}
+{"table": "table_88", "summary": "PurchaseOrderID | RevisionNumber | Status | EmployeeID | VendorID | ShipMethodID | OrderDate | ShipDate | SubTotal | TaxAmt | Freight | TotalDue | ModifiedDate"}
+{"table": "table_9", "summary": "TransactionID | ProductID | ReferenceOrderID | ReferenceOrderLineID | TransactionDate | TransactionType | Quantity | ActualCost | ModifiedDate"}
