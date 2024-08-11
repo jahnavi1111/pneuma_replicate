@@ -33,6 +33,10 @@ Assume you are the creator of the table and have all the necessary information t
 
 pipe = initialize_pipeline("meta-llama/Meta-Llama-3-8B-Instruct", torch.bfloat16)
 
+# Specific setting for Llama-3-8B-Instruct for batching
+pipe.tokenizer.pad_token_id = pipe.model.config.eos_token_id
+pipe.tokenizer.padding_side = 'left'
+
 
 def generate_contexts(benchmark_name: str, data_src: str, generation_params={}):
     csv_data_source = CsvDataSource(data_src)  # Adjust the csv source names
@@ -42,26 +46,22 @@ def generate_contexts(benchmark_name: str, data_src: str, generation_params={}):
         except FileNotFoundError:
             benchmark = pd.DataFrame(columns=["id", "table", "context_question", "context"])
         csv_file_name = table[0]
-        dataset = "\n".join(table[1])
-        num_of_rows = table[2]
+
+        conversations = []
         for i in tqdm(range(len(questions)), desc="Iterating questions"):
-            question = questions[i]
-            prompt = get_generative_prompt(dataset, question, num_of_rows)
-            conversation = [{"role": "user", "content": prompt}]
-            values = {"table": [csv_file_name[:-4]], "context_question": [question]}
+            prompt = get_generative_prompt("\n".join(table[1]), questions[i], table[2])
+            conversations.append([{"role": "user", "content": prompt}])
+        outputs = prompt_pipeline(
+            pipe, conversations, batch_size=3, context_length=8192, top_p=None, temperature=None, **generation_params
+        )
 
-            # Skip if this combination of table and context question is answered already
-            if benchmark[["table", "context_question"]].isin(values).all(axis=1).any():
-                continue
-
-            answer = prompt_pipeline(
-                pipe, conversation, context_length=8192, top_p=None, temperature=None, **generation_params
-            )[0][-1]["content"]
+        for output_idx, output in enumerate(outputs):
+            answer = output[-1]["content"]
             row = pd.DataFrame(
                 {
-                    "id": [f"{csv_file_name[:-4]}_{i}"],
+                    "id": [f"{csv_file_name[:-4]}_{output_idx}"],
                     "table": [csv_file_name[:-4]],
-                    "context_question": [question],
+                    "context_question": [questions[output_idx]],
                     "context": [answer],
                 }
             )
@@ -69,8 +69,8 @@ def generate_contexts(benchmark_name: str, data_src: str, generation_params={}):
             benchmark.to_csv(benchmark_name, index=False)
 
 
-name = "contexts_chembl.csv"  # Adjust the contexts name
+name = "contexts_adventure.csv"  # Adjust the contexts name
 generate_contexts(
     name,
-    "pneuma_chembl_10K",  # Adjust data source path
+    "pneuma_adventure_works",  # Adjust data source path
 )
