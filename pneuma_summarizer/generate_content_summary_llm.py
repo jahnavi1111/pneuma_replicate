@@ -16,6 +16,9 @@ import setproctitle
 setproctitle.setproctitle("python")
 
 pipe = initialize_pipeline("meta-llama/Meta-Llama-3-8B-Instruct", torch.bfloat16)
+# Specific setting for Llama-3-8B-Instruct for batching
+pipe.tokenizer.pad_token_id = pipe.model.config.eos_token_id
+pipe.tokenizer.padding_side = 'left'
 
 
 def write_jsonl(data: list[dict[str, str]], file_path: str):
@@ -42,25 +45,26 @@ def generate_descriptions(src_path: str, descriptions_path: str):
         bar.set_description(f"Processing table {table}")
         df = pd.read_csv(f"{src_path}/{table}.csv")
         cols = df.columns
+        conversations = []
         for col in cols:
             prompt = get_col_description_prompt(" | ".join(cols), col)
-            description = prompt_pipeline(
-                pipe,
-                [[{"role": "user", "content": prompt}]],
-                temperature=None,
-                top_p=None,
-                max_new_tokens=400,
-            )[0][-1]["content"]
-
-            new_row = {
-                "table": table,
-                "summary": f"{col}: {description}",
-            }
-            summaries.append(new_row)
-            write_jsonl(summaries, f"{descriptions_path}.jsonl")
+            conversations.append([{"role": "user", "content": prompt}])
+        
+        for i in tqdm(range(0, len(conversations), 3)):
+            outputs = prompt_pipeline(
+                pipe, conversations[i:i+3], batch_size=3, context_length=8192, max_new_tokens=400, temperature=None, top_p=None
+            )
+            for output_idx, output in enumerate(outputs):
+                summary = output[-1]["content"]
+                new_row = {
+                    "table": table,
+                    "summary": f"{cols[i+output_idx]}: {summary}",
+                }
+                summaries.append(new_row)
+                write_jsonl(summaries, f"{descriptions_path}")
 
 
 # Adjust paths
-src_path = "../data_src/tables/pneuma_public_bi"
-descriptions_path = "public_narrations"
+src_path = "pneuma_fetaqa"
+descriptions_path = "summaries/narrations/fetaqa_narrations.jsonl"
 generate_descriptions(src_path, descriptions_path)
