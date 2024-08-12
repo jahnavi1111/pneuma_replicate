@@ -1,5 +1,10 @@
+import sys
+from pathlib import Path
+
 import duckdb
 import fire
+
+sys.path.append(str(Path(__file__).resolve().parent))
 from index_generator.index_generator import IndexGenerator
 from query.query import Query
 from registration.registration import Registration

@@ -25,7 +25,7 @@ setup(
     long_description_content_type="text/markdown",
     long_description=LONG_DESCRIPTION,
     license="TODO License",
-    packages=find_packages(include=["pneuma", "pneuma.*"]),
+    packages=find_packages(include=["pneuma*"]),
     entry_points={"console_scripts": ["pneuma=pneuma.pneuma:main"]},
     install_requires=requirements,
 )

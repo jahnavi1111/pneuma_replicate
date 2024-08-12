@@ -1,5 +1,6 @@
 {
     "python.analysis.extraPaths": [
-        "./pneuma"
+        "./pneuma",
+        "./pneuma*"
     ],
 }
