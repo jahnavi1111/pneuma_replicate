@@ -33,7 +33,7 @@ class IndexGenerator:
         self.index_location = index_location
         self.chroma_client = chromadb.PersistentClient(self.index_location)
 
-    def generate_index(self, index_name: str, table_ids: list | tuple = None):
+    def generate_index(self, index_name: str, table_ids: list | tuple = None) -> str:
         if table_ids is None:
             print("No table ids provided. Generating index for all tables...")
             table_ids = [

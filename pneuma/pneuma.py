@@ -36,30 +36,30 @@ class Pneuma:
         s3_region: str = None,
         s3_access_key: str = None,
         s3_secret_access_key: str = None,
-    ):
+    ) -> str:
         return self.registration.add_table(
             path, creator, source, s3_region, s3_access_key, s3_secret_access_key
         )
 
-    def add_context(self, table_id: str, context_path: str):
+    def add_context(self, table_id: str, context_path: str) -> str:
         return self.registration.add_metadata(context_path, "context", table_id)
 
-    def add_summary(self, table_id: str, summary_path: str):
+    def add_summary(self, table_id: str, summary_path: str) -> str:
         return self.registration.add_metadata(summary_path, "summary", table_id)
 
-    def summarize(self, table_id: str = ""):
+    def summarize(self, table_id: str = "") -> str:
         return self.summarizer.summarize(table_id)
 
-    def purge_tables(self):
+    def purge_tables(self) -> str:
         return self.summarizer.purge_tables()
 
-    def generate_index(self, index_name: str, table_ids: list | tuple):
+    def generate_index(self, index_name: str, table_ids: list | tuple) -> str:
         return self.index_generator.generate_index(index_name, table_ids)
 
-    def query_index(self, index_name: str, query: str, k: int = 10):
+    def query_index(self, index_name: str, query: str, k: int = 10) -> str:
         return self.query.query(index_name, query, k)
 
-    def sanity_check(self):
+    def sanity_check(self) -> str:
         return "This works!"
 
 

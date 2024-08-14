@@ -1,13 +1,10 @@
 import json
-import math
-import random
 import sys
 from pathlib import Path
 
 import duckdb
 import fire
 import pandas as pd
-import torch
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 import os
@@ -34,7 +31,7 @@ class Summarizer:
         # Use small model for local testing
         # self.pipe = initialize_pipeline("TinyLlama/TinyLlama_v1.1", torch.bfloat16)
 
-    def summarize(self, table_id: str = None):
+    def summarize(self, table_id: str = None) -> str:
         if table_id is None or table_id == "":
             print("Generating summaries for all unsummarized tables...")
             table_ids = [
@@ -59,7 +56,7 @@ class Summarizer:
             f"with IDs: {', '.join([str(i[0]) for i in all_summary_ids])}.\n",
         ).to_json()
 
-    def purge_tables(self):
+    def purge_tables(self) -> str:
         # drop summarized tables
         summarized_table_ids = [
             entry[0]
@@ -82,7 +79,7 @@ class Summarizer:
             message=f"Total of {len(summarized_table_ids)} tables have been purged.\n",
         ).to_json()
 
-    def __summarize_table_by_id(self, table_id: str):
+    def __summarize_table_by_id(self, table_id: str) -> list[str]:
         status = self.connection.sql(
             f"SELECT status FROM table_status WHERE id = '{table_id}'"
         ).fetchone()[0]
@@ -120,7 +117,7 @@ class Summarizer:
     def produce_summaries(
         self,
         df: pd.DataFrame,
-    ):
+    ) -> list[str]:
         return [" | ".join(df.columns)]
 
 

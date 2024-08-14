@@ -20,7 +20,7 @@ class Registration:
         self.db_path = db_path
         self.connection = duckdb.connect(db_path)
 
-    def setup(self):
+    def setup(self) -> str:
         try:
             self.connection.execute("INSTALL httpfs")
             self.connection.execute("LOAD httpfs")
@@ -108,7 +108,7 @@ class Registration:
         s3_region: str = None,
         s3_access_key: str = None,
         s3_secret_access_key: str = None,
-    ):
+    ) -> str:
         if source not in ["file", "s3"]:
             return "Invalid source. Please use 'file' or 's3'."
 
@@ -133,7 +133,7 @@ class Registration:
 
     def add_metadata(
         self, metadata_path: str, metadata_type: str = "", table_id: str = ""
-    ):
+    ) -> str:
         if os.path.isfile(metadata_path):
             return self.__read_metadata_file(
                 metadata_path, metadata_type, table_id
@@ -152,7 +152,7 @@ class Registration:
         self,
         path: str,
         creator: str,
-    ):
+    ) -> Response:
         # Index -1 to get the file extension, then slice [1:] to remove the dot.
         file_type = os.path.splitext(path)[-1][1:]
 
@@ -227,7 +227,7 @@ class Registration:
             message=f"Table with ID: {path} has been added to the database.",
         )
 
-    def __read_table_folder(self, folder_path: str, creator: str):
+    def __read_table_folder(self, folder_path: str, creator: str) -> Response:
         print(f"Reading folder {folder_path}...")
         paths = [os.path.join(folder_path, f) for f in os.listdir(folder_path)]
         file_count = 0
@@ -252,7 +252,7 @@ class Registration:
 
     def __insert_metadata(
         self, metadata_type: str, metadata_content: str, table_id: str
-    ):
+    ) -> Response:
         payload = {
             "payload": metadata_content.strip(),
         }
@@ -277,7 +277,7 @@ class Registration:
 
     def __read_metadata_file(
         self, metadata_path: str, metadata_type: str, table_id: str
-    ):
+    ) -> Response:
         # Index -1 to get the file extension, then slice [1:] to remove the dot.
         file_type = os.path.splitext(metadata_path)[-1][1:]
 
@@ -292,7 +292,8 @@ class Registration:
                 metadata_content = f.read()
 
             return self.__insert_metadata(metadata_type, metadata_content, table_id)
-        elif file_type == "csv":
+
+        if file_type == "csv":
             metadata_df = pd.read_csv(metadata_path)
             # iterate over rows with iterrows()
             for index, row in metadata_df.iterrows():
@@ -309,9 +310,11 @@ class Registration:
                 message=f"{len(metadata_df)} metadata entries has been added.",
             )
 
+        return None
+
     def __read_metadata_folder(
         self, metadata_path: str, metadata_type: str, table_id: str
-    ):
+    ) -> Response:
         print(f"Reading metadata folder {metadata_path}...")
         paths = [os.path.join(metadata_path, f) for f in os.listdir(metadata_path)]
         file_count = 0

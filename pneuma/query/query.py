@@ -31,7 +31,7 @@ class Query:
         self.index_location = index_location
         self.chroma_client = chromadb.PersistentClient(self.index_location)
 
-    def query(self, index_name: str, query: str, k: int = 10):
+    def query(self, index_name: str, query: str, k: int = 10) -> str:
         try:
             chroma_collection = self.chroma_client.get_collection(index_name)
         except ValueError:
