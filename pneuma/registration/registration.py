@@ -13,8 +13,10 @@ from utils.table_status import TableStatus
 
 
 class Registration:
-    def __init__(self, db_path: str, out_path: str = "../out"):
-        os.makedirs(out_path, exist_ok=True)
+    def __init__(
+        self, db_path: str = os.path.expanduser("~/Documents/Pneuma/out/storage.db")
+    ):
+        os.makedirs(os.path.dirname(db_path), exist_ok=True)
         self.db_path = db_path
         self.connection = duckdb.connect(db_path)
 
@@ -107,6 +109,9 @@ class Registration:
         s3_access_key: str = None,
         s3_secret_access_key: str = None,
     ):
+        if source not in ["file", "s3"]:
+            return "Invalid source. Please use 'file' or 's3'."
+
         if source == "s3":
             self.connection.execute(
                 f"""
@@ -115,18 +120,16 @@ class Registration:
             SET s3_secret_access_key='{s3_secret_access_key}';
             """
             )
-        elif source != "file":
-            return "Invalid source. Please use 'file' or 's3'."
 
         if os.path.isfile(path):
             return self.__read_table_file(path, creator).to_json()
-        elif os.path.isdir(path):
+        if os.path.isdir(path):
             return self.__read_table_folder(path, creator).to_json()
-        else:
-            return Response(
-                status=ResponseStatus.ERROR,
-                message=f"Invalid path: {path}",
-            ).to_json()
+
+        return Response(
+            status=ResponseStatus.ERROR,
+            message=f"Invalid path: {path}",
+        ).to_json()
 
     def add_metadata(
         self, metadata_path: str, metadata_type: str = "", table_id: str = ""
@@ -135,15 +138,15 @@ class Registration:
             return self.__read_metadata_file(
                 metadata_path, metadata_type, table_id
             ).to_json()
-        elif os.path.isdir(metadata_path):
+        if os.path.isdir(metadata_path):
             return self.__read_metadata_folder(
                 metadata_path, metadata_type, table_id
             ).to_json()
-        else:
-            return Response(
-                status=ResponseStatus.ERROR,
-                message=f"Invalid path: {metadata_path}",
-            ).to_json()
+
+        return Response(
+            status=ResponseStatus.ERROR,
+            message=f"Invalid path: {metadata_path}",
+        ).to_json()
 
     def __read_table_file(
         self,
@@ -200,6 +203,14 @@ class Registration:
                 status=ResponseStatus.ERROR,
                 message="This table already exists in the database.",
             )
+
+        # Check if table with the same ID already exists.
+        # This means the same table with updated data is being registered.
+        if self.connection.sql(
+            f"SELECT * FROM table_status WHERE id = '{path}'"
+        ).fetchone():
+            # TODO
+            pass
 
         # The double quote is necessary to consider the path, which may contain
         # full stop that may mess with schema as a single string. Having single quote

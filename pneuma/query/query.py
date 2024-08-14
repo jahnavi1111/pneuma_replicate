@@ -1,3 +1,4 @@
+import os
 import sys
 from pathlib import Path
 
@@ -7,11 +8,16 @@ import fire
 from sentence_transformers import SentenceTransformer
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
+
 from utils.response import Response, ResponseStatus
 
 
 class Query:
-    def __init__(self, db_path: str, index_location: str = "../out/indexes"):
+    def __init__(
+        self,
+        db_path: str = os.path.expanduser("~/Documents/Pneuma/out/storage.db"),
+        index_location: str = os.path.expanduser("~/Documents/Pneuma/out/indexes"),
+    ):
         self.db_path = db_path
         self.connection = duckdb.connect(db_path)
         # self.embedding_model = SentenceTransformer(

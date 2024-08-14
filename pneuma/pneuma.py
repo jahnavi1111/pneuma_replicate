@@ -1,3 +1,5 @@
+import os
+
 import duckdb
 import fire
 from index_generator.index_generator import IndexGenerator
@@ -7,12 +9,17 @@ from summarizer.summarizer import Summarizer
 
 
 class Pneuma:
-    def __init__(self, hf_token: str = ""):
-        self.out_path = "out"
-        self.db_path = "out/storage.db"
-        self.index_location = "out/indexes"
+    def __init__(
+        self,
+        out_path: str = os.path.expanduser("~/Documents/Pneuma/out"),
+        hf_token: str = "",
+    ):
+        os.makedirs(out_path, exist_ok=True)
+        self.out_path = out_path
+        self.db_path = out_path + "/storage.db"
+        self.index_location = out_path + "/indexes"
 
-        self.registration = Registration(self.db_path, self.out_path)
+        self.registration = Registration(self.db_path)
         self.summarizer = Summarizer(self.db_path, hf_token)
         self.index_generator = IndexGenerator(self.db_path, self.index_location)
         self.query = Query(self.db_path, self.index_location)
