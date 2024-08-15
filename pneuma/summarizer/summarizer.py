@@ -11,16 +11,8 @@ from tqdm import tqdm
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 import os
 
-# I don't know why the imports has to be like this, but this is how I made it work.
-try:
-    # When running as a standalone script, the imports should be as follows
-    from pipeline_initializer import initialize_pipeline  # pylint: disable=import-error
-    from prompting_interface import prompt_pipeline  # pylint: disable=import-error
-except ModuleNotFoundError:
-    # When running as a pip-installed pneuma CLI application, the imports should be as follows
-    from .pipeline_initializer import initialize_pipeline
-    from .prompting_interface import prompt_pipeline
-
+from utils.pipeline_initializer import initialize_pipeline
+from utils.prompting_interface import prompt_pipeline
 from utils.response import Response, ResponseStatus
 from utils.table_status import TableStatus
 
