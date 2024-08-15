@@ -3,10 +3,12 @@ import os
 import sys
 from pathlib import Path
 
+import bm25s
 import chromadb
 import duckdb
 import fire
 import pandas as pd
+import Stemmer
 from chromadb.db.base import UniqueConstraintError
 from sentence_transformers import SentenceTransformer
 
@@ -18,20 +20,24 @@ class IndexGenerator:
     def __init__(
         self,
         db_path: str = os.path.expanduser("~/Documents/Pneuma/out/storage.db"),
-        index_location: str = os.path.expanduser("~/Documents/Pneuma/out/indexes"),
+        index_path: str = os.path.expanduser("~/Documents/Pneuma/out/indexes"),
     ):
         self.db_path = db_path
         self.connection = duckdb.connect(db_path)
         # self.embedding_model = SentenceTransformer(
         #     "dunzhang/stella_en_1.5B_v5", trust_remote_code=True
         # )
+        self.stemmer = Stemmer.Stemmer("english")
 
         # Small model for local testing purposes
         self.embedding_model = SentenceTransformer(
             "BAAI/bge-small-en-v1.5", trust_remote_code=True
         )
-        self.index_location = index_location
-        self.chroma_client = chromadb.PersistentClient(self.index_location)
+
+        self.index_path = index_path
+        self.vector_index_path = os.path.join(index_path, "vector")
+        self.keyword_index_path = os.path.join(index_path, "keyword")
+        self.chroma_client = chromadb.PersistentClient(self.vector_index_path)
 
     def generate_index(self, index_name: str, table_ids: list | tuple = None) -> str:
         if table_ids is None:
@@ -47,6 +53,85 @@ class IndexGenerator:
 
         print(f"Generating index for {len(table_ids)} tables...")
 
+        ### GENERATING AND INSERTING TABLES TO VECTOR INDEX ###
+        vector_index_response = self.__generate_vector_index(index_name)
+        if vector_index_response.status == ResponseStatus.ERROR:
+            return vector_index_response.to_json()
+
+        vector_index_id = vector_index_response.data["index_id"]
+        chroma_collection = vector_index_response.data["collection"]
+
+        print(vector_index_response.message)
+        vector_insert_response = self.__insert_tables_to_vector_index(
+            vector_index_id, table_ids, chroma_collection
+        )
+
+        if vector_insert_response.status == ResponseStatus.ERROR:
+            self.chroma_client.delete_collection(index_name)
+            return vector_insert_response.to_json()
+
+        print(vector_index_response.message)
+
+        ### GENERATING AND INSERTING TABLES TO KEYWORD INDEX ###
+        keyword_index_response = self.__generate_keyword_index(index_name)
+        if keyword_index_response.status == ResponseStatus.ERROR:
+            self.chroma_client.delete_collection(index_name)
+            return keyword_index_response.to_json()
+
+        keyword_index_id = keyword_index_response.data["index_id"]
+        retriever = keyword_index_response.data["retriever"]
+
+        print(keyword_index_response.message)
+        keyword_insert_response = self.__insert_tables_to_keyword_index(
+            keyword_index_id, table_ids, retriever
+        )
+
+        if keyword_insert_response.status == ResponseStatus.ERROR:
+            self.chroma_client.delete_collection(index_name)
+            return keyword_insert_response.to_json()
+
+        print(keyword_insert_response.message)
+
+        return Response(
+            status=ResponseStatus.SUCCESS,
+            message=f"Vector and keyword index named {index_name} with id {vector_index_id}"
+            f" and {keyword_index_id} has been created with {len(table_ids)} tables.",
+        ).to_json()
+
+    def __generate_vector_index(self, index_name: str) -> Response:
+        try:
+            chroma_collection = self.chroma_client.create_collection(
+                name=index_name, metadata={"hnsw:space": "cosine", "hnsw:M": 1024}
+            )
+        except UniqueConstraintError:
+            return Response(
+                status=ResponseStatus.ERROR,
+                message=f"Index named {index_name} already exists.",
+            )
+
+        # If we decide to use DuckDB's vector store, we don't need to store
+        # this data.
+        index_id = self.connection.sql(
+            f"""INSERT INTO indexes (name, location)
+            VALUES ('{index_name}', '{self.vector_index_path}')
+            RETURNING id"""
+        ).fetchone()[0]
+
+        return Response(
+            status=ResponseStatus.SUCCESS,
+            message=f"Vector index named {index_name} with id {index_id} has been created.",
+            data={
+                "index_id": index_id,
+                "collection": chroma_collection,
+            },
+        )
+
+    def __insert_tables_to_vector_index(
+        self,
+        index_id: int,
+        table_ids: list | tuple,
+        chroma_collection: chromadb.Collection,
+    ) -> Response:
         documents = []
         embeddings = []
         metadatas = []
@@ -54,54 +139,47 @@ class IndexGenerator:
 
         for table_id in table_ids:
             print(f"Processing table {table_id}...")
-            contexts = self.connection.sql(
-                f"""SELECT id, context FROM table_contexts
-                WHERE table_id='{table_id}'"""
-            ).fetchall()
+            contexts = self.__get_table_contexts(table_id)
+            summaries = self.__get_table_summaries(table_id)
 
-            summaries = self.connection.sql(
-                f"""SELECT id, summary FROM table_summaries
-                WHERE table_id='{table_id}'"""
-            ).fetchall()
-            for entry in contexts + summaries:
-                entry_id = entry[0]
-                content = json.loads(entry[1])
+            for context in contexts:
+                context_id = context[0]
+                content = json.loads(context[1])
                 payload = content["payload"]
 
-                embedding = self.embedding_model.encode(payload)
+                documents.append(payload)
+                metadatas.append({"table": f"{table_id}_SEP_contents_{context_id}"})
+                ids.append(f"{table_id}_SEP_contents_{context_id}")
+
+            for summary in summaries:
+                summary_id = summary[0]
+                content = json.loads(summary[1])
+                payload = content["payload"]
 
                 documents.append(payload)
-                embeddings.append(embedding.tolist())
-                metadatas.append({"table": table_id})
-                ids.append(str(entry_id))
+                metadatas.append({"table": f"{table_id}_SEP_summaries_{summary_id}"})
+                ids.append(f"{table_id}_SEP_summaries_{summary_id}")
 
         if len(documents) == 0:
             return Response(
                 status=ResponseStatus.ERROR,
                 message="No context and summary entries found for the given table ids.",
-            ).to_json()
-
-        try:
-            chroma_collection = self.chroma_client.create_collection(
-                name=index_name, metadata={"hnsw:space": "cosine"}
             )
-        except UniqueConstraintError:
-            return Response(
-                status=ResponseStatus.ERROR,
-                message=f"Index named {index_name} already exists.",
-            ).to_json()
 
-        chroma_collection.add(
-            documents=documents, embeddings=embeddings, metadatas=metadatas, ids=ids
-        )
+        for i in range(0, len(documents), 30000):
+            embeddings = self.embedding_model.encode(
+                documents[i : i + 30000],
+                batch_size=128,
+                show_progress_bar=True,
+                # device="cuda",
+            )
 
-        # If we decide to use DuckDB's vector store, we don't need to store
-        # this data.
-        index_id = self.connection.sql(
-            f"""INSERT INTO indexes (name, location)
-            VALUES ('{index_name}', '{self.index_location}')
-            RETURNING id"""
-        ).fetchone()[0]
+            chroma_collection.add(
+                embeddings=[embed.tolist() for embed in embeddings],
+                metadatas=metadatas[i : i + 30000],
+                documents=documents[i : i + 30000],
+                ids=ids[i : i + 30000],
+            )
 
         insert_df = pd.DataFrame.from_dict(
             {
@@ -118,8 +196,108 @@ class IndexGenerator:
 
         return Response(
             status=ResponseStatus.SUCCESS,
-            message=f"Index named {index_name} with id {index_id} has been created with {len(insert_df)} tables.",
-        ).to_json()
+            message=f"{len(table_ids)} Tables have been inserted to index with id {index_id}.",
+        )
+
+    def __generate_keyword_index(self, index_name):
+        retriever = bm25s.BM25(corpus=[])
+        corpus_tokens = bm25s.tokenize([])
+        retriever.index(corpus_tokens)
+        retriever.save(os.path.join(self.keyword_index_path, index_name), corpus=[])
+
+        index_id = self.connection.sql(
+            f"""INSERT INTO indexes (name, location)
+            VALUES ('{index_name}', '{self.keyword_index_path}')
+            RETURNING id"""
+        ).fetchone()[0]
+
+        return Response(
+            status=ResponseStatus.SUCCESS,
+            message=f"Keyword index named {index_name} with id {index_id} has been created.",
+            data={
+                "index_id": index_id,
+                "retriever": retriever,
+            },
+        )
+
+    def __insert_tables_to_keyword_index(
+        self, index_id: int, table_ids: list | tuple, retriever: bm25s.BM25
+    ):
+        index_name = self.connection.sql(
+            f"SELECT name FROM indexes WHERE id = {index_id}"
+        ).fetchone()[0]
+
+        corpus_json = []
+        for table_id in table_ids:
+            print(f"Processing table {table_id}...")
+            summaries = self.__get_table_summaries(table_id)
+            contexts = self.__get_table_contexts(table_id)
+
+            for context in contexts:
+                context_id = context[0]
+                content = json.loads(context[1])
+                payload = content["payload"]
+
+                corpus_json.append(
+                    {
+                        "text": payload,
+                        "metadata": {"table": f"{table_id}_SEP_{context_id}"},
+                    }
+                )
+
+            for summary in summaries:
+                summary_id = summary[0]
+                content = json.loads(summary[1])
+                payload = content["payload"]
+
+                corpus_json.append(
+                    {
+                        "text": payload,
+                        "metadata": {"table": f"{table_id}_SEP_contents_{summary_id}"},
+                    }
+                )
+
+        corpus_text = [doc["text"] for doc in corpus_json]
+        corpus_tokens = bm25s.tokenize(
+            corpus_text, stopwords="en", stemmer=self.stemmer, show_progress=False
+        )
+
+        retriever.corpus = retriever.corpus + corpus_json
+        retriever.index(corpus_tokens, show_progress=False)
+
+        retriever.save(
+            os.path.join(self.keyword_index_path, index_name), corpus=retriever.corpus
+        )
+
+        insert_df = pd.DataFrame.from_dict(
+            {
+                "index_id": [index_id] * len(table_ids),
+                "table_id": table_ids,
+            }
+        )
+
+        # So we know which tables are included in this index.
+        self.connection.sql(
+            """INSERT INTO index_table_mappings (index_id, table_id)
+            SELECT * FROM insert_df""",
+        )
+
+        return Response(
+            status=ResponseStatus.SUCCESS,
+            message=f"{len(table_ids)} Tables have been inserted to index with id {index_id}.",
+        )
+
+    def __get_table_contexts(self, table_id: str) -> list[tuple[str, str]]:
+        return self.connection.sql(
+            f"""SELECT id, context FROM table_contexts
+            WHERE table_id='{table_id}'"""
+        ).fetchall()
+
+    def __get_table_summaries(self, table_id: str) -> list[tuple[str, str]]:
+        return self.connection.sql(
+            f"""SELECT id, summary FROM table_summaries
+            WHERE table_id='{table_id}'"""
+        ).fetchall()
 
 
 if __name__ == "__main__":
