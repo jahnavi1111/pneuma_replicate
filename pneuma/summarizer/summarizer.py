@@ -155,7 +155,10 @@ class Summarizer:
             for output in outputs:
                 summary = output[-1]["content"]
                 summaries.append(summary)
-        return summaries
+
+        # The summaries generated are summaries for each column. We want each document
+        # to be a long string of all the column summaries.
+        return [" | ".join(summaries)]
 
     def __get_col_description_prompt(self, columns: str, column: str):
         return f"""A table has the following columns:
