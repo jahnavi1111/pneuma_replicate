@@ -127,14 +127,14 @@ def prompt_pipeline(
                 conversation[0]["content"] = truncated_text
         set_seed(42)  # Enhance reproducibility for when using sampling
         answers = pipe(
-            conversation, truncation=True, batch_size=batch_size, **generation_configs
+            conversations, truncation=True, batch_size=batch_size, **generation_configs
         )
-        conversations = []
+        results = []
         if isinstance(answers[0], dict):
             answers = [answers]
         for answer in answers:
-            conversations.append(answer[0]["generated_text"])
-        return conversations
+            results.append(answer[0]["generated_text"])
+        return results
     except Exception as error:
         logger.warning(error)
         return [[{"role": "user", "content": ""}]]

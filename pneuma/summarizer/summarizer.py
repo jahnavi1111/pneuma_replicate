@@ -5,12 +5,22 @@ from pathlib import Path
 import duckdb
 import fire
 import pandas as pd
+import torch
+from tqdm import tqdm
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 import os
 
-# from summarizer.pipeline_initializer import initialize_pipeline
-# from summarizer.prompting_interface import prompt_pipeline
+# I don't know why the imports has to be like this, but this is how I made it work.
+try:
+    # When running as a standalone script, the imports should be as follows
+    from pipeline_initializer import initialize_pipeline  # pylint: disable=import-error
+    from prompting_interface import prompt_pipeline  # pylint: disable=import-error
+except ModuleNotFoundError:
+    # When running as a pip-installed pneuma CLI application, the imports should be as follows
+    from .pipeline_initializer import initialize_pipeline
+    from .prompting_interface import prompt_pipeline
+
 from utils.response import Response, ResponseStatus
 from utils.table_status import TableStatus
 
@@ -27,9 +37,15 @@ class Summarizer:
         # self.pipe = initialize_pipeline(
         #     "meta-llama/Meta-Llama-3-8B-Instruct", torch.bfloat16, hf_token
         # )
+        # Specific setting for Llama-3-8B-Instruct for batching
+        # self.pipe.tokenizer.pad_token_id = self.pipe.model.config.eos_token_id
+        # self.pipe.tokenizer.padding_side = 'left'
 
         # Use small model for local testing
-        # self.pipe = initialize_pipeline("TinyLlama/TinyLlama_v1.1", torch.bfloat16)
+        self.pipe = initialize_pipeline("TinyLlama/TinyLlama_v1.1", torch.bfloat16)
+        self.pipe.tokenizer.chat_template = "{% for message in messages %}{% if message['role'] == 'user' %}{{ ' ' }}{% endif %}{{ message['content'] }}{% if not loop.last %}{{ '  ' }}{% endif %}{% endfor %}{{ eos_token }}"
+        self.pipe.tokenizer.pad_token_id = self.pipe.model.config.eos_token_id
+        self.pipe.tokenizer.padding_side = "left"
 
     def summarize(self, table_id: str = None) -> str:
         if table_id is None or table_id == "":
@@ -89,7 +105,7 @@ class Summarizer:
 
         table_df = self.connection.sql(f"SELECT * FROM '{table_id}'").to_df()
 
-        summaries = self.produce_summaries(table_df)
+        summaries = self.__produce_summaries(table_df)
 
         insert_df = pd.DataFrame.from_dict(
             {
@@ -114,11 +130,47 @@ class Summarizer:
 
         return summary_ids
 
-    def produce_summaries(
+    def __produce_summaries(
         self,
         df: pd.DataFrame,
     ) -> list[str]:
+        summaries = []
+        summaries.extend(self.__generate_column_summary(df))
+        summaries.extend(self.__generate_descriptions(df))
+        return summaries
+
+    def __generate_column_summary(self, df: pd.DataFrame) -> list[str]:
         return [" | ".join(df.columns)]
+
+    def __generate_descriptions(self, df: pd.DataFrame) -> list[str]:
+        summaries = []
+        cols = df.columns
+        conversations = []
+        for col in cols:
+            prompt = self.__get_col_description_prompt(" | ".join(cols), col)
+            conversations.append([{"role": "user", "content": prompt}])
+
+        for i in tqdm(range(0, len(conversations), 3)):
+            outputs = prompt_pipeline(
+                self.pipe,
+                conversations[i : i + 3],
+                batch_size=3,
+                context_length=8192,
+                max_new_tokens=400,
+                temperature=None,
+                top_p=None,
+            )
+            for output in outputs:
+                summary = output[-1]["content"]
+                summaries.append(summary)
+        return summaries
+
+    def __get_col_description_prompt(self, columns: str, column: str):
+        return f"""A table has the following columns:
+/*
+{columns}
+*/
+Describe briefly what the {column} column represents. If not possible, simply state "No description.\""""
 
 
 if __name__ == "__main__":
