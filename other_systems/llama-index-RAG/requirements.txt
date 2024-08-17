@@ -1,0 +1,5 @@
+llama-index-readers-file==0.1.32
+llama-index-llms-huggingface==0.2.5
+duckdb==1.0.0
+SQLAlchemy==2.0.32
+duckdb_engine==0.13.1
