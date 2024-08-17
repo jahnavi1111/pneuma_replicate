@@ -31,7 +31,7 @@ class CsvDataSource:
 
         content = "col: " + " | ".join(df.columns)
         self.pointer += 1
-        return (csv_file_name, content, len(df))
+        return (self.csv_file_names[self.pointer-1][:-4], content, len(df))
 
     def set_data_source(self, data_source: str):
         """
