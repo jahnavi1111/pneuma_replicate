@@ -9,7 +9,7 @@ logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger("prompting_interface.py")
 
 
-def truncate_text(
+def truncate_conversation_if_necessary(
     tokenizer: PreTrainedTokenizerBase,
     conversation: list[dict[str, str]],
     context_length: int,
@@ -33,31 +33,8 @@ def truncate_text(
     )
     max_tokens = context_length - base_len - max_new_tokens
     tokens = tokenizer.tokenize(conversation[0]["content"])[:max_tokens]
-    return tokenizer.convert_tokens_to_string(tokens)
-
-
-def is_within_context_length(
-    tokenizer: PreTrainedTokenizerBase,
-    conversation: list[dict[str, str]],
-    context_length: int,
-):
-    """
-    Check whether a conversation is within context_length
-
-    ### Parameters:
-    - tokenizer (PreTrainedTokenizerBase): A PreTrainedTokenizerBase from HuggingFace
-    - conversation (list[dict[str, str]]): A conversation
-    - context_length (int): The context length of a model
-
-    ### Returns:
-    - check_result (bool): Indicator of whether the check result is True
-    """
-    conv_len = len(
-        tokenizer.apply_chat_template(
-            conversation, tokenize=True, add_generation_prompt=True
-        )
-    )
-    return conv_len <= context_length
+    conversation[0]["content"] = tokenizer.convert_tokens_to_string(tokens)
+    return conversation
 
 
 def remove_unset_generation_configs(generation_configs: dict[str, any]):
@@ -118,19 +95,15 @@ def prompt_pipeline(
     }
     remove_unset_generation_configs(generation_configs)
     try:
-        for conversation in conversations:
-            if not is_within_context_length(
-                pipe.tokenizer, conversation, context_length
-            ):
-                truncated_text = truncate_text(
-                    pipe.tokenizer, conversation, context_length, max_new_tokens
-                )
-                conversation[0]["content"] = truncated_text
-        set_seed(42)  # Enhance reproducibility for when using sampling
+        for i in range(len(conversations)):
+            conversations[i] = truncate_conversation_if_necessary(
+                pipe.tokenizer, conversations[i], context_length, max_new_tokens
+            )
+        set_seed(42, deterministic=True)
         answers = pipe(
             conversations, truncation=True, batch_size=batch_size, **generation_configs
         )
-        results = []
+        results: list[list[dict[str,str]]] = []
         if isinstance(answers[0], dict):
             answers = [answers]
         for answer in answers:
@@ -143,11 +116,18 @@ def prompt_pipeline(
 
 if __name__ == "__main__":
     import torch
+    import os
+    os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
+    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+    import setproctitle
+    setproctitle.setproctitle("python")
+
     from pipeline_initializer import initialize_pipeline
 
     pipe = initialize_pipeline("meta-llama/Meta-Llama-3-8B-Instruct", torch.bfloat16)
     conversations = [[{"role": "user", "content": "Tell me about Illinois!"}]]
-    output = prompt_pipeline(pipe, conversations, 1, 8192)
-
-    assert len(output) == 2
+    output = prompt_pipeline(
+        pipe,conversations, 1, 8192, temperature=None, top_p=None, max_new_tokens=20
+    )
+    print(output)
     assert output[0][-1]["role"] == "assistant"
