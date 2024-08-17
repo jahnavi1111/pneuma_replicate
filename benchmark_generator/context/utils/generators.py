@@ -21,35 +21,42 @@ def generate_contexts(
     generation_params={},
 ):
     csv_data_source = CsvDataSource(data_src_path)
-    contexts: list[dict[str, str]] = []
+    try:
+        contexts = read_jsonl(f"{contexts_name}.jsonl")
+    except:
+        contexts: list[dict[str, str]] = []
 
     for table in tqdm(iter(csv_data_source), desc="Processing tables"):
         conversations = []
         for i in tqdm(range(len(questions)), desc="Iterating questions"):
+            # Skip if the contexts of a table is already generated
+            if table[0] in [context["table"] for context in contexts]:
+                continue
             prompt = get_generate_context_prompt(table[1], questions[i], table[2])
             conversations.append([{"role": "user", "content": prompt}])
 
-        outputs = prompt_pipeline(
-            pipe,
-            conversations,
-            batch_size=2,
-            context_length=8192,
-            top_p=None,
-            temperature=None,
-            **generation_params,
-        )
-
-        for output_idx, output in enumerate(outputs):
-            context = output[-1]["content"]
-            contexts.append(
-                {
-                    "id": f"{table[0]}_{output_idx}",
-                    "table": table[0],
-                    "context_question": questions[output_idx],
-                    "context": context,
-                }
+        if len(conversations) > 0:
+            outputs = prompt_pipeline(
+                pipe,
+                conversations,
+                batch_size=2,
+                context_length=8192,
+                top_p=None,
+                temperature=None,
+                **generation_params,
             )
-            write_jsonl(contexts, f"{contexts_name}.jsonl")
+
+            for output_idx, output in enumerate(outputs):
+                context = output[-1]["content"]
+                contexts.append(
+                    {
+                        "id": f"{table[0]}_{output_idx}",
+                        "table": table[0],
+                        "context_question": questions[output_idx],
+                        "context": context,
+                    }
+                )
+                write_jsonl(contexts, f"{contexts_name}.jsonl")
 
 
 def generate_questions(
@@ -96,7 +103,7 @@ def generate_questions(
         )
 
         for output_idx, output in enumerate(outputs):
-            question_bx1 = output[-1]["content"]
+            question_bx1 = output[-1]["content"].split("Question: ")[-1]
             benchmark.append(
                 {
                     "context_id": context_ids[output_idx],
