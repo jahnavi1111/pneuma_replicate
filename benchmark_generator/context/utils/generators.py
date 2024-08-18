@@ -65,74 +65,85 @@ def generate_questions(
     pipe: TextGenerationPipeline,
     generation_params={},
 ):
-    random.seed(42)
-
-    benchmark: list[dict[str, str]] = []
+    try:
+        benchmark = read_jsonl(f"{benchmark_name}.jsonl")
+    except:
+        benchmark: list[dict[str, str]] = []
     contexts = read_jsonl(f"{contexts_name}.jsonl")
     context_questions = [context["context_question"] for context in contexts[:51]]
     total_sample_size = 1020
     num_samples_per_group = total_sample_size // len(context_questions)
 
-    for context_question in tqdm(
+    for question_id, context_question in enumerate(tqdm(
         context_questions, "Iterating specific context questions"
-    ):
+    )):
         specific_contexts = [
             context
             for context in contexts
             if context["context_question"] == context_question
         ]
+        random.seed(question_id)
         sampled_contexts = random.sample(specific_contexts, k=num_samples_per_group)
 
         conversations_bx1 = []
         context_ids: list[str] = []
         tables: list[str] = []
         for context in sampled_contexts:
+            if context["id"] in [row["context_id"] for row in benchmark]:
+                break
             prompt = get_generate_bx1_prompt(context["context"])
             conversations_bx1.append([{"role": "user", "content": prompt}])
             context_ids.append(context["id"])
             tables.append(context["table"])
 
-        outputs = prompt_pipeline(
-            pipe,
-            conversations_bx1,
-            batch_size=2,
-            context_length=8192,
-            top_p=None,
-            temperature=None,
-            **generation_params,
-        )
-
-        for output_idx, output in enumerate(outputs):
-            question_bx1 = output[-1]["content"].split("Question: ")[-1]
-            benchmark.append(
-                {
-                    "context_id": context_ids[output_idx],
-                    "question_bx1": question_bx1,
-                    "question_bx2": "",
-                    "answer_tables": [tables[output_idx]],
-                }
+        if len(conversations_bx1) > 0:
+            outputs = prompt_pipeline(
+                pipe,
+                conversations_bx1,
+                batch_size=2,
+                context_length=8192,
+                top_p=None,
+                temperature=None,
+                **generation_params,
             )
-            write_jsonl(benchmark, f"{benchmark_name}.jsonl")
+
+            for output_idx, output in enumerate(outputs):
+                question_bx1 = output[-1]["content"].split("Question: ")[-1]
+                benchmark.append(
+                    {
+                        "context_id": context_ids[output_idx],
+                        "question_bx1": question_bx1,
+                        "question_bx2": "",
+                        "answer_tables": [tables[output_idx]],
+                    }
+                )
+                write_jsonl(benchmark, f"{benchmark_name}.jsonl")
 
         conversations_bx2: list[str] = []
-        for item in benchmark:
+
+        base_bx2_index = question_id*len(sampled_contexts)
+        for item in benchmark[base_bx2_index:base_bx2_index+len(sampled_contexts)]:
+            # Skip if the bx2 question already generated
+            if len(item["question_bx2"]) > 0:
+                continue
             prompt = get_generate_bx2_prompt(item["question_bx1"])
             conversations_bx2.append([{"role": "user", "content": prompt}])
 
-        outputs = prompt_pipeline(
-            pipe,
-            conversations_bx2,
-            batch_size=2,
-            context_length=8192,
-            top_p=None,
-            temperature=None,
-            **generation_params,
-        )
+        if len(conversations_bx2) > 0:
+            outputs = prompt_pipeline(
+                pipe,
+                conversations_bx2,
+                batch_size=2,
+                context_length=8192,
+                top_p=None,
+                temperature=None,
+                **generation_params,
+            )
 
-        for output_idx, output in enumerate(outputs):
-            question_bx2 = output[-1]["content"]
-            benchmark[output_idx]["question_bx2"] = question_bx2
-            write_jsonl(benchmark, f"{benchmark_name}.jsonl")
+            for output_idx, output in enumerate(outputs):
+                question_bx2 = output[-1]["content"]
+                benchmark[base_bx2_index+output_idx]["question_bx2"] = question_bx2
+                write_jsonl(benchmark, f"{benchmark_name}.jsonl")
 
 
 def label_questions(
