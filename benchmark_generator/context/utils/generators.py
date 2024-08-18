@@ -152,8 +152,8 @@ def label_questions(
     pipe: TextGenerationPipeline,
     generation_params={},
 ):
-    benchmark = read_jsonl(benchmark_name)
-    contexts = read_jsonl(contexts_name)
+    benchmark = read_jsonl(f"{benchmark_name}.jsonl")
+    contexts = read_jsonl(f"{contexts_name}.jsonl")
 
     for i in tqdm(range(len(benchmark)), "Processing rows of benchmark"):
         question_bx1 = benchmark[i]["question_bx1"]
@@ -163,6 +163,8 @@ def label_questions(
         context_elicitation_question = [
             context for context in contexts if context["id"] == context_id
         ][0]["context_question"]
+
+        # Contexts that were generated from the same context elicitation question
         specific_contexts = [
             context
             for context in contexts
