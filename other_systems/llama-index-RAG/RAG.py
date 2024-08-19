@@ -53,9 +53,9 @@ def get_documents(path: str, duckdb_filename=""):
 
 
 # Adjust names and tokens
-long_name = "pneuma_public_bi"
-short_name = "public"
-login("TODO: HF_Token")
+long_name = "pneuma_adventure_works"
+short_name = "adventure"
+# login("TODO: HF_Token")
 
 documents = get_documents(long_name, short_name)
 ctx_benchmark = read_jsonl(
@@ -122,7 +122,7 @@ print("Benchmark results for BX2")
 evaluate_benchmark(ctx_benchmark, "question_bx2")
 
 print("Benchmark results for BC1")
-evaluate_benchmark(ctx_benchmark, "question_from_sql_1")
+evaluate_benchmark(ctn_benchmark, "question_from_sql_1")
 
 print("Benchmark results for BC2")
-evaluate_benchmark(ctx_benchmark, "question")
+evaluate_benchmark(ctn_benchmark, "question")
