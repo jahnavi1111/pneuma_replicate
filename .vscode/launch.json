@@ -132,7 +132,7 @@
             "cwd": "${workspaceFolder}/pneuma/query",
             "program": "query.py",
             "console": "integratedTerminal",
-            "args": "query --db_path=../out/storage.db sample_index \"Why was this dataset created?\" 2",
+            "args": "query --db_path=../out/storage.db --index_path=../out/indexes complete_index \"Why was this dataset created?\" 3",
         },
     ]
 }
