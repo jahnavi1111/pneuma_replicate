@@ -3,7 +3,7 @@ import setproctitle
 import torch
 import sys
 
-sys.path.append("..")
+sys.path.append("../..")
 
 from tqdm import tqdm
 from benchmark_generator.context.utils.jsonl import read_jsonl
@@ -22,7 +22,7 @@ set_seed(42, deterministic=True)
 
 
 def get_documents(path: str, duckdb_filename=""):
-    engine = create_engine(f"duckdb:///duckdb/{duckdb_filename}.duckdb")
+    engine = create_engine(f"duckdb:///{duckdb_filename}.duckdb")
     contexts = read_jsonl(
         f"../../data_src/benchmarks/context/{duckdb_filename}/contexts_{duckdb_filename}.jsonl"
     )
@@ -53,11 +53,11 @@ def get_documents(path: str, duckdb_filename=""):
 
 
 # Adjust names and tokens
-long_name = "pneuma_public_bi"
-short_name = "public"
-login("TODO: HF_Token")
+long_name = "pneuma_adventure_works"
+short_name = "adventure"
+# login("TODO: HF_Token")
 
-documents = get_documents(long_name, short_name)
+documents = get_documents(f"../../data_src/tables/{long_name}", short_name)
 ctx_benchmark = read_jsonl(
     f"../../data_src/benchmarks/context/{short_name}/bx_{short_name}.jsonl"
 )
@@ -122,7 +122,7 @@ print("Benchmark results for BX2")
 evaluate_benchmark(ctx_benchmark, "question_bx2")
 
 print("Benchmark results for BC1")
-evaluate_benchmark(ctx_benchmark, "question_from_sql_1")
+evaluate_benchmark(ctn_benchmark, "question_from_sql_1")
 
 print("Benchmark results for BC2")
-evaluate_benchmark(ctx_benchmark, "question")
+evaluate_benchmark(ctn_benchmark, "question")
