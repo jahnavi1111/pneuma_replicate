@@ -148,8 +148,8 @@ class IndexGenerator:
                 payload = content["payload"]
 
                 documents.append(payload)
-                metadatas.append({"table": f"{table_id}_SEP_contents_{context_id}"})
-                ids.append(f"{table_id}_SEP_contents_{context_id}")
+                metadatas.append({"table": f"{table_id}_SEP_{context_id}"})
+                ids.append(f"{table_id}_SEP_{context_id}")
 
             for summary in summaries:
                 summary_id = summary[0]
@@ -157,8 +157,8 @@ class IndexGenerator:
                 payload = content["payload"]
 
                 documents.append(payload)
-                metadatas.append({"table": f"{table_id}_SEP_summaries_{summary_id}"})
-                ids.append(f"{table_id}_SEP_summaries_{summary_id}")
+                metadatas.append({"table": f"{table_id}_SEP_contents_{summary_id}"})
+                ids.append(f"{table_id}_SEP_contents_{summary_id}")
 
         if len(documents) == 0:
             return Response(
