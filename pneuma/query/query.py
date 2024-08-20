@@ -1,18 +1,20 @@
 import os
 import sys
+from collections import defaultdict
 from pathlib import Path
 
 import bm25s
 import chromadb
 import duckdb
 import fire
+import pandas as pd
 import Stemmer
+import torch
 from sentence_transformers import SentenceTransformer
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
-
-from collections import defaultdict
-
+from utils.pipeline_initializer import initialize_pipeline
+from utils.prompting_interface import prompt_pipeline
 from utils.response import Response, ResponseStatus
 
 
@@ -33,6 +35,20 @@ class Query:
         self.embedding_model = SentenceTransformer(
             "BAAI/bge-small-en-v1.5", trust_remote_code=True
         )
+
+        # self.pipe = initialize_pipeline(
+        #     "meta-llama/Meta-Llama-3-8B-Instruct", torch.bfloat16, hf_token
+        # )
+        # Specific setting for Llama-3-8B-Instruct for batching
+        # self.pipe.tokenizer.pad_token_id = self.pipe.model.config.eos_token_id
+        # self.pipe.tokenizer.padding_side = 'left'
+
+        # Use small model for local testing
+        self.pipe = initialize_pipeline("TinyLlama/TinyLlama_v1.1", torch.bfloat16)
+        self.pipe.tokenizer.chat_template = "{% for message in messages %}{% if message['role'] == 'user' %}{{ ' ' }}{% endif %}{{ message['content'] }}{% if not loop.last %}{{ '  ' }}{% endif %}{% endfor %}{{ eos_token }}"
+        self.pipe.tokenizer.pad_token_id = self.pipe.model.config.eos_token_id
+        self.pipe.tokenizer.padding_side = "left"
+
         self.index_path = index_path
         self.vector_index_path = os.path.join(index_path, "vector")
         self.keyword_index_path = os.path.join(index_path, "keyword")
@@ -87,8 +103,8 @@ class Query:
             all_nodes.append((node_id, combined_score, doc))
 
         sorted_nodes = sorted(all_nodes, key=lambda node: (-node[1], node[0]))[:k]
-        # sorted_nodes = self.__rerank(sorted_nodes, query)
-        return sorted_nodes
+        reranked_nodes = self.__rerank(sorted_nodes, query)
+        return reranked_nodes
 
     def __process_nodes_bm25(self, items):
         # Normalize relevance scores and return the nodes in dict format
@@ -121,6 +137,82 @@ class Query:
                 score = (scores[idx] - min_score) / (max_score - min_score)
             processed_nodes[items["ids"][0][idx]] = (score, items["documents"][0][idx])
         return processed_nodes
+
+    def __rerank(
+        self,
+        nodes: list[tuple[str, float, str]],
+        query: str,
+    ):
+        tables_relevancy = defaultdict(bool)
+
+        for node in nodes:
+            node_id = node[0]
+            # table_id = node_id.split("_SEP_")[0]
+            node_type = node_id.split("_SEP_")[1]
+            if node_type.startswith("contents"):
+                if self.__is_table_content_relevant(node[2], query):
+                    tables_relevancy[node_id] = True
+            else:
+                if self.__is_table_context_relevant(node[2], query):
+                    tables_relevancy[node_id] = True
+        new_nodes = [
+            (node_id, score, doc)
+            for node_id, score, doc in nodes
+            if tables_relevancy[node_id]
+        ] + [
+            (node_id, score, doc)
+            for tablnode_id, score, doc in nodes
+            if not tables_relevancy[node_id]
+        ]
+        return new_nodes
+
+    def __is_table_content_relevant(self, content: str, question: str):
+        prompt = f"""Given a table with the following columns:
+    */
+    {content}
+    */
+    and this question:
+    /*
+    {question}
+    */
+    Is the table relevant to answer the question? Begin your answer with yes/no."""
+
+        answer: str = prompt_pipeline(
+            self.pipe,
+            [[{"role": "user", "content": prompt}]],
+            context_length=8192,
+            max_new_tokens=3,
+            top_p=None,
+            temperature=None,
+        )[0][-1]["content"]
+
+        if answer.lower().startswith("yes"):
+            return True
+        return False
+
+    def __is_table_context_relevant(self, context: str, question: str):
+        prompt = f"""Given this context describing a table:
+    */
+    {context}
+    */
+    and this question:
+    /*
+    {question}
+    */
+    Is the table relevant to answer the question? Begin your answer with yes/no."""
+
+        answer: str = prompt_pipeline(
+            self.pipe,
+            [[{"role": "user", "content": prompt}]],
+            context_length=8192,
+            max_new_tokens=3,
+            top_p=None,
+            temperature=None,
+        )[0][-1]["content"]
+
+        if answer.lower().startswith("yes"):
+            return True
+        return False
 
 
 if __name__ == "__main__":
