@@ -12,7 +12,7 @@ def write_jsonl(data: list[dict[str, str]], file_path: str):
             file.write("\n")
 
 
-tables_path = "pneuma_fetaqa"
+tables_path = "../data_src/tables/pneuma_fetaqa"
 summaries_name = "fetaqa_standard.jsonl"
 content_summaries: list[dict[str, str]] = []
 tables = [
