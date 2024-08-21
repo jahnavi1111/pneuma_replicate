@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import sys
 from pathlib import Path
@@ -9,7 +10,15 @@ import pandas as pd
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from utils.response import Response, ResponseStatus
+from utils.summary_types import SummaryType
 from utils.table_status import TableStatus
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[logging.FileHandler("pneuma.log"), logging.StreamHandler()],
+)
 
 
 class Registration:
@@ -24,6 +33,7 @@ class Registration:
         try:
             self.connection.execute("INSTALL httpfs")
             self.connection.execute("LOAD httpfs")
+            logger.info("HTTPFS installed and loaded.")
 
             self.connection.sql(
                 """CREATE TABLE IF NOT EXISTS table_status (
@@ -36,10 +46,12 @@ class Registration:
                     )
                 """
             )
+            logger.info("Table status table created.")
 
             # Arbitrary auto-incrementing id for contexts and summaries.
             # Change to "CREATE IF NOT EXISTS" on production.
             self.connection.sql("CREATE SEQUENCE IF NOT EXISTS id_seq START 1")
+            logger.info("ID sequence created.")
 
             # DuckDB does not support "ON DELETE CASCADE" so be careful with deletions.
             self.connection.sql(
@@ -50,16 +62,19 @@ class Registration:
                     )
                 """
             )
+            logger.info("Table contexts table created.")
 
             # DuckDB does not support "ON DELETE CASCADE" so be careful with deletions.
             self.connection.sql(
                 """CREATE TABLE IF NOT EXISTS table_summaries (
                     id INTEGER DEFAULT nextval('id_seq') PRIMARY KEY,
                     table_id VARCHAR NOT NULL REFERENCES table_status(id),
-                    summary JSON NOT NULL
+                    summary JSON NOT NULL,
+                    summary_type VARCHAR NOT NULL,
                     )
                 """
             )
+            logger.info("Table summaries table created.")
 
             self.connection.sql(
                 """CREATE TABLE IF NOT EXISTS indexes (
@@ -69,6 +84,7 @@ class Registration:
                     )
                 """
             )
+            logger.info("Indexes table created.")
 
             self.connection.sql(
                 """CREATE TABLE IF NOT EXISTS index_table_mappings (
@@ -78,6 +94,7 @@ class Registration:
                     )
                 """
             )
+            logger.info("Index table mappings table created.")
 
             # TODO: Adjust the response column to the actual response type.
             self.connection.sql(
@@ -90,6 +107,8 @@ class Registration:
                     )
                 """
             )
+            logger.info("Query history table created.")
+
             return Response(
                 status=ResponseStatus.SUCCESS,
                 message="Database Initialized.",
@@ -228,20 +247,23 @@ class Registration:
         )
 
     def __read_table_folder(self, folder_path: str, creator: str) -> Response:
-        print(f"Reading folder {folder_path}...")
+        logger.info("Reading folder %s...", folder_path)
         paths = [os.path.join(folder_path, f) for f in os.listdir(folder_path)]
         file_count = 0
         for path in paths:
-            print(f"Processing {path}...")
+            logger.info("Processing %s...", path)
 
             # If the path is a folder, recursively read the folder.
             if os.path.isdir(path):
-                print(self.__read_table_folder(path, creator).message)
+                logger.info(self.__read_table_folder(path, creator).message)
                 continue
 
             response = self.__read_table_file(path, creator)
-            print(
-                f"Processing table {path} {response.status.value}: {response.message}"
+            logger.info(
+                "Processing table %s %s: %s",
+                path,
+                response.status.value,
+                response.message,
             )
             file_count += 1
 
@@ -265,8 +287,8 @@ class Registration:
             ).fetchone()[0]
         elif metadata_type == "summary":
             metadata_id = self.connection.sql(
-                f"""INSERT INTO table_summaries (table_id, summary)
-                VALUES ('{table_id}', '{json.dumps(payload)}')
+                f"""INSERT INTO table_summaries (table_id, summary, summary_type)
+                VALUES ('{table_id}', '{json.dumps(payload)}', '{SummaryType.USER_GENERATED}')
                 RETURNING id"""
             ).fetchone()[0]
 
@@ -300,7 +322,7 @@ class Registration:
                 table_id = row["table_id"]
                 metadata_type = row["metadata_type"]
                 metadata_content = row["value"]
-                print(
+                logger.info(
                     self.__insert_metadata(
                         metadata_type, metadata_content, table_id
                     ).message
@@ -315,22 +337,25 @@ class Registration:
     def __read_metadata_folder(
         self, metadata_path: str, metadata_type: str, table_id: str
     ) -> Response:
-        print(f"Reading metadata folder {metadata_path}...")
+        logger.info("Reading metadata folder %s...", metadata_path)
         paths = [os.path.join(metadata_path, f) for f in os.listdir(metadata_path)]
         file_count = 0
         for path in paths:
-            print(f"Processing {path}...")
+            logger.info("Processing %s...", path)
 
             # If the path is a folder, recursively read the folder.
             if os.path.isdir(path):
-                print(
+                logger.info(
                     self.__read_metadata_folder(path, metadata_type, table_id).message
                 )
                 continue
 
             response = self.__read_metadata_file(path, metadata_type, table_id)
-            print(
-                f"Processing metadata {path} {response.status.value}: {response.message}"
+            logger.info(
+                "Processing metadata %s %s: %s",
+                path,
+                response.status.value,
+                response.message,
             )
             file_count += 1
 

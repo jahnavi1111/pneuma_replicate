@@ -1,4 +1,6 @@
 import json
+import logging
+import os
 import sys
 from pathlib import Path
 
@@ -9,12 +11,15 @@ import torch
 from tqdm import tqdm
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
-import os
 
 from utils.pipeline_initializer import initialize_pipeline
 from utils.prompting_interface import prompt_pipeline
 from utils.response import Response, ResponseStatus
+from utils.summary_types import SummaryType
 from utils.table_status import TableStatus
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 class Summarizer:
@@ -40,8 +45,10 @@ class Summarizer:
         self.pipe.tokenizer.padding_side = "left"
 
     def summarize(self, table_id: str = None) -> str:
+        logger.info("TEST")
+        print("TEST")
         if table_id is None or table_id == "":
-            print("Generating summaries for all unsummarized tables...")
+            logger.info("Generating summaries for all unsummarized tables...")
             table_ids = [
                 entry[0]
                 for entry in self.connection.sql(
@@ -49,19 +56,19 @@ class Summarizer:
                     WHERE status = '{TableStatus.REGISTERED}'"""
                 ).fetchall()
             ]
-            print(f"Found {len(table_ids)} unsummarized tables.")
+            logger.info("Found %d unsummarized tables.", len(table_ids))
         else:
             table_ids = [table_id]
 
         all_summary_ids = []
         for table_id in table_ids:
-            print(f"Summarizing table with ID: {table_id}")
+            logger.info("Summarizing table with ID: %s", table_id)
             all_summary_ids.extend(self.__summarize_table_by_id(table_id))
 
         return Response(
             status=ResponseStatus.SUCCESS,
             message=f"Total of {len(all_summary_ids)} summaries has been added "
-            f"with IDs: {', '.join([str(i[0]) for i in all_summary_ids])}.\n",
+            f"with IDs: {', '.join([str(summary_id) for summary_id in all_summary_ids])}.\n",
         ).to_json()
 
     def purge_tables(self) -> str:
@@ -74,7 +81,7 @@ class Summarizer:
         ]
 
         for table_id in summarized_table_ids:
-            print(f"Dropping table with ID: {table_id}")
+            logger.info("Dropping table with ID: %s", table_id)
             self.connection.sql(f'DROP TABLE "{table_id}"')
             self.connection.sql(
                 f"""UPDATE table_status
@@ -92,27 +99,31 @@ class Summarizer:
             f"SELECT status FROM table_status WHERE id = '{table_id}'"
         ).fetchone()[0]
         if status == str(TableStatus.SUMMARIZED) or status == str(TableStatus.DELETED):
-            print(f"Table with ID {table_id} has already been summarized.")
+            logger.warning("Table with ID %s has already been summarized.", table_id)
             return []
 
         table_df = self.connection.sql(f"SELECT * FROM '{table_id}'").to_df()
 
-        summaries = self.__produce_summaries(table_df)
+        standard_summary = self.__generate_column_summary(table_df)
+        narration_summary = self.__generate_column_description(table_df)
 
-        insert_df = pd.DataFrame.from_dict(
-            {
-                "table_id": [table_id] * len(summaries),
-                "summary": [
-                    json.dumps({"payload": summary.strip()}) for summary in summaries
-                ],
-            }
+        summary_ids = []
+
+        summary_ids.append(
+            self.connection.sql(
+                f"""INSERT INTO table_summaries (table_id, summary, summary_type)
+                VALUES ('{table_id}', '{json.dumps(standard_summary)}', '{SummaryType.STANDARD}')
+                RETURNING id"""
+            ).fetchone()[0]
         )
 
-        summary_ids = self.connection.sql(
-            """INSERT INTO table_summaries (table_id, summary)
-            SELECT * FROM insert_df
-            RETURNING id"""
-        ).fetchall()
+        summary_ids.append(
+            self.connection.sql(
+                f"""INSERT INTO table_summaries (table_id, summary, summary_type)
+                VALUES ('{table_id}', '{json.dumps(narration_summary)}', '{SummaryType.NARRATION}')
+                RETURNING id"""
+            ).fetchone()[0]
+        )
 
         self.connection.sql(
             f"""UPDATE table_status
@@ -122,19 +133,11 @@ class Summarizer:
 
         return summary_ids
 
-    def __produce_summaries(
-        self,
-        df: pd.DataFrame,
-    ) -> list[str]:
-        summaries = []
-        summaries.extend(self.__generate_column_summary(df))
-        summaries.extend(self.__generate_descriptions(df))
-        return summaries
+    def __generate_column_summary(self, df: pd.DataFrame) -> str:
+        return " | ".join(df.columns).strip()
 
-    def __generate_column_summary(self, df: pd.DataFrame) -> list[str]:
-        return [" | ".join(df.columns)]
-
-    def __generate_descriptions(self, df: pd.DataFrame) -> list[str]:
+    def __generate_column_description(self, df: pd.DataFrame) -> list[str]:
+        return " description | ".join(df.columns).strip() + " description"
         summaries = []
         cols = df.columns
         conversations = []
@@ -158,7 +161,7 @@ class Summarizer:
 
         # The summaries generated are summaries for each column. We want each document
         # to be a long string of all the column summaries.
-        return [" | ".join(summaries)]
+        return " | ".join(summaries).strip()
 
     def __get_col_description_prompt(self, columns: str, column: str):
         return f"""A table has the following columns:
