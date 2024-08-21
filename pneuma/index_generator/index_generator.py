@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import sys
 from pathlib import Path
@@ -13,7 +14,12 @@ from chromadb.db.base import UniqueConstraintError
 from sentence_transformers import SentenceTransformer
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
+from utils.logging_config import configure_logging
 from utils.response import Response, ResponseStatus
+from utils.summary_types import SummaryType
+
+configure_logging()
+logger = logging.getLogger("IndexGenerator")
 
 
 class IndexGenerator:
@@ -41,7 +47,7 @@ class IndexGenerator:
 
     def generate_index(self, index_name: str, table_ids: list | tuple = None) -> str:
         if table_ids is None:
-            print("No table ids provided. Generating index for all tables...")
+            logger.info("No table ids provided. Generating index for all tables...")
             table_ids = [
                 entry[0]
                 for entry in self.connection.sql(
@@ -51,7 +57,7 @@ class IndexGenerator:
         elif isinstance(table_ids, str):
             table_ids = (table_ids,)
 
-        print(f"Generating index for {len(table_ids)} tables...")
+        logger.info("Generating index for %d tables...", len(table_ids))
 
         ### GENERATING AND INSERTING TABLES TO VECTOR INDEX ###
         vector_index_response = self.__generate_vector_index(index_name)
@@ -61,7 +67,7 @@ class IndexGenerator:
         vector_index_id = vector_index_response.data["index_id"]
         chroma_collection = vector_index_response.data["collection"]
 
-        print(vector_index_response.message)
+        logger.info(vector_index_response.message)
         vector_insert_response = self.__insert_tables_to_vector_index(
             vector_index_id, table_ids, chroma_collection
         )
@@ -70,7 +76,7 @@ class IndexGenerator:
             self.chroma_client.delete_collection(index_name)
             return vector_insert_response.to_json()
 
-        print(vector_index_response.message)
+        logger.info(vector_insert_response.message)
 
         ### GENERATING AND INSERTING TABLES TO KEYWORD INDEX ###
         keyword_index_response = self.__generate_keyword_index(index_name)
@@ -81,7 +87,7 @@ class IndexGenerator:
         keyword_index_id = keyword_index_response.data["index_id"]
         retriever = keyword_index_response.data["retriever"]
 
-        print(keyword_index_response.message)
+        logger.info(keyword_index_response.message)
         keyword_insert_response = self.__insert_tables_to_keyword_index(
             keyword_index_id, table_ids, retriever
         )
@@ -90,7 +96,7 @@ class IndexGenerator:
             self.chroma_client.delete_collection(index_name)
             return keyword_insert_response.to_json()
 
-        print(keyword_insert_response.message)
+        logger.info(keyword_insert_response.message)
 
         return Response(
             status=ResponseStatus.SUCCESS,
@@ -138,9 +144,9 @@ class IndexGenerator:
         ids = []
 
         for table_id in table_ids:
-            print(f"Processing table {table_id}...")
+            logger.info("Processing table %s...", table_id)
             contexts = self.__get_table_contexts(table_id)
-            summaries = self.__get_table_summaries(table_id)
+            summaries = self.__get_table_summaries(table_id, SummaryType.STANDARD)
 
             for context in contexts:
                 context_id = context[0]
@@ -229,9 +235,9 @@ class IndexGenerator:
 
         corpus_json = []
         for table_id in table_ids:
-            print(f"Processing table {table_id}...")
-            summaries = self.__get_table_summaries(table_id)
+            logger.info("Processing table %s...", table_id)
             contexts = self.__get_table_contexts(table_id)
+            summaries = self.__get_table_summaries(table_id, SummaryType.NARRATION)
 
             for context in contexts:
                 context_id = context[0]
@@ -293,10 +299,12 @@ class IndexGenerator:
             WHERE table_id='{table_id}'"""
         ).fetchall()
 
-    def __get_table_summaries(self, table_id: str) -> list[tuple[str, str]]:
+    def __get_table_summaries(
+        self, table_id: str, summary_type: SummaryType
+    ) -> list[tuple[str, str]]:
         return self.connection.sql(
             f"""SELECT id, summary FROM table_summaries
-            WHERE table_id='{table_id}'"""
+            WHERE table_id='{table_id}' AND summary_type='{summary_type}'"""
         ).fetchall()
 
 
