@@ -46,7 +46,6 @@ class Summarizer:
         self.pipe.tokenizer.padding_side = "left"
 
     def summarize(self, table_id: str = None) -> str:
-        logger.info("TEST")
         if table_id is None or table_id == "":
             logger.info("Generating summaries for all unsummarized tables...")
             table_ids = [
@@ -72,7 +71,6 @@ class Summarizer:
         ).to_json()
 
     def purge_tables(self) -> str:
-        # drop summarized tables
         summarized_table_ids = [
             entry[0]
             for entry in self.connection.sql(
@@ -112,7 +110,7 @@ class Summarizer:
         summary_ids.append(
             self.connection.sql(
                 f"""INSERT INTO table_summaries (table_id, summary, summary_type)
-                VALUES ('{table_id}', '{json.dumps(standard_summary)}', '{SummaryType.STANDARD}')
+                VALUES ('{table_id}', '{json.dumps({"payload": standard_summary})}', '{SummaryType.STANDARD}')
                 RETURNING id"""
             ).fetchone()[0]
         )
@@ -120,7 +118,7 @@ class Summarizer:
         summary_ids.append(
             self.connection.sql(
                 f"""INSERT INTO table_summaries (table_id, summary, summary_type)
-                VALUES ('{table_id}', '{json.dumps(narration_summary)}', '{SummaryType.NARRATION}')
+                VALUES ('{table_id}', '{json.dumps({"payload": narration_summary})}', '{SummaryType.NARRATION}')
                 RETURNING id"""
             ).fetchone()[0]
         )
@@ -139,6 +137,7 @@ class Summarizer:
     def __generate_column_description(self, df: pd.DataFrame) -> list[str]:
         # Used for quick local testing
         # return " description | ".join(df.columns).strip() + " description"
+
         summaries = []
         cols = df.columns
         conversations = []
