@@ -7,7 +7,6 @@ import bm25s
 import chromadb
 import duckdb
 import fire
-import pandas as pd
 import Stemmer
 import torch
 from sentence_transformers import SentenceTransformer
@@ -168,14 +167,14 @@ class Query:
 
     def __is_table_content_relevant(self, content: str, question: str):
         prompt = f"""Given a table with the following columns:
-    */
-    {content}
-    */
-    and this question:
-    /*
-    {question}
-    */
-    Is the table relevant to answer the question? Begin your answer with yes/no."""
+*/
+{content}
+*/
+and this question:
+/*
+{question}
+*/
+Is the table relevant to answer the question? Begin your answer with yes/no."""
 
         answer: str = prompt_pipeline(
             self.pipe,
@@ -192,14 +191,14 @@ class Query:
 
     def __is_table_context_relevant(self, context: str, question: str):
         prompt = f"""Given this context describing a table:
-    */
-    {context}
-    */
-    and this question:
-    /*
-    {question}
-    */
-    Is the table relevant to answer the question? Begin your answer with yes/no."""
+*/
+{context}
+*/
+and this question:
+/*
+{question}
+*/
+Is the table relevant to answer the question? Begin your answer with yes/no."""
 
         answer: str = prompt_pipeline(
             self.pipe,
