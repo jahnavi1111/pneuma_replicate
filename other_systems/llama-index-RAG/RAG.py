@@ -112,7 +112,7 @@ def evaluate_benchmark(benchmark: list[dict[str, str]], question_key: str):
             print(f"Current hit rate sum in row {idx}: {hit_rate_sum}")
             print(f"Response: {response}")
             print("=" * 200)
-    print(f"Final Hit Rate for BX1: {hit_rate_sum/len(benchmark)}")
+    print(f"Final Hit Rate: {hit_rate_sum/len(benchmark)}")
 
 
 print("Benchmark results for BX1")
