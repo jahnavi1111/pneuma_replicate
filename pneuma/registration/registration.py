@@ -9,16 +9,13 @@ import fire
 import pandas as pd
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
+from utils.logging_config import configure_logging
 from utils.response import Response, ResponseStatus
 from utils.summary_types import SummaryType
 from utils.table_status import TableStatus
 
-logger = logging.getLogger(__name__)
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[logging.FileHandler("pneuma.log"), logging.StreamHandler()],
-)
+configure_logging()
+logger = logging.getLogger("Registration")
 
 
 class Registration:

@@ -12,14 +12,15 @@ from tqdm import tqdm
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
+from utils.logging_config import configure_logging
 from utils.pipeline_initializer import initialize_pipeline
 from utils.prompting_interface import prompt_pipeline
 from utils.response import Response, ResponseStatus
 from utils.summary_types import SummaryType
 from utils.table_status import TableStatus
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+configure_logging()
+logger = logging.getLogger("Summarizer")
 
 
 class Summarizer:
@@ -46,7 +47,6 @@ class Summarizer:
 
     def summarize(self, table_id: str = None) -> str:
         logger.info("TEST")
-        print("TEST")
         if table_id is None or table_id == "":
             logger.info("Generating summaries for all unsummarized tables...")
             table_ids = [
@@ -137,7 +137,8 @@ class Summarizer:
         return " | ".join(df.columns).strip()
 
     def __generate_column_description(self, df: pd.DataFrame) -> list[str]:
-        return " description | ".join(df.columns).strip() + " description"
+        # Used for quick local testing
+        # return " description | ".join(df.columns).strip() + " description"
         summaries = []
         cols = df.columns
         conversations = []
