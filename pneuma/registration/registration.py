@@ -241,18 +241,21 @@ class Registration:
         return Response(
             status=ResponseStatus.SUCCESS,
             message=f"Table with ID: {path} has been added to the database.",
+            data={"table_id": path, "table_name": name},
         )
 
     def __read_table_folder(self, folder_path: str, creator: str) -> Response:
         logger.info("Reading folder %s...", folder_path)
         paths = [os.path.join(folder_path, f) for f in os.listdir(folder_path)]
-        file_count = 0
+        data = []
         for path in paths:
             logger.info("Processing %s...", path)
 
             # If the path is a folder, recursively read the folder.
             if os.path.isdir(path):
-                logger.info(self.__read_table_folder(path, creator).message)
+                response = self.__read_table_folder(path, creator)
+                logger.info(response.message)
+                data.extend(response.data["tables"])
                 continue
 
             response = self.__read_table_file(path, creator)
@@ -262,11 +265,13 @@ class Registration:
                 response.status.value,
                 response.message,
             )
-            file_count += 1
+            data.append(response.data)
 
+        file_count = len(data)
         return Response(
             status=ResponseStatus.SUCCESS,
             message=f"{file_count} files in folder {folder_path} has been processed.",
+            data={"file_count": file_count, "tables": data},
         )
 
     def __insert_metadata(
@@ -292,6 +297,7 @@ class Registration:
         return Response(
             status=ResponseStatus.SUCCESS,
             message=f"{metadata_type.capitalize()} ID: {metadata_id}",
+            data={"metadata_ids": [metadata_id]},
         )
 
     def __read_metadata_file(
@@ -314,19 +320,21 @@ class Registration:
 
         if file_type == "csv":
             metadata_df = pd.read_csv(metadata_path)
-            # iterate over rows with iterrows()
+            data = []
             for index, row in metadata_df.iterrows():
                 table_id = row["table_id"]
                 metadata_type = row["metadata_type"]
                 metadata_content = row["value"]
-                logger.info(
-                    self.__insert_metadata(
-                        metadata_type, metadata_content, table_id
-                    ).message
+                response = self.__insert_metadata(
+                    metadata_type, metadata_content, table_id
                 )
+                logger.info(response.message)
+                data.extend(response.data["metadata_ids"])
+
             return Response(
                 status=ResponseStatus.SUCCESS,
                 message=f"{len(metadata_df)} metadata entries has been added.",
+                data={"metadata_ids": data},
             )
 
         return None
@@ -336,15 +344,15 @@ class Registration:
     ) -> Response:
         logger.info("Reading metadata folder %s...", metadata_path)
         paths = [os.path.join(metadata_path, f) for f in os.listdir(metadata_path)]
-        file_count = 0
+        metadata_ids = []
         for path in paths:
             logger.info("Processing %s...", path)
 
             # If the path is a folder, recursively read the folder.
             if os.path.isdir(path):
-                logger.info(
-                    self.__read_metadata_folder(path, metadata_type, table_id).message
-                )
+                response = self.__read_metadata_folder(path, metadata_type, table_id)
+                logger.info(response.message)
+                metadata_ids.extend(response.data["metadata_ids"])
                 continue
 
             response = self.__read_metadata_file(path, metadata_type, table_id)
@@ -354,11 +362,13 @@ class Registration:
                 response.status.value,
                 response.message,
             )
-            file_count += 1
+            metadata_ids.extend(response.data["metadata_ids"])
 
+        file_count = len(metadata_ids)
         return Response(
             status=ResponseStatus.SUCCESS,
             message=f"{file_count} files in folder {metadata_path} has been processed.",
+            data={"file_count": file_count, "metadata_ids": metadata_ids},
         )
 
 
