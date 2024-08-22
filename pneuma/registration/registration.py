@@ -116,7 +116,7 @@ class Registration:
                 message=f"Error initializing database: {e}",
             ).to_json()
 
-    def add_table(
+    def add_tables(
         self,
         path: str,
         creator: str,
