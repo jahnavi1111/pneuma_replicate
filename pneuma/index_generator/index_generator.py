@@ -102,6 +102,11 @@ class IndexGenerator:
             status=ResponseStatus.SUCCESS,
             message=f"Vector and keyword index named {index_name} with id {vector_index_id}"
             f" and {keyword_index_id} has been created with {len(table_ids)} tables.",
+            data={
+                "table_ids": table_ids,
+                "vector_index_id": vector_index_id,
+                "keyword_index_id": keyword_index_id,
+            },
         ).to_json()
 
     def __generate_vector_index(self, index_name: str) -> Response:

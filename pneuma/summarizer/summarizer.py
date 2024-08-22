@@ -68,6 +68,7 @@ class Summarizer:
             status=ResponseStatus.SUCCESS,
             message=f"Total of {len(all_summary_ids)} summaries has been added "
             f"with IDs: {', '.join([str(summary_id) for summary_id in all_summary_ids])}.\n",
+            data={"table_ids": table_ids, "summary_ids": all_summary_ids},
         ).to_json()
 
     def purge_tables(self) -> str:

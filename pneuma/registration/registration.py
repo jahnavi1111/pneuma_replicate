@@ -211,6 +211,10 @@ class Registration:
                 ) AS tbl"""
             ).fetchone()[0]
 
+        # For ease of keeping track of IDs, we replace backslashes (Windows) with
+        # forward slashes (everything else) to make the path (therefore, ID) consistent.
+        path = path.replace("\\", "/")
+
         # Check if table with the same hash already exist
         if self.connection.sql(
             f"SELECT * FROM table_status WHERE hash = '{table_hash}'"
@@ -297,7 +301,7 @@ class Registration:
         return Response(
             status=ResponseStatus.SUCCESS,
             message=f"{metadata_type.capitalize()} ID: {metadata_id}",
-            data={"metadata_ids": [metadata_id]},
+            data={"file_count": 1, "metadata_ids": [metadata_id]},
         )
 
     def __read_metadata_file(
@@ -334,7 +338,7 @@ class Registration:
             return Response(
                 status=ResponseStatus.SUCCESS,
                 message=f"{len(metadata_df)} metadata entries has been added.",
-                data={"metadata_ids": data},
+                data={"file_count": len(data), "metadata_ids": data},
             )
 
         return None
