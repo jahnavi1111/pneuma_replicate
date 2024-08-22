@@ -3,23 +3,25 @@
 Pneuma is built in several modules, each of which can be run independently. More details can be found [here](https://docs.google.com/document/d/16MsdIs80NssVtIhMq4r0RxXSpTKts_1MyyU2gf6ncpc).
 
 ## Table of Contents
+
 1. [Getting Started](#getting-started)
 2. [Registration Module](#registration-module)
     1. [Setup](#setup)
-    2. [Read Table](#read-table)
-    3. [Add Context](#add-context)
-    4. [Add Summary](#add-summary)
+    2. [Add Tables](#add-table)
+    3. [Add Metadata](#add-metadata)
 3. [Summarizer Module](#summarizer-module)
     1. [Summarize](#summarize)
 4. [Index Generation Module](#index-generation-module)
 5. [Query Module](#query-module)
 
 ## Getting Started
+
 This setup guide is written on a Windows environment with Python version 3.10.6.
 
-**Private/Gated models Access**
+### Private/Gated models Access
 
 For the summarizer module, you may want to access private/gated models such as `Meta-Llama-3-8B-Instruct`, as used in the paper. To do this, create a user access token in HuggingFace, then login using the following commands:
+
 ```shell
 pip install -U "huggingface_hub[cli]"
 huggingface-cli login [your_token]
@@ -28,6 +30,7 @@ huggingface-cli login [your_token]
 Alternatively, you can pass the token directly, as instructed in [Summarize](#summarize).
 
 **Clone the repository.**
+
 ```shell
 git clone https://github.com/TheDataStation/Pneuma
 cd modules
@@ -35,35 +38,41 @@ cd modules
 
 **(Recommended but not required) Create a virtual environment.**
 
-```
+```shell
 python -m venv venv
 env\Scripts\activate.bat
 ```
 
 **Install required Python modules.**
 
-```
+```shell
 pip install -r requirements.txt
 ```
 
 ## Registration Module
+
 This module is used to load data from various sources and context into DuckDB. Transformations, such as sorting rows, filtering out repeated values, etc. will also be done.
 
-### Setup 
-**Usage**: 
+### Setup
+
+**Usage**:
+
 ```shell
 registration.py setup --db_path=PATH/TO/DATABASE_NAME.db
 ```
 
 **Description**: Initializes the database schema. Creates a DATABASE_NAME.db file in the specified path.
 
-**Example Usage**: 
+**Example Usage**:
+
 ```shell
 registration.py setup --db_path=../out/storage.db
 ```
 
 ### Add Table
-**Usage**: 
+
+**Usage**:
+
 ```shell
 registration.py add_table --db_path=PATH/TO/DATABASE_NAME.db [OPTION]... (PATH_TO_FOLDER/PATH_TO_FILE.(csv/parquet)) CREATOR_NAME
 ```
@@ -74,11 +83,12 @@ registration.py add_table --db_path=PATH/TO/DATABASE_NAME.db [OPTION]... (PATH_T
 - CREATOR_NAME is the name of the person who runs this command (TODO: Authenticate automatically).
 
 **Options**:
+
 - --s3_region=REGION
 
     Region of the s3 bucket.
 
--  --s3_access_key=AWS_ACCESS_KEY
+- --s3_access_key=AWS_ACCESS_KEY
 
     AWS access key ID
 
@@ -86,29 +96,36 @@ registration.py add_table --db_path=PATH/TO/DATABASE_NAME.db [OPTION]... (PATH_T
 
     AWS secret access key ID
 
-**Examples Usage**: 
+**Examples Usage**:
+
 ```shell
 registration.py add_table --db_path=../out/storage.db ../sample_data/5cq6-qygt.csv david csv
 ```
 
 ### Add Metadata
-**Usage**: 
+
+**Usage**:
+
 ```shell
 registration.py add_metadata --db_path=PATH/TO/DATABASE_NAME.db (PATH_TO_FOLDER/PATH_TO_FILE.txt) (context/summary) [TABLE_ID]
 ```
 
 **Description**: Creates a context or summary entry for the specified table.
 
-**Example Usage**: 
+**Example Usage**:
+
 ```shell
 registration.py add_metadata --db_path=../out/storage.db ../sample_data/context/sample_context.txt context ../sample_data/csv/5cq6-qygt.csv
 ```
 
 ## Summarizer Module
+
 The summarized module generates content summaries of registered tables, which will then be stored in an index. These summaries will be useful for answering users' content-related questions
 
 ### Summarize
-**Usage**: 
+
+**Usage**:
+
 ```shell
 summarizer.py summarize --db_path=PATH/TO/DATABASE_NAME.db [OPTION]... TABLE_ID
 ```
@@ -116,41 +133,51 @@ summarizer.py summarize --db_path=PATH/TO/DATABASE_NAME.db [OPTION]... TABLE_ID
 **Description**: Generates summary entries for the specified table.
 
 **Options**:
+
 - --hf_token: User access token from HuggingFace to access gated models. This option is not needed if you have been authenticated using huggingface-cli.
 
-**Example Usage**: 
+**Example Usage**:
+
 ```shell
 summarizer.py summarize --db_path=../out/storage.db ../sample_data/5cq6-qygt.csv
 ```
 
 ## Index Generation Module
-We store registered context and generated summaries as documents in a searchable (vector) index, enabling the retrieval of the most relevant documents quickly and accurately. Given a set of tables, this module generates an index.
+
+We store registered context and generated summaries as documents in a searchable (vector) index and keyword index, enabling the retrieval of the most relevant documents quickly and accurately. Given a set of tables, this module generates an index.
 
 ### Generate Index
+
 **Usage**:
+
 ```shell
 index_generator.py generate_index --db_path=PATH/TO/DATABASE_NAME.db INDEX_NAME 'TABLE_ID1','TABLEID2','TABLEID3',...
 ```
 
 **Description**: Generates an index with the name INDEX_NAME containing context and summary entries from the tables listed.
 
-**Example Usage**
+**Example Usage**:
+
 ```shell
 index_generator.py generate_index --db_path=../out/storage.db sample_index '../sample_data/5cq6-qygt.csv','../sample_data/5n77-2d6a.csv'
 ```
 
 ## Query Module
-The query module answers users’ queries by searching through the index generated by the index generation module. This module receives a plain text query, retrieves the most relevant documents, and provides an answer.
+
+The query module answers users’ queries by searching through the index generated by the index generation module. This module receives a plain text query, retrieves the most relevant documents, and provides an answer. The retrieval process is done using hybrid search and a reranking algorithm is then performed.
 
 ### Query
+
 **Usage**:
+
 ```shell
 query.py query --db_path=PATH/TO/DATABASE_NAME.db INDEX_NAME QUERY [K]
 ```
 
 **Description**: Queries an index with name INDEX_NAME with the query QUERY. The option K (default value: 10) defines the number of documents retrieved.
 
-**Example Usage**
+**Example Usage**:
+
 ```shell
 query.py query --db_path=../out/storage.db sample_index "Why was this dataset created?" 2
 ```
