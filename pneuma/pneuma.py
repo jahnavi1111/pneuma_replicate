@@ -28,7 +28,7 @@ class Pneuma:
 
         print(self.registration.setup())
 
-    def add_table(
+    def add_tables(
         self,
         path: str,
         creator: str,
@@ -43,9 +43,9 @@ class Pneuma:
 
     def add_metadata(
         self,
-        metadata_path: str,
-        metadata_type: str,
-        table_id,
+        metadata_path: str = "",
+        metadata_type: str = "",
+        table_id: str = "",
     ) -> str:
         return self.registration.add_metadata(metadata_path, metadata_type, table_id)
 
