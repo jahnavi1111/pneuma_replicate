@@ -1,4 +1,5 @@
 import logging
+import os
 
 
 def configure_logging():
@@ -9,5 +10,10 @@ def configure_logging():
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s [%(name)s] [%(levelname)s] %(message)s",
-        handlers=[logging.FileHandler("../pneuma.log"), logging.StreamHandler()],
+        handlers=[
+            logging.FileHandler(
+                os.path.expanduser("~/Documents/Pneuma/out/pneuma.log")
+            ),
+            logging.StreamHandler(),
+        ],
     )

@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import sys
+import time
 from pathlib import Path
 
 import bm25s
@@ -60,7 +61,10 @@ class IndexGenerator:
         logger.info("Generating index for %d tables...", len(table_ids))
 
         ### GENERATING AND INSERTING TABLES TO VECTOR INDEX ###
+        start_time = time.time()
         vector_index_response = self.__generate_vector_index(index_name)
+        end_time = time.time()
+        vector_index_generation_time = end_time - start_time
         if vector_index_response.status == ResponseStatus.ERROR:
             return vector_index_response.to_json()
 
@@ -79,7 +83,10 @@ class IndexGenerator:
         logger.info(vector_insert_response.message)
 
         ### GENERATING AND INSERTING TABLES TO KEYWORD INDEX ###
+        start_time = time.time()
         keyword_index_response = self.__generate_keyword_index(index_name)
+        end_time = time.time()
+        keyword_index_generation_time = end_time - start_time
         if keyword_index_response.status == ResponseStatus.ERROR:
             self.chroma_client.delete_collection(index_name)
             return keyword_index_response.to_json()
@@ -106,6 +113,8 @@ class IndexGenerator:
                 "table_ids": table_ids,
                 "vector_index_id": vector_index_id,
                 "keyword_index_id": keyword_index_id,
+                "vector_index_generation_time": vector_index_generation_time,
+                "keyword_index_generation_time": keyword_index_generation_time,
             },
         ).to_json()
 
