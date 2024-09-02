@@ -1,7 +1,7 @@
 import os
 
 os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 import torch
 
@@ -14,7 +14,7 @@ data_src_path = "../../data_src/tables/pneuma_chicago_10K"
 contexts_name = f"contexts_{dataset_name}"
 benchmark_name = f"bx_{dataset_name}"
 
-pipe = initialize_pipeline("meta-llama/Meta-Llama-3-8B-Instruct", torch.bfloat16)
+pipe = initialize_pipeline("../../models/llama", torch.bfloat16)
 
 # Specific setting for Llama-3-8B-Instruct for batching
 pipe.tokenizer.pad_token_id = pipe.model.config.eos_token_id
