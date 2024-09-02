@@ -1,5 +1,4 @@
 import os
-import setproctitle
 import torch
 import sys
 
@@ -17,7 +16,6 @@ from huggingface_hub import login
 
 os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-setproctitle.setproctitle("python")
 set_seed(42, deterministic=True)
 
 
