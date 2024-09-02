@@ -1,15 +1,11 @@
 import os
-import json
+import sys
 import pandas as pd
 
+sys.path.append("..")
+
 from tqdm import tqdm
-
-
-def write_jsonl(data: list[dict[str, str]], file_path: str):
-    with open(file_path, "w", encoding="utf-8") as file:
-        for item in data:
-            file.write(json.dumps(item))
-            file.write("\n")
+from benchmark_generator.context.utils.jsonl import write_jsonl
 
 
 tables_path = "../data_src/tables/pneuma_fetaqa"

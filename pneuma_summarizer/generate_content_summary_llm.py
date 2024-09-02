@@ -2,9 +2,6 @@ import os
 
 os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-import setproctitle
-
-setproctitle.setproctitle("python")
 
 import sys
 import torch
