@@ -26,28 +26,28 @@ class Query:
     ):
         self.db_path = db_path
         self.connection = duckdb.connect(db_path)
-        # self.embedding_model = SentenceTransformer(
-        #     "dunzhang/stella_en_1.5B_v5", trust_remote_code=True
-        # )
+        self.embedding_model = SentenceTransformer(
+            "dunzhang/stella_en_1.5B_v5", trust_remote_code=True
+        )
         self.stemmer = Stemmer.Stemmer("english")
 
         # Small model for local testing purposes
-        self.embedding_model = SentenceTransformer(
-            "BAAI/bge-small-en-v1.5", trust_remote_code=True
-        )
-
-        # self.pipe = initialize_pipeline(
-        #     "meta-llama/Meta-Llama-3-8B-Instruct", torch.bfloat16, hf_token
+        # self.embedding_model = SentenceTransformer(
+        #     "BAAI/bge-small-en-v1.5", trust_remote_code=True
         # )
-        # Specific setting for Llama-3-8B-Instruct for batching
-        # self.pipe.tokenizer.pad_token_id = self.pipe.model.config.eos_token_id
-        # self.pipe.tokenizer.padding_side = 'left'
 
-        # Use small model for local testing
-        self.pipe = initialize_pipeline("TinyLlama/TinyLlama_v1.1", torch.bfloat16)
-        self.pipe.tokenizer.chat_template = "{% for message in messages %}{% if message['role'] == 'user' %}{{ ' ' }}{% endif %}{{ message['content'] }}{% if not loop.last %}{{ '  ' }}{% endif %}{% endfor %}{{ eos_token }}"
+        self.pipe = initialize_pipeline(
+            "meta-llama/Meta-Llama-3-8B-Instruct", torch.bfloat16, hf_token
+        )
+        # Specific setting for Llama-3-8B-Instruct for batching
         self.pipe.tokenizer.pad_token_id = self.pipe.model.config.eos_token_id
         self.pipe.tokenizer.padding_side = "left"
+
+        # Use small model for local testing
+        # self.pipe = initialize_pipeline("TinyLlama/TinyLlama_v1.1", torch.bfloat16)
+        # self.pipe.tokenizer.chat_template = "{% for message in messages %}{% if message['role'] == 'user' %}{{ ' ' }}{% endif %}{{ message['content'] }}{% if not loop.last %}{{ '  ' }}{% endif %}{% endfor %}{{ eos_token }}"
+        # self.pipe.tokenizer.pad_token_id = self.pipe.model.config.eos_token_id
+        # self.pipe.tokenizer.padding_side = "left"
 
         self.index_path = index_path
         self.vector_index_path = os.path.join(index_path, "vector")
