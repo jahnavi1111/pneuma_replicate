@@ -1,4 +1,5 @@
 import json
+import os
 import shutil
 from datetime import datetime
 from time import time
@@ -36,6 +37,8 @@ def get_question_key(benchmark_type: str, use_rephrased_questions: bool = False)
 
 
 def main():
+    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+
     dataset = "public"
     if dataset == "chicago":
         content_benchmark = read_jsonl(
