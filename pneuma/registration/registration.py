@@ -11,16 +11,16 @@ import pandas as pd
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from utils.logging_config import configure_logging
 from utils.response import Response, ResponseStatus
+from utils.storage_config import get_storage_path
 from utils.summary_types import SummaryType
 from utils.table_status import TableStatus
 
 configure_logging()
 logger = logging.getLogger("Registration")
 
-
 class Registration:
     def __init__(
-        self, db_path: str = os.path.expanduser("~/Documents/Pneuma/out/storage.db")
+        self, db_path: str = os.path.join(get_storage_path(), "storage.db")
     ):
         os.makedirs(os.path.dirname(db_path), exist_ok=True)
         self.db_path = db_path

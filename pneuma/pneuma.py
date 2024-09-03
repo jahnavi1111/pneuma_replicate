@@ -6,12 +6,13 @@ from index_generator.index_generator import IndexGenerator
 from query.query import Query
 from registration.registration import Registration
 from summarizer.summarizer import Summarizer
+from utils.storage_config import get_storage_path
 
 
 class Pneuma:
     def __init__(
         self,
-        out_path: str = os.path.expanduser("~/Documents/Pneuma/out"),
+        out_path: str = get_storage_path(),
         hf_token: str = "",
     ):
         os.makedirs(out_path, exist_ok=True)

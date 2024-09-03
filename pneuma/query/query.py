@@ -15,13 +15,14 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 from utils.pipeline_initializer import initialize_pipeline
 from utils.prompting_interface import prompt_pipeline
 from utils.response import Response, ResponseStatus
+from utils.storage_config import get_storage_path
 
 
 class Query:
     def __init__(
         self,
-        db_path: str = os.path.expanduser("~/Documents/Pneuma/out/storage.db"),
-        index_path: str = os.path.expanduser("~/Documents/Pneuma/out/indexes"),
+        db_path: str = os.path.join(get_storage_path(), "storage.db"),
+        index_path: str = os.path.join(get_storage_path(), "indexes"),
     ):
         self.db_path = db_path
         self.connection = duckdb.connect(db_path)

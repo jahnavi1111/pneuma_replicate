@@ -16,6 +16,7 @@ from utils.logging_config import configure_logging
 from utils.pipeline_initializer import initialize_pipeline
 from utils.prompting_interface import prompt_pipeline
 from utils.response import Response, ResponseStatus
+from utils.storage_config import get_storage_path
 from utils.summary_types import SummaryType
 from utils.table_status import TableStatus
 
@@ -26,7 +27,7 @@ logger = logging.getLogger("Summarizer")
 class Summarizer:
     def __init__(
         self,
-        db_path: str = os.path.expanduser("~/Documents/Pneuma/out/storage.db"),
+        db_path: str = os.path.join(get_storage_path(), "storage.db"),
         hf_token: str = "",
     ):
         self.db_path = db_path
