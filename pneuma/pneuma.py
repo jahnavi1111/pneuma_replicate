@@ -23,7 +23,7 @@ class Pneuma:
         self.registration = Registration(self.db_path)
         self.summarizer = Summarizer(self.db_path, hf_token)
         self.index_generator = IndexGenerator(self.db_path, self.index_location)
-        self.query = Query(self.db_path, self.index_location)
+        self.query = Query(self.db_path, self.index_location, hf_token)
 
         self.connection = duckdb.connect(self.db_path)
 

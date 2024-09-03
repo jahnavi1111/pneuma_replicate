@@ -23,6 +23,7 @@ class Query:
         self,
         db_path: str = os.path.join(get_storage_path(), "storage.db"),
         index_path: str = os.path.join(get_storage_path(), "indexes"),
+        hf_token: str = "",
     ):
         self.db_path = db_path
         self.connection = duckdb.connect(db_path)
