@@ -17,13 +17,17 @@ def initialize_pipeline(
     ### Returns:
     - pipe (TextGenerationPipeline): The pipeline for text generation
     """
-    pipe = pipeline(
-        "text-generation",
-        model=model_path,
-        device_map="auto",
-        torch_dtype=torch_dtype,
-        token=hf_token,
-    )
+    pipeline_args = {
+        "task": "text-generation",
+        "model": model_path,
+        "device_map": "auto",
+        "torch_dtype": torch_dtype,
+    }
+
+    if hf_token:
+        pipeline_args["token"] = hf_token
+
+    pipe = pipeline(**pipeline_args)
     pipe.tokenizer.model_max_length = context_length
     return pipe
 
