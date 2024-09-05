@@ -159,7 +159,7 @@ def main():
     # Write results to file
     timestamp = datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
     with open(
-        f"{out_path}/../benchmark_results-{timestamp}.json", "w", encoding="utf-8"
+        f"{out_path}/../benchmark-{dataset}-{timestamp}.json", "w", encoding="utf-8"
     ) as f:
         json_results = {
             "dataset": dataset,
