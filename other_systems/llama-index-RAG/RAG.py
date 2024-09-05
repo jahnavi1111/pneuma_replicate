@@ -1,18 +1,24 @@
+import json
 import os
-import torch
 import sys
+import time
+from datetime import datetime
+
+import torch
 
 sys.path.append("../..")
 
-from tqdm import tqdm
-from benchmark_generator.context.utils.jsonl import read_jsonl
-from transformers import set_seed
-from llama_index.readers.database import DatabaseReader
-from llama_index.core import VectorStoreIndex, Settings, PromptTemplate, Document
+
+from huggingface_hub import login
+from llama_index.core import Document, PromptTemplate, Settings, VectorStoreIndex
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.llms.huggingface import HuggingFaceLLM
+from llama_index.readers.database import DatabaseReader
 from sqlalchemy import create_engine
-from huggingface_hub import login
+from tqdm import tqdm
+from transformers import set_seed
+
+from benchmark_generator.context.utils.jsonl import read_jsonl
 
 os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
@@ -55,7 +61,16 @@ long_name = "pneuma_adventure_works"
 short_name = "adventure"
 # login("TODO: HF_Token")
 
+results = {}
+
+start_time = time.time()
 documents = get_documents(f"../../data_src/tables/{long_name}", short_name)
+end_time = time.time()
+results["ingestion"] = {
+    "file_count": len(documents),
+    "time": end_time - start_time,
+}
+
 ctx_benchmark = read_jsonl(
     f"../../data_src/benchmarks/context/{short_name}/bx_{short_name}.jsonl"
 )
@@ -83,7 +98,12 @@ Settings.llm = HuggingFaceLLM(
 )
 
 
+start_time = time.time()
 index = VectorStoreIndex.from_documents(documents, show_progress=True)
+end_time = time.time()
+results["generate_index"] = {
+    "time": end_time - start_time,
+}
 query_engine = index.as_query_engine(similarity_top_k=1)
 
 
@@ -113,14 +133,60 @@ def evaluate_benchmark(benchmark: list[dict[str, str]], question_key: str):
     print(f"Final Hit Rate: {hit_rate_sum/len(benchmark)}")
 
 
+results["query_index"] = []
+
 print("Benchmark results for BX1")
+start_time = time.time()
 evaluate_benchmark(ctx_benchmark, "question_bx1")
+end_time = time.time()
+results["query_index"].append(
+    {
+        "benchmark": "BX1",
+        "time": end_time - start_time,
+    }
+)
 
 print("Benchmark results for BX2")
+start_time = time.time()
 evaluate_benchmark(ctx_benchmark, "question_bx2")
+end_time = time.time()
+results["query_index"].append(
+    {
+        "benchmark": "BX2",
+        "time": end_time - start_time,
+    }
+)
+
 
 print("Benchmark results for BC1")
+start_time = time.time()
 evaluate_benchmark(ctn_benchmark, "question_from_sql_1")
+end_time = time.time()
+results["query_index"].append(
+    {
+        "benchmark": "BC1",
+        "time": end_time - start_time,
+    }
+)
 
 print("Benchmark results for BC2")
+start_time = time.time()
 evaluate_benchmark(ctn_benchmark, "question")
+end_time = time.time()
+results["query_index"].append(
+    {
+        "benchmark": "BC2",
+        "time": end_time - start_time,
+    }
+)
+
+timestamp = datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
+with open(
+    f"benchmark_results/benchmark-{long_name}-{timestamp}.json", "w", encoding="utf-8"
+) as f:
+    json_results = {
+        "dataset": long_name,
+        "timestamp": timestamp,
+        "results": results,
+    }
+    json.dump(json_results, f, indent=4)
