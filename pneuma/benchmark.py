@@ -78,8 +78,8 @@ def main():
     print("Starting reading tables...")
     start_time = time()
     response = pneuma.add_tables(data_path, "benchmarking")
-    response = json.loads(response)
     end_time = time()
+    response = json.loads(response)
     print(
         f"Time to read {response['data']['file_count']} tables: {end_time - start_time} seconds"
     )
@@ -94,8 +94,8 @@ def main():
         print("Starting adding metadata...")
         start_time = time()
         response = pneuma.add_metadata(metadata_path)
-        response = json.loads(response)
         end_time = time()
+        response = json.loads(response)
         print(
             f"Time to add {response['data']['file_count']} contexts: {end_time - start_time} seconds"
         )
@@ -109,8 +109,8 @@ def main():
     print("Starting summarizing tables...")
     start_time = time()
     response = pneuma.summarize()
-    response = json.loads(response)
     end_time = time()
+    response = json.loads(response)
     print(
         f"Time to summarize {len(response['data']['table_ids'])} tables: {end_time - start_time} seconds"
     )
