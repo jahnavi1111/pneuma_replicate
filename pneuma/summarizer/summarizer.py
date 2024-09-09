@@ -165,8 +165,6 @@ class Summarizer:
             for output_idx, output in enumerate(outputs):
                 col_narrations.append(f"{cols[output_idx]}: {output[-1]['content']}")
 
-        print('SUMMARIES', col_narrations)
-
         # The summaries generated are summaries for each column. We want each document
         # to be a long string of all the column summaries.
         print (' | '.join(col_narrations).strip())
