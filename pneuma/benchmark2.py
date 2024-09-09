@@ -40,7 +40,7 @@ def get_question_key(benchmark_type: str, use_rephrased_questions: bool = False)
 
 
 def main():
-    dataset = "chembl"
+    dataset = "public"
     if dataset == "chicago":
         content_benchmark = read_jsonl(
             "../data_src/benchmarks/content/pneuma_chicago_10K_questions_annotated.jsonl"
@@ -69,94 +69,46 @@ def main():
     for data in content_benchmark:
         questions.append(data[question_key])
     metadata_path = ""
-    shutil.rmtree(out_path, ignore_errors=True)
     pneuma = Pneuma(out_path=out_path)
-    pneuma.setup()
 
     results = {}
     responses = {}
 
-    # Read Tables
-    print("Starting reading tables...")
+    # Generate Index
+    print("Starting generating index...")
     start_time = time()
-    response = pneuma.add_tables(data_path, "benchmarking")
+    response = pneuma.generate_index("benchmark_index")
     end_time = time()
     response = json.loads(response)
     print(
-        f"Time to read {response['data']['file_count']} tables: {end_time - start_time} seconds"
+        f"Time to generate index with {len(response['data']['table_ids'])} tables: {end_time - start_time} seconds"
     )
-    results["read_tables"] = {
-        "file_count": response["data"]["file_count"],
-        "time": end_time - start_time,
-    }
-    responses["read_tables"] = response
-
-    # Add Metadata
-    if metadata_path:
-        print("Starting adding metadata...")
-        start_time = time()
-        response = pneuma.add_metadata(metadata_path)
-        end_time = time()
-        response = json.loads(response)
-        print(
-            f"Time to add {response['data']['file_count']} contexts: {end_time - start_time} seconds"
-        )
-        results["add_metadata"] = {
-            "file_count": response["data"]["file_count"],
-            "time": end_time - start_time,
-        }
-        responses["add_metadata"] = response
-
-    # Summarize
-    print("Starting summarizing tables...")
-    start_time = time()
-    response = pneuma.summarize()
-    end_time = time()
-    response = json.loads(response)
-    print(
-        f"Time to summarize {len(response['data']['table_ids'])} tables: {end_time - start_time} seconds"
-    )
-    results["summarize"] = {
+    results["generate_index"] = {
         "table_count": len(response["data"]["table_ids"]),
+        "vector_index_generation_time": response["data"][
+            "vector_index_generation_time"
+        ],
+        "keyword_index_generation_time": response["data"][
+            "keyword_index_generation_time"
+        ],
         "time": end_time - start_time,
     }
-    responses["summarize"] = response
+    responses["generate_index"] = response
 
-    # # Generate Index
-    # print("Starting generating index...")
-    # start_time = time()
-    # response = pneuma.generate_index("benchmark_index")
-    # end_time = time()
-    # response = json.loads(response)
-    # print(
-    #     f"Time to generate index with {len(response['data']['table_ids'])} tables: {end_time - start_time} seconds"
-    # )
-    # results["generate_index"] = {
-    #     "table_count": len(response["data"]["table_ids"]),
-    #     "vector_index_generation_time": response["data"][
-    #         "vector_index_generation_time"
-    #     ],
-    #     "keyword_index_generation_time": response["data"][
-    #         "keyword_index_generation_time"
-    #     ],
-    #     "time": end_time - start_time,
-    # }
-    # responses["generate_index"] = response
-
-    # # Query Index
-    # start_time = time()
-    # for question in questions:
-    #     response = pneuma.query_index("benchmark_index", question, 3)
-    #     response = json.loads(response)
-    # end_time = time()
-    # print(
-    #     f"Time to query index with {len(questions)} questions: {end_time - start_time} seconds"
-    # )
-    # results["query_index"] = {
-    #     "query_count": len(questions),
-    #     "time": end_time - start_time,
-    #     "query_throughput": len(questions) / (end_time - start_time),
-    # }
+    # Query Index
+    start_time = time()
+    for question in questions:
+        response = pneuma.query_index("benchmark_index", question, 3)
+        response = json.loads(response)
+    end_time = time()
+    print(
+        f"Time to query index with {len(questions)} questions: {end_time - start_time} seconds"
+    )
+    results["query_index"] = {
+        "query_count": len(questions),
+        "time": end_time - start_time,
+        "query_throughput": len(questions) / (end_time - start_time),
+    }
 
     # Write results to file
     timestamp = datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
