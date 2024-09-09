@@ -216,12 +216,13 @@ class Registration:
         path = path.replace("\\", "/")
 
         # Check if table with the same hash already exist
-        if self.connection.sql(
-            f"SELECT * FROM table_status WHERE hash = '{table_hash}'"
-        ).fetchone():
+        table_exist = self.connection.sql(
+            f"SELECT id FROM table_status WHERE hash = '{table_hash}'"
+        ).fetchone()
+        if table_exist:
             return Response(
                 status=ResponseStatus.ERROR,
-                message="This table already exists in the database.",
+                message=f"This table already exists in the database with id {table_exist}.",
             )
 
         # Check if table with the same ID already exists.
