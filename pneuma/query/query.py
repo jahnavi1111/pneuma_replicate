@@ -38,7 +38,7 @@ class Query:
         # )
 
         self.pipe = initialize_pipeline(
-            "meta-llama/Meta-Llama-3-8B-Instruct", torch.bfloat16, hf_token
+            "meta-llama/Meta-Llama-3-8B-Instruct", torch.bfloat16
         )
         # Specific setting for Llama-3-8B-Instruct for batching
         self.pipe.tokenizer.pad_token_id = self.pipe.model.config.eos_token_id
