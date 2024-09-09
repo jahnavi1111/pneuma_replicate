@@ -33,8 +33,11 @@ class Summarizer:
         self.db_path = db_path
         self.connection = duckdb.connect(db_path)
 
+        # If we pass in the hf_token argument it causes
+        # [WARNING] '>' not supported between instances of 'int' and 'str'
+        # And the LLM won't generate output for some reason.
         self.pipe = initialize_pipeline(
-            "meta-llama/Meta-Llama-3-8B-Instruct", torch.bfloat16, hf_token
+            "meta-llama/Meta-Llama-3-8B-Instruct", torch.bfloat16
         )
         # Specific setting for Llama-3-8B-Instruct for batching
         self.pipe.tokenizer.pad_token_id = self.pipe.model.config.eos_token_id
@@ -98,9 +101,9 @@ class Summarizer:
         status = self.connection.sql(
             f"SELECT status FROM table_status WHERE id = '{table_id}'"
         ).fetchone()[0]
-        if status == str(TableStatus.SUMMARIZED) or status == str(TableStatus.DELETED):
-            logger.warning("Table with ID %s has already been summarized.", table_id)
-            return []
+        # if status == str(TableStatus.SUMMARIZED) or status == str(TableStatus.DELETED):
+        #     logger.warning("Table with ID %s has already been summarized.", table_id)
+        #     return []
 
         table_df = self.connection.sql(f"SELECT * FROM '{table_id}'").to_df()
 
@@ -116,11 +119,12 @@ class Summarizer:
                 RETURNING id"""
             ).fetchone()[0]
         )
-
+        narration_payload = json.dumps({"payload": narration_summary})
+        narration_payload = narration_payload.replace("'", "''")
         summary_ids.append(
             self.connection.sql(
                 f"""INSERT INTO table_summaries (table_id, summary, summary_type)
-                VALUES ('{table_id}', '{json.dumps({"payload": narration_summary})}', '{SummaryType.NARRATION}')
+                VALUES ('{table_id}', '{narration_payload}', '{SummaryType.NARRATION}')
                 RETURNING id"""
             ).fetchone()[0]
         )
@@ -140,30 +144,33 @@ class Summarizer:
         # Used for quick local testing
         # return " description | ".join(df.columns).strip() + " description"
 
-        summaries = []
         cols = df.columns
         conversations = []
         for col in cols:
             prompt = self.__get_col_description_prompt(" | ".join(cols), col)
             conversations.append([{"role": "user", "content": prompt}])
 
-        for i in tqdm(range(0, len(conversations), 3)):
+        if len(conversations) > 0:
             outputs = prompt_pipeline(
-                self.pipe,
-                conversations[i : i + 3],
-                batch_size=3,
+                self.pipe, 
+                conversations,
+                batch_size=2,
                 context_length=8192,
                 max_new_tokens=400,
                 temperature=None,
                 top_p=None,
             )
-            for output in outputs:
-                summary = output[-1]["content"]
-                summaries.append(summary)
+
+            col_narrations: list[str] = []
+            for output_idx, output in enumerate(outputs):
+                col_narrations.append(f"{cols[output_idx]}: {output[-1]['content']}")
+
+        print('SUMMARIES', col_narrations)
 
         # The summaries generated are summaries for each column. We want each document
         # to be a long string of all the column summaries.
-        return " | ".join(summaries).strip()
+        print (' | '.join(col_narrations).strip())
+        return " | ".join(col_narrations).strip()
 
     def __get_col_description_prompt(self, columns: str, column: str):
         return f"""A table has the following columns:
