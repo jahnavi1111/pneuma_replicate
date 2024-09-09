@@ -80,7 +80,7 @@ class Pneuma:
 
     def generate_index(self, index_name: str, table_ids: list | tuple = None) -> str:
         if self.index_generator is None:
-            self.__init_index_generator
+            self.__init_index_generator()
         return self.index_generator.generate_index(index_name, table_ids)
 
     def query_index(self, index_name: str, query: str, k: int = 10) -> str:
