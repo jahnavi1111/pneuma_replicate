@@ -19,15 +19,29 @@ class Pneuma:
         self.out_path = out_path
         self.db_path = out_path + "/storage.db"
         self.index_location = out_path + "/indexes"
+        self.hf_token = hf_token
 
+        self.registration = None
+        self.summarizer = None
+        self.index_generator = None
+        self.query = None
+
+    def __init_registration(self):
         self.registration = Registration(self.db_path)
-        self.summarizer = Summarizer(self.db_path, hf_token)
+
+    def __init_summarizer(self):
+        self.summarizer = Summarizer(self.db_path, self.hf_token)
+
+    def __init_index_generator(self):
         self.index_generator = IndexGenerator(self.db_path, self.index_location)
-        self.query = Query(self.db_path, self.index_location, hf_token)
 
-        self.connection = duckdb.connect(self.db_path)
+    def __init_query(self):
+        self.query = Query(self.db_path, self.index_location, self.hf_token)
 
-        print(self.registration.setup())
+    def setup(self) -> str:
+        if self.registration is None:
+            self.__init_registration()
+        return self.registration.setup()
 
     def add_tables(
         self,
@@ -38,6 +52,8 @@ class Pneuma:
         s3_access_key: str = None,
         s3_secret_access_key: str = None,
     ) -> str:
+        if self.registration is None:
+            self.__init_registration()
         return self.registration.add_tables(
             path, creator, source, s3_region, s3_access_key, s3_secret_access_key
         )
@@ -48,18 +64,28 @@ class Pneuma:
         metadata_type: str = "",
         table_id: str = "",
     ) -> str:
+        if self.registration is None:
+            self.__init_registration()
         return self.registration.add_metadata(metadata_path, metadata_type, table_id)
 
     def summarize(self, table_id: str = "") -> str:
+        if self.summarizer is None:
+            self.__init_summarizer()
         return self.summarizer.summarize(table_id)
 
     def purge_tables(self) -> str:
+        if self.summarizer is None:
+            self.__init_summarizer()
         return self.summarizer.purge_tables()
 
     def generate_index(self, index_name: str, table_ids: list | tuple = None) -> str:
+        if self.index_generator is None:
+            self.__init_index_generator
         return self.index_generator.generate_index(index_name, table_ids)
 
     def query_index(self, index_name: str, query: str, k: int = 10) -> str:
+        if self.query is None:
+            self.__init_query()
         return self.query.query(index_name, query, k)
 
     def sanity_check(self) -> str:
