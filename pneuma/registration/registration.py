@@ -178,6 +178,9 @@ class Registration:
                 message="Invalid file type. Please use 'csv' or 'parquet'.",
             )
 
+        # If the path contains single quotes, we need to escape them to avoid
+        # breaking the SQL query.
+        path = path.replace("'", "''")
         if file_type == "csv":
             name = path.split("/")[-1][:-4]
             table = self.connection.sql(

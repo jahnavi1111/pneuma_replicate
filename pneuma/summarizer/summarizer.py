@@ -53,7 +53,7 @@ class Summarizer:
         if table_id is None or table_id == "":
             logger.info("Generating summaries for all unsummarized tables...")
             table_ids = [
-                entry[0]
+                entry[0].replace("'", "''")
                 for entry in self.connection.sql(
                     f"""SELECT id FROM table_status
                     WHERE status = '{TableStatus.REGISTERED}'"""
@@ -61,7 +61,7 @@ class Summarizer:
             ]
             logger.info("Found %d unsummarized tables.", len(table_ids))
         else:
-            table_ids = [table_id]
+            table_ids = [table_id.replace("'", "''")]
 
         all_summary_ids = []
         for table_id in table_ids:
@@ -85,6 +85,8 @@ class Summarizer:
 
         for table_id in summarized_table_ids:
             logger.info("Dropping table with ID: %s", table_id)
+            # Escape single quotes to avoid breaking the SQL query
+            table_id = table_id.replace("'", "''")
             self.connection.sql(f'DROP TABLE "{table_id}"')
             self.connection.sql(
                 f"""UPDATE table_status
@@ -112,10 +114,16 @@ class Summarizer:
 
         summary_ids = []
 
+
+        standard_payload = json.dumps({"payload": standard_summary})
+        standard_payload = standard_payload.replace("'", "''")
+        print(f"""INSERT INTO table_summaries (table_id, summary, summary_type)
+                VALUES ('{table_id}', '{standard_payload}', '{SummaryType.STANDARD}')
+                RETURNING id""")
         summary_ids.append(
             self.connection.sql(
                 f"""INSERT INTO table_summaries (table_id, summary, summary_type)
-                VALUES ('{table_id}', '{json.dumps({"payload": standard_summary})}', '{SummaryType.STANDARD}')
+                VALUES ('{table_id}', '{standard_payload}', '{SummaryType.STANDARD}')
                 RETURNING id"""
             ).fetchone()[0]
         )
@@ -167,7 +175,6 @@ class Summarizer:
 
         # The summaries generated are summaries for each column. We want each document
         # to be a long string of all the column summaries.
-        print (' | '.join(col_narrations).strip())
         return " | ".join(col_narrations).strip()
 
     def __get_col_description_prompt(self, columns: str, column: str):

@@ -309,6 +309,7 @@ class IndexGenerator:
         )
 
     def __get_table_contexts(self, table_id: str) -> list[tuple[str, str]]:
+        table_id = table_id.replace("'", "''")
         return self.connection.sql(
             f"""SELECT id, context FROM table_contexts
             WHERE table_id='{table_id}'"""
@@ -317,6 +318,7 @@ class IndexGenerator:
     def __get_table_summaries(
         self, table_id: str, summary_type: SummaryType
     ) -> list[tuple[str, str]]:
+        table_id = table_id.replace("'", "''")
         return self.connection.sql(
             f"""SELECT id, summary FROM table_summaries
             WHERE table_id='{table_id}' AND summary_type='{summary_type}'"""
