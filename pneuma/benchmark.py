@@ -40,7 +40,7 @@ def get_question_key(benchmark_type: str, use_rephrased_questions: bool = False)
 
 
 def main():
-    dataset = "chembl"
+    dataset = "fetaqa"
     if dataset == "chicago":
         content_benchmark = read_jsonl(
             "../data_src/benchmarks/content/pneuma_chicago_10K_questions_annotated.jsonl"
@@ -61,6 +61,11 @@ def main():
             "../data_src/benchmarks/content/pneuma_adventure_works_questions_annotated.jsonl"
         )
         data_path = "../data_src/tables/pneuma_adventure_works"
+    elif dataset == "fetaqa":
+        content_benchmark = read_jsonl(
+            "../data_src/benchmarks/content/pneuma_fetaqa_questions_annotated.jsonl"
+        )
+        data_path = "../data_src/tables/pneuma_fetaqa"
 
     benchmark_type = "content"
     question_key = get_question_key(benchmark_type)
