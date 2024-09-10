@@ -240,6 +240,9 @@ class Registration:
         # full stop that may mess with schema as a single string. Having single quote
         # inside breaks the query, so having the double quote INSIDE the single quote
         # is the only way to make it work.
+
+        # Escape double quote in the path
+        path = path.replace('"', '""')
         table.create(f'"{path}"')
 
         self.connection.sql(
