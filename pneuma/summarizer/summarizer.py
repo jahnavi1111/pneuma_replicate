@@ -117,9 +117,6 @@ class Summarizer:
 
         standard_payload = json.dumps({"payload": standard_summary})
         standard_payload = standard_payload.replace("'", "''")
-        print(f"""INSERT INTO table_summaries (table_id, summary, summary_type)
-                VALUES ('{table_id}', '{standard_payload}', '{SummaryType.STANDARD}')
-                RETURNING id""")
         summary_ids.append(
             self.connection.sql(
                 f"""INSERT INTO table_summaries (table_id, summary, summary_type)
