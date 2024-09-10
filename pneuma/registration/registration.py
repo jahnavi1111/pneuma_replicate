@@ -218,6 +218,9 @@ class Registration:
         # forward slashes (everything else) to make the path (therefore, ID) consistent.
         path = path.replace("\\", "/")
 
+        # We want to avoid double quotes on table names, so we change them to single quotes.
+        path = path.replace('"', "''")
+
         # Check if table with the same hash already exist
         table_exist = self.connection.sql(
             f"SELECT id FROM table_status WHERE hash = '{table_hash}'"
@@ -241,9 +244,10 @@ class Registration:
         # inside breaks the query, so having the double quote INSIDE the single quote
         # is the only way to make it work.
 
-        # Escape double quote in the path
-        path = path.replace('"', '""')
-        table.create(f'"{path}"')
+        # Because we are using double quotes for the table creation, we need to unescape
+        # the single quote so the table name fits the ID that is stored in table_status.
+        create_path = path.replace("''", "'")
+        table.create(f'"{create_path}"')
 
         self.connection.sql(
             f"""INSERT INTO table_status (id, table_name, status, creator, hash)
