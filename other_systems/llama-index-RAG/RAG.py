@@ -180,6 +180,7 @@ results["query_index"].append(
     }
 )
 
+os.makedirs("benchmark_results", exist_ok=True)
 timestamp = datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
 with open(
     f"benchmark_results/benchmark-{long_name}-{timestamp}.json", "w", encoding="utf-8"
