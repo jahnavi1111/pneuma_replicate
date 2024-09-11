@@ -11,3 +11,5 @@ nohup python -u generate_content_summary_llm.py >> generate_content_summary_llm.
 nohup python -u generate_content_summary_rows.py >> generate_content_summary_rows.out &
 nohup python -u generate_content_summary_std.py >> generate_content_summary_std.out &
 ```
+
+Note: Ensure that you have already downloaded the LLM using `../models/downloader.ipynb`.
