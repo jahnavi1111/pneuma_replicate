@@ -305,7 +305,7 @@ def start_benchmarking(
     print(f"Processing {dataset} dataset")
     start = time.time()
     client = chromadb.PersistentClient(
-        f"indices/index-{dataset}-pneuma-summarizer-schema-only"  # TODO: Adjust if necessary
+        f"indices/index-{dataset}-pneuma-summarizer"
     )
     collection = client.get_collection("benchmark")
     retriever = indexing_keyword(stemmer, contents_keyword, contexts)
