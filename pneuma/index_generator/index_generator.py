@@ -161,7 +161,11 @@ class IndexGenerator:
         for table_id in table_ids:
             logger.info("Processing table %s...", table_id)
             contexts = self.__get_table_contexts(table_id)
-            summaries = self.__get_table_summaries(table_id, SummaryType.STANDARD)
+            summaries = []
+            summaries.append(self.__get_table_summaries(table_id, SummaryType.STANDARD))
+            summaries.append(
+                self.__get_table_summaries(table_id, SummaryType.ROW_SUMMARY)
+            )
 
             for context in contexts:
                 context_id = context[0]
@@ -252,7 +256,13 @@ class IndexGenerator:
         for table_id in table_ids:
             logger.info("Processing table %s...", table_id)
             contexts = self.__get_table_contexts(table_id)
-            summaries = self.__get_table_summaries(table_id, SummaryType.NARRATION)
+            summaries = []
+            summaries.append(
+                self.__get_table_summaries(table_id, SummaryType.NARRATION)
+            )
+            summaries.append(
+                self.__get_table_summaries(table_id, SummaryType.ROW_SUMMARY)
+            )
 
             for context in contexts:
                 context_id = context[0]

@@ -265,7 +265,7 @@ class Registration:
         self, folder_path: str, creator: str, accept_duplicates: bool = False
     ) -> Response:
         logger.info("Reading folder %s...", folder_path)
-        paths = [os.path.join(folder_path, f) for f in os.listdir(folder_path)]
+        paths = [os.path.join(folder_path, f) for f in os.listdir(folder_path)][:625]
         data = []
         for path in paths:
             logger.info("Processing %s...", path)
