@@ -1,5 +1,6 @@
 import json
 import logging
+import math
 import os
 import sys
 from pathlib import Path
@@ -11,7 +12,6 @@ import torch
 from tqdm import tqdm
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
-
 from utils.logging_config import configure_logging
 from utils.pipeline_initializer import initialize_pipeline
 from utils.prompting_interface import prompt_pipeline
@@ -36,12 +36,12 @@ class Summarizer:
         # If we pass in the hf_token argument it causes
         # [WARNING] '>' not supported between instances of 'int' and 'str'
         # And the LLM won't generate output for some reason.
-        self.pipe = initialize_pipeline(
-            "meta-llama/Meta-Llama-3-8B-Instruct", torch.bfloat16
-        )
+        # self.pipe = initialize_pipeline(
+        #     "meta-llama/Meta-Llama-3-8B-Instruct", torch.bfloat16
+        # )
         # Specific setting for Llama-3-8B-Instruct for batching
-        self.pipe.tokenizer.pad_token_id = self.pipe.model.config.eos_token_id
-        self.pipe.tokenizer.padding_side = 'left'
+        # self.pipe.tokenizer.pad_token_id = self.pipe.model.config.eos_token_id
+        # self.pipe.tokenizer.padding_side = "left"
 
         # Use small model for local testing
         # self.pipe = initialize_pipeline("TinyLlama/TinyLlama_v1.1", torch.bfloat16)
@@ -110,10 +110,9 @@ class Summarizer:
         table_df = self.connection.sql(f"SELECT * FROM '{table_id}'").to_df()
 
         standard_summary = self.__generate_column_summary(table_df)
-        narration_summary = self.__generate_column_description(table_df)
+        narration_summaries = self.__generate_column_description(table_df)
 
         summary_ids = []
-
 
         standard_payload = json.dumps({"payload": standard_summary})
         standard_payload = standard_payload.replace("'", "''")
@@ -124,15 +123,17 @@ class Summarizer:
                 RETURNING id"""
             ).fetchone()[0]
         )
-        narration_payload = json.dumps({"payload": narration_summary})
-        narration_payload = narration_payload.replace("'", "''")
-        summary_ids.append(
-            self.connection.sql(
-                f"""INSERT INTO table_summaries (table_id, summary, summary_type)
-                VALUES ('{table_id}', '{narration_payload}', '{SummaryType.NARRATION}')
-                RETURNING id"""
-            ).fetchone()[0]
-        )
+
+        for narration_summary in narration_summaries:
+            narration_payload = json.dumps({"payload": narration_summary})
+            narration_payload = narration_payload.replace("'", "''")
+            summary_ids.append(
+                self.connection.sql(
+                    f"""INSERT INTO table_summaries (table_id, summary, summary_type)
+                    VALUES ('{table_id}', '{narration_payload}', '{SummaryType.NARRATION}')
+                    RETURNING id"""
+                ).fetchone()[0]
+            )
 
         self.connection.sql(
             f"""UPDATE table_status
@@ -149,30 +150,15 @@ class Summarizer:
         # Used for quick local testing
         # return " description | ".join(df.columns).strip() + " description"
 
-        cols = df.columns
-        conversations = []
-        for col in cols:
-            prompt = self.__get_col_description_prompt(" | ".join(cols), col)
-            conversations.append([{"role": "user", "content": prompt}])
+        sample_size = math.ceil(min(len(df), 5))
+        selected_df = df.sample(n=sample_size, random_state=0).reset_index(drop=True)
 
-        if len(conversations) > 0:
-            outputs = prompt_pipeline(
-                self.pipe, 
-                conversations,
-                batch_size=2,
-                context_length=8192,
-                max_new_tokens=400,
-                temperature=None,
-                top_p=None,
-            )
+        formatted_rows = []
+        for row_idx, row in selected_df.iterrows():
+            formatted_row = " | ".join([f"{col}: {val}" for col, val in row.items()])
+            formatted_rows.append(formatted_row.strip())
 
-            col_narrations: list[str] = []
-            for output_idx, output in enumerate(outputs):
-                col_narrations.append(f"{cols[output_idx]}: {output[-1]['content']}")
-
-        # The summaries generated are summaries for each column. We want each document
-        # to be a long string of all the column summaries.
-        return " | ".join(col_narrations).strip()
+        return formatted_rows
 
     def __get_col_description_prompt(self, columns: str, column: str):
         return f"""A table has the following columns:

@@ -182,7 +182,7 @@ Is the table relevant to answer the question? Begin your answer with yes/no."""
             self.pipe,
             [[{"role": "user", "content": prompt}]],
             context_length=8192,
-            max_new_tokens=3,
+            max_new_tokens=2,
             top_p=None,
             temperature=None,
         )[0][-1]["content"]

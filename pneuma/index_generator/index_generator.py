@@ -122,7 +122,7 @@ class IndexGenerator:
     def __generate_vector_index(self, index_name: str) -> Response:
         try:
             chroma_collection = self.chroma_client.create_collection(
-                name=index_name, metadata={"hnsw:space": "cosine", "hnsw:M": 1024}
+                name=index_name, metadata={"hnsw:space": "cosine"}
             )
         except UniqueConstraintError:
             return Response(
