@@ -51,11 +51,18 @@ class Pneuma:
         s3_region: str = None,
         s3_access_key: str = None,
         s3_secret_access_key: str = None,
+        accept_duplicates: bool = False,
     ) -> str:
         if self.registration is None:
             self.__init_registration()
         return self.registration.add_tables(
-            path, creator, source, s3_region, s3_access_key, s3_secret_access_key
+            path,
+            creator,
+            source,
+            s3_region,
+            s3_access_key,
+            s3_secret_access_key,
+            accept_duplicates,
         )
 
     def add_metadata(

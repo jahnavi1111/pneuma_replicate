@@ -18,10 +18,9 @@ from utils.table_status import TableStatus
 configure_logging()
 logger = logging.getLogger("Registration")
 
+
 class Registration:
-    def __init__(
-        self, db_path: str = os.path.join(get_storage_path(), "storage.db")
-    ):
+    def __init__(self, db_path: str = os.path.join(get_storage_path(), "storage.db")):
         os.makedirs(os.path.dirname(db_path), exist_ok=True)
         self.db_path = db_path
         self.connection = duckdb.connect(db_path)
@@ -124,6 +123,7 @@ class Registration:
         s3_region: str = None,
         s3_access_key: str = None,
         s3_secret_access_key: str = None,
+        accept_duplicates: bool = False,
     ) -> str:
         if source not in ["file", "s3"]:
             return "Invalid source. Please use 'file' or 's3'."
@@ -138,9 +138,9 @@ class Registration:
             )
 
         if os.path.isfile(path):
-            return self.__read_table_file(path, creator).to_json()
+            return self.__read_table_file(path, creator, accept_duplicates).to_json()
         if os.path.isdir(path):
-            return self.__read_table_folder(path, creator).to_json()
+            return self.__read_table_folder(path, creator, accept_duplicates).to_json()
 
         return Response(
             status=ResponseStatus.ERROR,
@@ -168,6 +168,7 @@ class Registration:
         self,
         path: str,
         creator: str,
+        accept_duplicates: bool = False,
     ) -> Response:
         # Index -1 to get the file extension, then slice [1:] to remove the dot.
         file_type = os.path.splitext(path)[-1][1:]
@@ -221,22 +222,23 @@ class Registration:
         # We want to avoid double quotes on table names, so we change them to single quotes.
         path = path.replace('"', "''")
 
-        # Check if table with the same hash already exist
-        table_exist = self.connection.sql(
-            f"SELECT id FROM table_status WHERE hash = '{table_hash}'"
-        ).fetchone()
-        if table_exist:
-            return Response(
-                status=ResponseStatus.ERROR,
-                message=f"This table already exists in the database with id {table_exist}.",
-            )
+        if not accept_duplicates:
+            # Check if table with the same hash already exist
+            table_exist = self.connection.sql(
+                f"SELECT id FROM table_status WHERE hash = '{table_hash}'"
+            ).fetchone()
+            if table_exist:
+                return Response(
+                    status=ResponseStatus.ERROR,
+                    message=f"This table already exists in the database with id {table_exist}.",
+                )
 
         # Check if table with the same ID already exists.
         # This means the same table with updated data is being registered.
         if self.connection.sql(
             f"SELECT * FROM table_status WHERE id = '{path}'"
         ).fetchone():
-            # TODO
+            # TODO Check if the table data has changed. Prompt the user to confirm if they want to update.
             pass
 
         # The double quote is necessary to consider the path, which may contain
@@ -259,7 +261,9 @@ class Registration:
             data={"table_id": path, "table_name": name},
         )
 
-    def __read_table_folder(self, folder_path: str, creator: str) -> Response:
+    def __read_table_folder(
+        self, folder_path: str, creator: str, accept_duplicates: bool = False
+    ) -> Response:
         logger.info("Reading folder %s...", folder_path)
         paths = [os.path.join(folder_path, f) for f in os.listdir(folder_path)]
         data = []
@@ -268,12 +272,12 @@ class Registration:
 
             # If the path is a folder, recursively read the folder.
             if os.path.isdir(path):
-                response = self.__read_table_folder(path, creator)
+                response = self.__read_table_folder(path, creator, accept_duplicates)
                 logger.info(response.message)
                 data.extend(response.data["tables"])
                 continue
 
-            response = self.__read_table_file(path, creator)
+            response = self.__read_table_file(path, creator, accept_duplicates)
             logger.info(
                 "Processing table %s %s: %s",
                 path,
