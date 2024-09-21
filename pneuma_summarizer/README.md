@@ -12,4 +12,6 @@ nohup python -u generate_content_summary_rows.py >> generate_content_summary_row
 nohup python -u generate_content_summary_std.py >> generate_content_summary_std.out &
 ```
 
+Then, adjust the summaries for vector search to account for the limited context window of an embedding model.
+
 Note: Ensure that you have already downloaded the LLM using `../models/downloader.ipynb`.
