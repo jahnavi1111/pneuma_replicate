@@ -1,2 +1,0 @@
-FlagEmbedding==1.2.11
-peft==0.12.0
