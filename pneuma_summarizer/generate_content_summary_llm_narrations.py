@@ -28,7 +28,7 @@ def get_col_description_prompt(columns: str, column: str):
 Describe briefly what the {column} column represents. If not possible, simply state "No description.\""""
 
 
-def generate_descriptions(src_path: str, descriptions_path: str):
+def generate_llm_narration_summaries(src_path: str, descriptions_path: str):
     tables = sorted([file[:-4] for file in os.listdir(src_path)])
     try:
         summaries = read_jsonl(descriptions_path)
@@ -70,7 +70,23 @@ def generate_descriptions(src_path: str, descriptions_path: str):
             write_jsonl(summaries, descriptions_path)
 
 
-# Adjust paths
-src_path = "../data_src/tables/pneuma_public_bi"
-descriptions_path = "summaries/narrations/public_narrations.jsonl"
-generate_descriptions(src_path, descriptions_path)
+if __name__ == "__main__":
+    src_path = "../data_src/tables/pneuma_chembl_10K"
+    descriptions_path = "summaries/narrations/chembl.jsonl"
+    generate_llm_narration_summaries(src_path, descriptions_path)
+
+    src_path = "../data_src/tables/pneuma_adventure_works"
+    descriptions_path = "summaries/narrations/adventure.jsonl"
+    generate_llm_narration_summaries(src_path, descriptions_path)
+
+    src_path = "../data_src/tables/pneuma_public_bi"
+    descriptions_path = "summaries/narrations/public.jsonl"
+    generate_llm_narration_summaries(src_path, descriptions_path)
+
+    src_path = "../data_src/tables/pneuma_chicago_10K"
+    descriptions_path = "summaries/narrations/chicago.jsonl"
+    generate_llm_narration_summaries(src_path, descriptions_path)
+
+    src_path = "../data_src/tables/pneuma_fetaqa"
+    descriptions_path = "summaries/narrations/fetaqa.jsonl"
+    generate_llm_narration_summaries(src_path, descriptions_path)

@@ -16,7 +16,7 @@ from benchmark_generator.context.utils.jsonl import read_jsonl
 
 
 os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
-os.environ["CUDA_VISIBLE_DEVICES"] = "4"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 set_seed(42, deterministic=True)
 
 
@@ -97,44 +97,44 @@ def start_indexing(dataset, contents, contexts):
 if __name__ == "__main__":
     dataset = "public"
     contents = read_jsonl(
-        "../pneuma_summarizer/summaries/standard/public_standard.jsonl"
-    ) + read_jsonl("../pneuma_summarizer/summaries/rows/public.jsonl")
-    contexts = read_jsonl("../data_src/benchmarks/context/public/contexts_public.jsonl")
+        "../pneuma_summarizer/summaries/narrations/public_narrations_splitted.jsonl"
+    ) + read_jsonl("../pneuma_summarizer/summaries/rows/public_merged.jsonl")
+    contexts = read_jsonl("../data_src/benchmarks/context/public/contexts_public_merged.jsonl")
     path = "../data_src/tables/pneuma_public_bi"
     start_indexing(dataset, contents, contexts)
 
     dataset = "chembl"
     contents = read_jsonl(
-        "../pneuma_summarizer/summaries/standard/chembl_standard.jsonl"
-    ) + read_jsonl("../pneuma_summarizer/summaries/rows/chembl.jsonl")
-    contexts = read_jsonl("../data_src/benchmarks/context/chembl/contexts_chembl.jsonl")
+        "../pneuma_summarizer/summaries/narrations/chembl_narrations_splitted.jsonl"
+    ) + read_jsonl("../pneuma_summarizer/summaries/rows/chembl_merged.jsonl")
+    contexts = read_jsonl("../data_src/benchmarks/context/chembl/contexts_chembl_merged.jsonl")
     path = "../data_src/tables/pneuma_chembl_10K"
     start_indexing(dataset, contents, contexts)
 
     dataset = "adventure"
     contents = read_jsonl(
-        "../pneuma_summarizer/summaries/standard/adventure_standard.jsonl"
-    ) + read_jsonl("../pneuma_summarizer/summaries/rows/adventure.jsonl")
+        "../pneuma_summarizer/summaries/narrations/adventure_narrations_splitted.jsonl"
+    ) + read_jsonl("../pneuma_summarizer/summaries/rows/adventure_merged.jsonl")
     contexts = read_jsonl(
-        "../data_src/benchmarks/context/adventure/contexts_adventure.jsonl"
+        "../data_src/benchmarks/context/adventure/contexts_adventure_merged.jsonl"
     )
     path = "../data_src/tables/pneuma_adventure_works"
     start_indexing(dataset, contents, contexts)
 
     dataset = "chicago"
     contents = read_jsonl(
-        "../pneuma_summarizer/summaries/standard/chicago_standard.jsonl"
-    ) + read_jsonl("../pneuma_summarizer/summaries/rows/chicago.jsonl")
+        "../pneuma_summarizer/summaries/narrations/chicago_narrations_splitted.jsonl"
+    ) + read_jsonl("../pneuma_summarizer/summaries/rows/chicago_merged.jsonl")
     contexts = read_jsonl(
-        "../data_src/benchmarks/context/chicago/contexts_chicago.jsonl"
+        "../data_src/benchmarks/context/chicago/contexts_chicago_merged.jsonl"
     )
     path = "../data_src/tables/pneuma_chicago_10K"
     start_indexing(dataset, contents, contexts)
 
     dataset = "fetaqa"
     contents = read_jsonl(
-        "../pneuma_summarizer/summaries/standard/fetaqa_standard.jsonl"
-    ) + read_jsonl("../pneuma_summarizer/summaries/rows/fetaqa.jsonl")
-    contexts = read_jsonl("../data_src/benchmarks/context/fetaqa/contexts_fetaqa.jsonl")
+        "../pneuma_summarizer/summaries/narrations/fetaqa_narrations_splitted.jsonl"
+    ) + read_jsonl("../pneuma_summarizer/summaries/rows/fetaqa_merged.jsonl")
+    contexts = read_jsonl("../data_src/benchmarks/context/fetaqa/contexts_fetaqa_merged.jsonl")
     path = "../data_src/tables/pneuma_fetaqa"
     start_indexing(dataset, contents, contexts)

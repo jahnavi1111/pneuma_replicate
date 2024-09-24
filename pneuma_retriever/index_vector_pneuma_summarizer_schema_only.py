@@ -97,7 +97,7 @@ def start_indexing(dataset, contents, contexts):
 if __name__ == "__main__":
     dataset = "public"
     contents = read_jsonl(
-        "../pneuma_summarizer/summaries/standard/public_standard.jsonl"
+        "../pneuma_summarizer/summaries/narrations/public_narrations_splitted.jsonl"
     )
     contexts = read_jsonl("../data_src/benchmarks/context/public/contexts_public.jsonl")
     path = "../data_src/tables/pneuma_public_bi"
@@ -105,7 +105,7 @@ if __name__ == "__main__":
 
     dataset = "chembl"
     contents = read_jsonl(
-        "../pneuma_summarizer/summaries/standard/chembl_standard.jsonl"
+        "../pneuma_summarizer/summaries/narrations/chembl_narrations_splitted.jsonl"
     )
     contexts = read_jsonl("../data_src/benchmarks/context/chembl/contexts_chembl.jsonl")
     path = "../data_src/tables/pneuma_chembl_10K"
@@ -113,7 +113,7 @@ if __name__ == "__main__":
 
     dataset = "adventure"
     contents = read_jsonl(
-        "../pneuma_summarizer/summaries/standard/adventure_standard.jsonl"
+        "../pneuma_summarizer/summaries/narrations/adventure_narrations_splitted.jsonl"
     )
     contexts = read_jsonl(
         "../data_src/benchmarks/context/adventure/contexts_adventure.jsonl"
@@ -123,7 +123,7 @@ if __name__ == "__main__":
 
     dataset = "chicago"
     contents = read_jsonl(
-        "../pneuma_summarizer/summaries/standard/chicago_standard.jsonl"
+        "../pneuma_summarizer/summaries/narrations/chicago_narrations_splitted.jsonl"
     )
     contexts = read_jsonl(
         "../data_src/benchmarks/context/chicago/contexts_chicago.jsonl"
@@ -133,7 +133,7 @@ if __name__ == "__main__":
 
     dataset = "fetaqa"
     contents = read_jsonl(
-        "../pneuma_summarizer/summaries/standard/fetaqa_standard.jsonl"
+        "../pneuma_summarizer/summaries/narrations/fetaqa_narrations_splitted.jsonl"
     )
     contexts = read_jsonl("../data_src/benchmarks/context/fetaqa/contexts_fetaqa.jsonl")
     path = "../data_src/tables/pneuma_fetaqa"
