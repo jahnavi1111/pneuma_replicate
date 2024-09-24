@@ -1,6 +1,6 @@
 import setproctitle
 
-setproctitle.setproctitle("/opt/conda/bin/python3.8")
+setproctitle.setproctitle("python")
 import os
 import time
 import sys
@@ -16,7 +16,7 @@ from benchmark_generator.context.utils.jsonl import read_jsonl
 
 
 os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
-os.environ["CUDA_VISIBLE_DEVICES"] = "7"
+os.environ["CUDA_VISIBLE_DEVICES"] = "6"
 set_seed(42, deterministic=True)
 
 
@@ -88,53 +88,42 @@ def indexing_vector(
 def start_indexing(dataset, contents, contexts):
     print(f"Indexing dataset: {dataset}")
     start = time.time()
-    client = chromadb.PersistentClient(f"indices/index-{dataset}-pneuma-dbreader")
+    client = chromadb.PersistentClient(f"indices/index-{dataset}-pneuma-summarizer")
     indexing_vector(client, embedding_model, contents, contexts)
     end = time.time()
     print(f"Indexing time: {end-start} seconds")
 
 
-if __name__ == "__main__":
-    dataset = "public"
+def get_information(dataset: str):
+    """
+    Return the contents, contexts, and context benchmarks of a dataset
+    """
     contents = read_jsonl(
-        "../pneuma_summarizer/summaries/dbreader/public_dbreader.jsonl"
+        f"../pneuma_summarizer/summaries/narrations/{dataset}_splitted.jsonl"
+    ) + read_jsonl(f"../../pneuma_summarizer/summaries/rows/{dataset}_merged.jsonl")
+    contexts = read_jsonl(
+        f"../../data_src/benchmarks/context/{dataset}/contexts_{dataset}_merged.jsonl"
     )
-    contexts = read_jsonl("../data_src/benchmarks/context/public/contexts_public.jsonl")
-    path = "../data_src/tables/pneuma_public_bi"
-    start_indexing(dataset, contents, contexts)
+    return [contents, contexts]
 
+
+if __name__ == "__main__":
     dataset = "chembl"
-    contents = read_jsonl(
-        "../pneuma_summarizer/summaries/dbreader/chembl_dbreader.jsonl"
-    )
-    contexts = read_jsonl("../data_src/benchmarks/context/chembl/contexts_chembl.jsonl")
-    path = "../data_src/tables/pneuma_chembl_10K"
+    contents, contexts = get_information(dataset)
     start_indexing(dataset, contents, contexts)
 
     dataset = "adventure"
-    contents = read_jsonl(
-        "../pneuma_summarizer/summaries/dbreader/adventure_dbreader.jsonl"
-    )
-    contexts = read_jsonl(
-        "../data_src/benchmarks/context/adventure/contexts_adventure.jsonl"
-    )
-    path = "../data_src/tables/pneuma_adventure_works"
+    contents, contexts = get_information(dataset)
+    start_indexing(dataset, contents, contexts)
+
+    dataset = "public"
+    contents, contexts = get_information(dataset)
     start_indexing(dataset, contents, contexts)
 
     dataset = "chicago"
-    contents = read_jsonl(
-        "../pneuma_summarizer/summaries/dbreader/chicago_dbreader.jsonl"
-    )
-    contexts = read_jsonl(
-        "../data_src/benchmarks/context/chicago/contexts_chicago.jsonl"
-    )
-    path = "../data_src/tables/pneuma_chicago_10K"
+    contents, contexts = get_information(dataset)
     start_indexing(dataset, contents, contexts)
 
     dataset = "fetaqa"
-    contents = read_jsonl(
-        "../pneuma_summarizer/summaries/dbreader/fetaqa_dbreader.jsonl"
-    )
-    contexts = read_jsonl("../data_src/benchmarks/context/fetaqa/contexts_fetaqa.jsonl")
-    path = "../data_src/tables/pneuma_fetaqa"
+    contents, contexts = get_information(dataset)
     start_indexing(dataset, contents, contexts)
