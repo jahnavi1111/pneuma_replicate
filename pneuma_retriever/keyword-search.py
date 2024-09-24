@@ -152,51 +152,51 @@ def get_information(dataset: str):
     Return the contents, contexts, and context benchmarks of a dataset
     """
     contents = read_jsonl(
-        f"../../pneuma_summarizer/summaries/rows/{dataset}.jsonl"
-    ) + read_jsonl(f"../../pneuma_summarizer/summaries/narrations/{dataset}.jsonl")
+        f"../pneuma_summarizer/summaries/rows/{dataset}.jsonl"
+    ) + read_jsonl(f"../pneuma_summarizer/summaries/narrations/{dataset}.jsonl")
     contexts = read_jsonl(
-        f"../../data_src/benchmarks/context/{dataset}/contexts_{dataset}.jsonl"
+        f"../data_src/benchmarks/context/{dataset}/contexts_{dataset}.jsonl"
     )
     context_benchmark = read_jsonl(
-        f"../../data_src/benchmarks/context/{dataset}/bx_{dataset}.jsonl"
+        f"../data_src/benchmarks/context/{dataset}/bx_{dataset}.jsonl"
     )
     return [contents, contexts, context_benchmark]
 
 
 if __name__ == "__main__":
-    ks = [1, 10]
+    ks = [1, 10, 50]
 
     dataset = "chembl"
     content_benchmark = read_jsonl(
-        "../../data_src/benchmarks/content/pneuma_chembl_10K_questions_annotated.jsonl"
+        "../data_src/benchmarks/content/pneuma_chembl_10K_questions_annotated.jsonl"
     )
     contents, contexts, context_benchmark = get_information(dataset)
     start(dataset, contents, contexts, content_benchmark, context_benchmark, ks)
 
     dataset = "adventure"
     content_benchmark = read_jsonl(
-        "../../data_src/benchmarks/content/pneuma_adventure_works_questions_annotated.jsonl"
+        "../data_src/benchmarks/content/pneuma_adventure_works_questions_annotated.jsonl"
     )
     contents, contexts, context_benchmark = get_information(dataset)
     start(dataset, contents, contexts, content_benchmark, context_benchmark, ks)
 
     dataset = "public"
     content_benchmark = read_jsonl(
-        "../../data_src/benchmarks/content/pneuma_public_bi_questions_annotated.jsonl"
+        "../data_src/benchmarks/content/pneuma_public_bi_questions_annotated.jsonl"
     )
     contents, contexts, context_benchmark = get_information(dataset)
     start(dataset, contents, contexts, content_benchmark, context_benchmark, ks)
 
     dataset = "chicago"
     content_benchmark = read_jsonl(
-        "../../data_src/benchmarks/content/pneuma_chicago_10K_questions_annotated.jsonl"
+        "../data_src/benchmarks/content/pneuma_chicago_10K_questions_annotated.jsonl"
     )
     contents, contexts, context_benchmark = get_information(dataset)
     start(dataset, contents, contexts, content_benchmark, context_benchmark, ks)
 
     dataset = "fetaqa"
     content_benchmark = read_jsonl(
-        "../../data_src/benchmarks/content/pneuma_fetaqa_questions_annotated.jsonl"
+        "../data_src/benchmarks/content/pneuma_fetaqa_questions_annotated.jsonl"
     )
     contents, contexts, context_benchmark = get_information(dataset)
     start(dataset, contents, contexts, content_benchmark, context_benchmark, ks)
