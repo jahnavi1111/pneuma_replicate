@@ -29,9 +29,9 @@ stemmer = Stemmer.Stemmer("english")
 
 reranker = None
 reranking_mode = RerankingMode.NONE
-# reranker = initialize_pipeline("../../models/llama", torch.bfloat16)
+# reranker = initialize_pipeline("../models/llama", torch.bfloat16)
 # reranking_mode = RerankingMode.LLM
-# reranker = FlagLLMReranker("../../models/bge-reranker")
+# reranker = FlagLLMReranker("../models/bge-reranker")
 # reranking_mode = RerankingMode.DIRECT_SCORE
 hybrid_retriever = HybridRetriever(reranker, reranking_mode)
 
@@ -117,7 +117,7 @@ def evaluate_benchmark(
     for data in benchmark:
         questions.append(data[question_key])
     embed_questions = np.loadtxt(
-        f"../embeddings/embed-{dataset}-questions-{benchmark_type}-{use_rephrased_questions}.txt"
+        f"embeddings/embed-{dataset}-questions-{benchmark_type}-{use_rephrased_questions}.txt"
     )
     embed_questions = [embed.tolist() for embed in embed_questions]
 
@@ -187,7 +187,7 @@ def start(
 ):
     print(f"Processing {dataset} dataset")
     start = time.time()
-    client = chromadb.PersistentClient(f"../indices/index-{dataset}-pneuma-summarizer")
+    client = chromadb.PersistentClient(f"indices/index-{dataset}-pneuma-summarizer")
     collection = client.get_collection("benchmark")
     retriever = indexing_keyword(stemmer, rows + narrations, contexts)
     end = time.time()
@@ -264,17 +264,17 @@ if __name__ == "__main__":
 
     dataset = "fetaqa"
     narrations = read_jsonl(
-        f"../../pneuma_summarizer/summaries/narrations/{dataset}.jsonl"
+        f"../pneuma_summarizer/summaries/narrations/{dataset}.jsonl"
     )
-    rows = read_jsonl(f"../../pneuma_summarizer/summaries/rows/{dataset}.jsonl")
+    rows = read_jsonl(f"../pneuma_summarizer/summaries/rows/{dataset}.jsonl")
     content_benchmark = read_jsonl(
-        "../../data_src/benchmarks/content/pneuma_fetaqa_questions_annotated.jsonl"
+        "../data_src/benchmarks/content/pneuma_fetaqa_questions_annotated.jsonl"
     )
     context_benchmark = read_jsonl(
-        f"../../data_src/benchmarks/context/{dataset}/bx_{dataset}.jsonl"
+        f"../data_src/benchmarks/context/{dataset}/bx_{dataset}.jsonl"
     )
     contexts = read_jsonl(
-        f"../../data_src/benchmarks/context/{dataset}/contexts_{dataset}.jsonl"
+        f"../data_src/benchmarks/context/{dataset}/contexts_{dataset}.jsonl"
     )
     start(
         dataset,
@@ -290,17 +290,17 @@ if __name__ == "__main__":
 
     dataset = "chicago"
     narrations = read_jsonl(
-        f"../../pneuma_summarizer/summaries/narrations/{dataset}.jsonl"
+        f"../pneuma_summarizer/summaries/narrations/{dataset}.jsonl"
     )
-    rows = read_jsonl(f"../../pneuma_summarizer/summaries/rows/{dataset}.jsonl")
+    rows = read_jsonl(f"../pneuma_summarizer/summaries/rows/{dataset}.jsonl")
     content_benchmark = read_jsonl(
-        "../../data_src/benchmarks/content/pneuma_chicago_10K_questions_annotated.jsonl"
+        "../data_src/benchmarks/content/pneuma_chicago_10K_questions_annotated.jsonl"
     )
     context_benchmark = read_jsonl(
-        f"../../data_src/benchmarks/context/{dataset}/bx_{dataset}.jsonl"
+        f"../data_src/benchmarks/context/{dataset}/bx_{dataset}.jsonl"
     )
     contexts = read_jsonl(
-        f"../../data_src/benchmarks/context/{dataset}/contexts_{dataset}.jsonl"
+        f"../data_src/benchmarks/context/{dataset}/contexts_{dataset}.jsonl"
     )
     start(
         dataset,
@@ -316,17 +316,17 @@ if __name__ == "__main__":
 
     dataset = "public"
     narrations = read_jsonl(
-        f"../../pneuma_summarizer/summaries/narrations/{dataset}.jsonl"
+        f"../pneuma_summarizer/summaries/narrations/{dataset}.jsonl"
     )
-    rows = read_jsonl(f"../../pneuma_summarizer/summaries/rows/{dataset}.jsonl")
+    rows = read_jsonl(f"../pneuma_summarizer/summaries/rows/{dataset}.jsonl")
     content_benchmark = read_jsonl(
-        "../../data_src/benchmarks/content/pneuma_public_bi_questions_annotated.jsonl"
+        "../data_src/benchmarks/content/pneuma_public_bi_questions_annotated.jsonl"
     )
     context_benchmark = read_jsonl(
-        f"../../data_src/benchmarks/context/{dataset}/bx_{dataset}.jsonl"
+        f"../data_src/benchmarks/context/{dataset}/bx_{dataset}.jsonl"
     )
     contexts = read_jsonl(
-        f"../../data_src/benchmarks/context/{dataset}/contexts_{dataset}.jsonl"
+        f"../data_src/benchmarks/context/{dataset}/contexts_{dataset}.jsonl"
     )
     start(
         dataset,
@@ -342,17 +342,17 @@ if __name__ == "__main__":
 
     dataset = "chembl"
     narrations = read_jsonl(
-        f"../../pneuma_summarizer/summaries/narrations/{dataset}.jsonl"
+        f"../pneuma_summarizer/summaries/narrations/{dataset}.jsonl"
     )
     contexts = read_jsonl(
-        f"../../data_src/benchmarks/context/{dataset}/contexts_{dataset}.jsonl"
+        f"../data_src/benchmarks/context/{dataset}/contexts_{dataset}.jsonl"
     )
-    rows = read_jsonl(f"../../pneuma_summarizer/summaries/rows/{dataset}.jsonl")
+    rows = read_jsonl(f"../pneuma_summarizer/summaries/rows/{dataset}.jsonl")
     content_benchmark = read_jsonl(
-        "../../data_src/benchmarks/content/pneuma_chembl_10K_questions_annotated.jsonl"
+        "../data_src/benchmarks/content/pneuma_chembl_10K_questions_annotated.jsonl"
     )
     context_benchmark = read_jsonl(
-        f"../../data_src/benchmarks/context/{dataset}/bx_{dataset}.jsonl"
+        f"../data_src/benchmarks/context/{dataset}/bx_{dataset}.jsonl"
     )
     start(
         dataset,
@@ -368,17 +368,17 @@ if __name__ == "__main__":
 
     dataset = "adventure"
     narrations = read_jsonl(
-        f"../../pneuma_summarizer/summaries/narrations/{dataset}.jsonl"
+        f"../pneuma_summarizer/summaries/narrations/{dataset}.jsonl"
     )
-    rows = read_jsonl(f"../../pneuma_summarizer/summaries/rows/{dataset}.jsonl")
+    rows = read_jsonl(f"../pneuma_summarizer/summaries/rows/{dataset}.jsonl")
     content_benchmark = read_jsonl(
-        "../../data_src/benchmarks/content/pneuma_adventure_works_questions_annotated.jsonl"
+        "../data_src/benchmarks/content/pneuma_adventure_works_questions_annotated.jsonl"
     )
     context_benchmark = read_jsonl(
-        f"../../data_src/benchmarks/context/{dataset}/bx_{dataset}.jsonl"
+        f"../data_src/benchmarks/context/{dataset}/bx_{dataset}.jsonl"
     )
     contexts = read_jsonl(
-        f"../../data_src/benchmarks/context/{dataset}/contexts_{dataset}.jsonl"
+        f"../data_src/benchmarks/context/{dataset}/contexts_{dataset}.jsonl"
     )
     start(
         dataset,
