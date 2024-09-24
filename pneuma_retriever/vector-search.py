@@ -51,7 +51,7 @@ def evaluate_benchmark(
     for data in benchmark:
         questions.append(data[question_key])
     embed_questions = np.loadtxt(
-        f"../embeddings/embed-{dataset}-questions-{benchmark_type}-{use_rephrased_questions}.txt"
+        f"embeddings/embed-{dataset}-questions-{benchmark_type}-{use_rephrased_questions}.txt"
     )
     embed_questions = [embed.tolist() for embed in embed_questions]
 
