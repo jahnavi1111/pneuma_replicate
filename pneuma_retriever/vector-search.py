@@ -86,7 +86,7 @@ def evaluate_benchmark(
 
 def start(dataset: str, content_benchmark: list[dict[str, str]], ks: list[int]):
     start = time.time()
-    client = chromadb.PersistentClient(f"../indices/index-{dataset}-content-narrations")
+    client = chromadb.PersistentClient(f"indices/index-{dataset}-content-narrations")
     collection = client.get_collection("benchmark")
     end = time.time()
     print(f"Indexing time: {end-start} seconds")
