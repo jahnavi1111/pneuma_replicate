@@ -17,6 +17,7 @@ from transformers import set_seed
 from FlagEmbedding import FlagLLMReranker
 from chromadb.api.models.Collection import Collection
 from benchmark_generator.context.utils.jsonl import read_jsonl, write_jsonl
+from sentence_transformers.SentenceTransformer import SentenceTransformer
 from benchmark_generator.context.utils.pipeline_initializer import initialize_pipeline
 from hybrid_retriever import HybridRetriever, RerankingMode
 
@@ -33,6 +34,8 @@ reranking_mode = RerankingMode.NONE
 # reranking_mode = RerankingMode.LLM
 # reranker = FlagLLMReranker("../models/bge-reranker")
 # reranking_mode = RerankingMode.DIRECT_SCORE
+# reranker = SentenceTransformer("../models/stella", local_files_only=True)
+# reranking_mode = RerankingMode.COSINE
 hybrid_retriever = HybridRetriever(reranker, reranking_mode)
 
 hitrates_data: list[dict[str, str]] = []
