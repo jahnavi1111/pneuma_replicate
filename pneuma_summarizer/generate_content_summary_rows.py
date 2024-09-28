@@ -21,10 +21,11 @@ def generate_row_summaries(table_path: str, summary_path: str):
         selected_df = df.sample(n=sample_size, random_state=table_idx).reset_index(
             drop=True
         )
-        for _, row in selected_df.iterrows():
+        for df_idx, row in selected_df.iterrows():
             formatted_row = " | ".join([f"{col}: {val}" for col, val in row.items()])
             content_summaries.append(
                 {
+                    "id": f"{table[:-4]}_SEP_contents_SEP_row-{df_idx}",
                     "table": table[:-4],
                     "summary": formatted_row,
                 }
