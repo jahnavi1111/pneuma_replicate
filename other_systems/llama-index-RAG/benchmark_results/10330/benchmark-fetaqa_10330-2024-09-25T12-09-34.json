@@ -8,12 +8,6 @@
         },
         "generate_index": {
             "time": 366.5958914756775
-        },
-        "query_index": [
-            {
-                "benchmark": "BC2",
-                "time": 11052.42144703865
-            }
-        ]
+        }
     }
 }
