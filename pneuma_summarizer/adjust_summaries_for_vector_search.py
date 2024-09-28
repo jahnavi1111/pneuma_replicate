@@ -101,7 +101,7 @@ def merge_context_summaries(contexts: list[dict[str, str]], name: str):
         context_idx = 0
         while context_idx < len(table_contexts):
             processed_context = table_contexts[context_idx]["context"]
-
+            source_ids = [table_contexts[context_idx]["id"]]
             while (context_idx + 1) < len(table_contexts):
                 temp = (
                     processed_context
@@ -109,7 +109,7 @@ def merge_context_summaries(contexts: list[dict[str, str]], name: str):
                     + table_contexts[context_idx + 1]["context"]
                 )
                 if len(tokenizer.encode(temp)) < EMBEDDING_MAX_TOKENS:
-                    print(len(tokenizer.encode(temp)))
+                    source_ids.append(table_contexts[context_idx + 1]["id"])
                     processed_context = temp
                     context_idx += 1
                 else:
@@ -118,6 +118,7 @@ def merge_context_summaries(contexts: list[dict[str, str]], name: str):
             context_idx += 1
             processed_contexts.append(
                 {
+                    "source_ids": source_ids,
                     "table": table,
                     "context": processed_context,
                 }
