@@ -41,6 +41,7 @@ def split_schema_summaries(
             col_idx += 1
             processed_contents.append(
                 {
+                    "source_ids": [f"{table}_SEP_contents_SEP_schema"],
                     "table": table,
                     "summary": processed_summary,
                 }
