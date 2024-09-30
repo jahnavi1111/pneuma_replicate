@@ -64,8 +64,9 @@ def generate_llm_narration_summaries(src_path: str, descriptions_path: str):
                 col_narrations.append(f"{cols[output_idx]}: {output[-1]["content"]}")
             
             summaries.append({
+                "id": f"{table}_SEP_contents_SEP_schema",
                 "table": table,
-                "summary": " | ".join(col_narrations)
+                "summary": " | ".join(col_narrations),
             })
             write_jsonl(summaries, descriptions_path)
 

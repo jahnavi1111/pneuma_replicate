@@ -1,4 +1,5 @@
 import logging
+import torch
 
 from transformers import set_seed
 from transformers.tokenization_utils_base import PreTrainedTokenizerBase
@@ -111,6 +112,7 @@ def prompt_pipeline(
         return results
     except Exception as error:
         logger.warning(error)
+        torch.cuda.empty_cache()
         return [[{"role": "user", "content": ""}]]
 
 

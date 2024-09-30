@@ -50,7 +50,7 @@ def generate_contexts(
                 context = output[-1]["content"]
                 contexts.append(
                     {
-                        "id": f"{table[0]}_{output_idx}",
+                        "id": f"{table[0]}_SEP_contexts-{output_idx}",
                         "table": table[0],
                         "context_question": questions[output_idx],
                         "context": context,

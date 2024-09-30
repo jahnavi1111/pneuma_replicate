@@ -1,6 +1,3 @@
-import setproctitle
-
-setproctitle.setproctitle("/usr/bin/python")
 import os
 import torch
 import time
@@ -43,34 +40,30 @@ hitrates_data: list[dict[str, str]] = []
 
 def indexing_keyword(
     stemmer,
-    narration_contents: list[dict[str, str]],
+    contents: list[dict[str, str]],
     contexts: list[dict[str, str]] = None,
 ):
     corpus_json = []
-    tables = sorted({content["table"] for content in narration_contents})
+    tables = sorted({content["table"] for content in contents})
     for table in tables:
-        cols_descriptions = [
-            content["summary"]
-            for content in narration_contents
-            if content["table"] == table
-        ]
-        for content_idx, content in enumerate(cols_descriptions):
+        table_contents = [content for content in contents if content["table"] == table]
+        for content in table_contents:
             corpus_json.append(
                 {
-                    "text": content,
-                    "metadata": {"table": f"{table}_SEP_contents_{content_idx}"},
+                    "text": content["summary"],
+                    "metadata": {"table": content["id"]},
                 }
             )
 
         if contexts is not None:
-            filtered_contexts = [
-                context["context"] for context in contexts if context["table"] == table
+            table_contexts = [
+                context for context in contexts if context["table"] == table
             ]
-            for context_idx, context in enumerate(filtered_contexts):
+            for context in table_contexts:
                 corpus_json.append(
                     {
-                        "text": context,
-                        "metadata": {"table": f"{table}_SEP_{context_idx}"},
+                        "text": context["context"],
+                        "metadata": {"table": context["id"]},
                     }
                 )
 
@@ -88,14 +81,18 @@ def get_question_key(benchmark_type: str, use_rephrased_questions: bool):
     if benchmark_type == "content":
         if not use_rephrased_questions:
             question_key = "question_from_sql_1"
+            benchmark_name = "BC1"
         else:
             question_key = "question"
+            benchmark_name = "BC2"
     else:
         if not use_rephrased_questions:
             question_key = "question_bx1"
+            benchmark_name = "BX1"
         else:
             question_key = "question_bx2"
-    return question_key
+            benchmark_name = "BX2"
+    return question_key, benchmark_name
 
 
 def evaluate_benchmark(
@@ -114,7 +111,7 @@ def evaluate_benchmark(
     hitrate_sum = 0
     wrong_questions = []
     increased_k = k * n
-    question_key = get_question_key(benchmark_type, use_rephrased_questions)
+    question_key, benchmark_name = get_question_key(benchmark_type, use_rephrased_questions)
 
     questions = []
     for data in benchmark:
@@ -167,6 +164,7 @@ def evaluate_benchmark(
     hitrates_data.append(
         {
             "dataset": dataset,
+            "benchmark_name": benchmark_name,
             "k": k,
             "n": n,
             "alpha": alpha,
@@ -261,23 +259,23 @@ def start(
 
 if __name__ == "__main__":
     # Adjust
-    ns = [5]
-    alphas = [0.7]
-    k = 10
+    ns = [3,5]
+    alphas = [0.5,0.7]
+    k = 1
 
-    dataset = "fetaqa"
+    dataset = "chembl"
     narrations = read_jsonl(
         f"../pneuma_summarizer/summaries/narrations/{dataset}.jsonl"
     )
+    contexts = read_jsonl(
+        f"../data_src/benchmarks/context/{dataset}/contexts_{dataset}.jsonl"
+    )
     rows = read_jsonl(f"../pneuma_summarizer/summaries/rows/{dataset}.jsonl")
     content_benchmark = read_jsonl(
-        "../data_src/benchmarks/content/pneuma_fetaqa_questions_annotated.jsonl"
+        "../data_src/benchmarks/content/pneuma_chembl_10K_questions_annotated.jsonl"
     )
     context_benchmark = read_jsonl(
         f"../data_src/benchmarks/context/{dataset}/bx_{dataset}.jsonl"
-    )
-    contexts = read_jsonl(
-        f"../data_src/benchmarks/context/{dataset}/contexts_{dataset}.jsonl"
     )
     start(
         dataset,
@@ -288,16 +286,16 @@ if __name__ == "__main__":
         context_benchmark,
         alphas,
         ns,
-        k
+        k,
     )
 
-    dataset = "chicago"
+    dataset = "adventure"
     narrations = read_jsonl(
         f"../pneuma_summarizer/summaries/narrations/{dataset}.jsonl"
     )
     rows = read_jsonl(f"../pneuma_summarizer/summaries/rows/{dataset}.jsonl")
     content_benchmark = read_jsonl(
-        "../data_src/benchmarks/content/pneuma_chicago_10K_questions_annotated.jsonl"
+        "../data_src/benchmarks/content/pneuma_adventure_works_questions_annotated.jsonl"
     )
     context_benchmark = read_jsonl(
         f"../data_src/benchmarks/context/{dataset}/bx_{dataset}.jsonl"
@@ -343,19 +341,19 @@ if __name__ == "__main__":
         k,
     )
 
-    dataset = "chembl"
+    dataset = "chicago"
     narrations = read_jsonl(
         f"../pneuma_summarizer/summaries/narrations/{dataset}.jsonl"
     )
-    contexts = read_jsonl(
-        f"../data_src/benchmarks/context/{dataset}/contexts_{dataset}.jsonl"
-    )
     rows = read_jsonl(f"../pneuma_summarizer/summaries/rows/{dataset}.jsonl")
     content_benchmark = read_jsonl(
-        "../data_src/benchmarks/content/pneuma_chembl_10K_questions_annotated.jsonl"
+        "../data_src/benchmarks/content/pneuma_chicago_10K_questions_annotated.jsonl"
     )
     context_benchmark = read_jsonl(
         f"../data_src/benchmarks/context/{dataset}/bx_{dataset}.jsonl"
+    )
+    contexts = read_jsonl(
+        f"../data_src/benchmarks/context/{dataset}/contexts_{dataset}.jsonl"
     )
     start(
         dataset,
@@ -369,13 +367,13 @@ if __name__ == "__main__":
         k,
     )
 
-    dataset = "adventure"
+    dataset = "fetaqa"
     narrations = read_jsonl(
         f"../pneuma_summarizer/summaries/narrations/{dataset}.jsonl"
     )
     rows = read_jsonl(f"../pneuma_summarizer/summaries/rows/{dataset}.jsonl")
     content_benchmark = read_jsonl(
-        "../data_src/benchmarks/content/pneuma_adventure_works_questions_annotated.jsonl"
+        "../data_src/benchmarks/content/pneuma_fetaqa_questions_annotated.jsonl"
     )
     context_benchmark = read_jsonl(
         f"../data_src/benchmarks/context/{dataset}/bx_{dataset}.jsonl"

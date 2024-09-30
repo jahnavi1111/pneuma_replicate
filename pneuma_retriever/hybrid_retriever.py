@@ -1,4 +1,5 @@
 import sys
+import ast
 
 sys.path.append("..")
 
@@ -39,17 +40,22 @@ class HybridRetriever:
     def _process_nodes_vec(self, items):
         # Normalize relevance scores and return the nodes in dict format
         scores: list[float] = [1 - dist for dist in items["distances"][0]]
+        documents: list[str] = items["documents"][0]
+        source_ids: list[list[str]] = [ast.literal_eval(metadata["source_ids"]) for metadata in items["metadatas"][0]]
         max_score = max(scores)
         min_score = min(scores)
 
         processed_nodes: dict[str, tuple[float, str]] = {}
 
-        for idx in range(len(items["ids"][0])):
+        for idx in range(len(scores)):
             if min_score == max_score:
                 score = 1
             else:
                 score = (scores[idx] - min_score) / (max_score - min_score)
-            processed_nodes[items["ids"][0][idx]] = (score, items["documents"][0][idx])
+            
+            for source_id in source_ids[idx]:
+                if source_id not in processed_nodes:
+                    processed_nodes[source_id] = (score, documents[idx])
         return processed_nodes
 
     def _get_relevance_prompt(self, desc: str, desc_type: str, question: str):

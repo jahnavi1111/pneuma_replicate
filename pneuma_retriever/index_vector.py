@@ -1,6 +1,3 @@
-import setproctitle
-
-setproctitle.setproctitle("python")
 import os
 import time
 import sys
@@ -26,7 +23,8 @@ embedding_model = SentenceTransformer("../models/stella", local_files_only=True)
 def indexing_vector(
     client: Client,
     embedding_model: SentenceTransformer,
-    std_contents: list[dict[str, str]],
+    schema_contents: list[dict[str, str]],
+    row_contents: list[dict[str, str]],
     contexts: list[dict[str, str]] = None,
     collection_name="benchmark",
     reindex=False,
@@ -49,24 +47,29 @@ def indexing_vector(
         name=collection_name, metadata={"hnsw:space": "cosine", "hnsw:random_seed": 42}
     )
 
-    tables = sorted({content["table"] for content in std_contents})
+    tables = sorted({content["table"] for content in schema_contents})
     for table in tables:
-        cols = [
-            content["summary"] for content in std_contents if content["table"] == table
-        ]
-        for content_idx, content in enumerate(cols):
-            documents.append(content)
-            metadatas.append({"table": f"{table}_SEP_contents_{content_idx}"})
-            ids.append(f"{table}_SEP_contents_{content_idx}")
+        table_schema_contents = [content for content in schema_contents if content["table"] == table]
+        table_row_contents = [content for content in row_contents if content["table"] == table]
+
+        for idx, schema_content in enumerate(table_schema_contents):
+            documents.append(schema_content["summary"])
+            metadatas.append({"source_ids": str(schema_content["source_ids"])})
+            ids.append(f"{table}_SEP_contents_SEP_schema-{idx}")
+
+        for idx, row_content in enumerate(table_row_contents):
+            documents.append(row_content["summary"])
+            metadatas.append({"source_ids": str(row_content["source_ids"])})
+            ids.append(f"{table}_SEP_contents_SEP_row-{idx}")
 
         if contexts is not None:
-            filtered_contexts = [
-                context["context"] for context in contexts if context["table"] == table
+            table_contexts = [
+                context for context in contexts if context["table"] == table
             ]
-            for context_idx, context in enumerate(filtered_contexts):
-                documents.append(context)
-                metadatas.append({"table": f"{table}_SEP_{context_idx}"})
-                ids.append(f"{table}_SEP_{context_idx}")
+            for context_idx, context in enumerate(table_contexts):
+                documents.append(context["context"])
+                metadatas.append({"source_ids": str(context["source_ids"])})
+                ids.append(f"{table}_SEP_contexts-{context_idx}")
 
     for i in range(0, len(documents), 30000):
         embeddings = embedding_model.encode(
@@ -85,11 +88,11 @@ def indexing_vector(
     return collection
 
 
-def start_indexing(dataset, contents, contexts):
+def start_indexing(dataset, schema_contents, row_contents, contexts):
     print(f"Indexing dataset: {dataset}")
     start = time.time()
     client = chromadb.PersistentClient(f"indices/index-{dataset}-pneuma-summarizer")
-    indexing_vector(client, embedding_model, contents, contexts)
+    indexing_vector(client, embedding_model, schema_contents, row_contents, contexts)
     end = time.time()
     print(f"Indexing time: {end-start} seconds")
 
@@ -98,32 +101,33 @@ def get_information(dataset: str):
     """
     Return the contents, contexts, and context benchmarks of a dataset
     """
-    contents = read_jsonl(
+    schema_contents = read_jsonl(
         f"../pneuma_summarizer/summaries/narrations/{dataset}_splitted.jsonl"
-    ) + read_jsonl(f"../pneuma_summarizer/summaries/rows/{dataset}_merged.jsonl")
+    ) 
+    row_contents = read_jsonl(f"../pneuma_summarizer/summaries/rows/{dataset}_merged.jsonl")
     contexts = read_jsonl(
         f"../data_src/benchmarks/context/{dataset}/contexts_{dataset}_merged.jsonl"
     )
-    return [contents, contexts]
+    return [schema_contents, row_contents, contexts]
 
 
 if __name__ == "__main__":
     dataset = "chembl"
-    contents, contexts = get_information(dataset)
-    start_indexing(dataset, contents, contexts)
+    schema_contents, row_contents, contexts = get_information(dataset)
+    start_indexing(dataset, schema_contents, row_contents, contexts)
 
     dataset = "adventure"
-    contents, contexts = get_information(dataset)
-    start_indexing(dataset, contents, contexts)
+    schema_contents, row_contents, contexts = get_information(dataset)
+    start_indexing(dataset, schema_contents, row_contents, contexts)
 
     dataset = "public"
-    contents, contexts = get_information(dataset)
-    start_indexing(dataset, contents, contexts)
+    schema_contents, row_contents, contexts = get_information(dataset)
+    start_indexing(dataset, schema_contents, row_contents, contexts)
 
     dataset = "chicago"
-    contents, contexts = get_information(dataset)
-    start_indexing(dataset, contents, contexts)
+    schema_contents, row_contents, contexts = get_information(dataset)
+    start_indexing(dataset, schema_contents, row_contents, contexts)
 
     dataset = "fetaqa"
-    contents, contexts = get_information(dataset)
-    start_indexing(dataset, contents, contexts)
+    schema_contents, row_contents, contexts = get_information(dataset)
+    start_indexing(dataset, schema_contents, row_contents, contexts)

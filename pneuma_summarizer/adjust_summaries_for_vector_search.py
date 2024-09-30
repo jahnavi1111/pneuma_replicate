@@ -41,6 +41,7 @@ def split_schema_summaries(
             col_idx += 1
             processed_contents.append(
                 {
+                    "source_ids": [f"{table}_SEP_contents_SEP_schema"],
                     "table": table,
                     "summary": processed_summary,
                 }
@@ -63,11 +64,12 @@ def merge_row_summaries(rows: list[dict[str, str]], name: str, summary_type: str
         rows_idx = 0
         while rows_idx < len(table_rows):
             processed_summary = table_rows[rows_idx]["summary"]
+            source_ids = [table_rows[rows_idx]["id"]]
 
             while (rows_idx + 1) < len(table_rows):
                 temp = processed_summary + " || " + table_rows[rows_idx + 1]["summary"]
                 if len(tokenizer.encode(temp)) < EMBEDDING_MAX_TOKENS:
-                    print(len(tokenizer.encode(temp)))
+                    source_ids.append(table_rows[rows_idx + 1]["id"])
                     processed_summary = temp
                     rows_idx += 1
                 else:
@@ -76,6 +78,7 @@ def merge_row_summaries(rows: list[dict[str, str]], name: str, summary_type: str
             rows_idx += 1
             processed_rows.append(
                 {
+                    "source_ids": source_ids,
                     "table": table,
                     "summary": processed_summary,
                 }
@@ -98,7 +101,7 @@ def merge_context_summaries(contexts: list[dict[str, str]], name: str):
         context_idx = 0
         while context_idx < len(table_contexts):
             processed_context = table_contexts[context_idx]["context"]
-
+            source_ids = [table_contexts[context_idx]["id"]]
             while (context_idx + 1) < len(table_contexts):
                 temp = (
                     processed_context
@@ -106,7 +109,7 @@ def merge_context_summaries(contexts: list[dict[str, str]], name: str):
                     + table_contexts[context_idx + 1]["context"]
                 )
                 if len(tokenizer.encode(temp)) < EMBEDDING_MAX_TOKENS:
-                    print(len(tokenizer.encode(temp)))
+                    source_ids.append(table_contexts[context_idx + 1]["id"])
                     processed_context = temp
                     context_idx += 1
                 else:
@@ -115,6 +118,7 @@ def merge_context_summaries(contexts: list[dict[str, str]], name: str):
             context_idx += 1
             processed_contexts.append(
                 {
+                    "source_ids": source_ids,
                     "table": table,
                     "context": processed_context,
                 }
@@ -130,66 +134,46 @@ def merge_context_summaries(contexts: list[dict[str, str]], name: str):
 
 if __name__ == "__main__":
     name = f"chembl"
-    std_contents = read_jsonl(f"summaries/standard/{name}.jsonl")
     narration_contents = read_jsonl(f"summaries/narrations/{name}.jsonl")
     row_contents = read_jsonl(f"summaries/rows/{name}.jsonl")
-    dbreader_contents = read_jsonl(f"summaries/dbreader/{name}.jsonl")
     contexts = read_jsonl(f"../data_src/benchmarks/context/{name}/contexts_{name}.jsonl")
 
-    split_schema_summaries(std_contents, "standard", name)
     split_schema_summaries(narration_contents, "narrations", name)
     merge_row_summaries(row_contents, name, "rows")
-    merge_row_summaries(dbreader_contents, name, "dbreader")
     merge_context_summaries(contexts, name)
 
     name = f"adventure"
-    std_contents = read_jsonl(f"summaries/standard/{name}.jsonl")
     narration_contents = read_jsonl(f"summaries/narrations/{name}.jsonl")
     row_contents = read_jsonl(f"summaries/rows/{name}.jsonl")
-    dbreader_contents = read_jsonl(f"summaries/dbreader/{name}.jsonl")
     contexts = read_jsonl(f"../data_src/benchmarks/context/{name}/contexts_{name}.jsonl")
 
-    split_schema_summaries(std_contents, "standard", name)
     split_schema_summaries(narration_contents, "narrations", name)
     merge_row_summaries(row_contents, name, "rows")
-    merge_row_summaries(dbreader_contents, name, "dbreader")
     merge_context_summaries(contexts, name)
 
     name = f"public"
-    std_contents = read_jsonl(f"summaries/standard/{name}.jsonl")
     narration_contents = read_jsonl(f"summaries/narrations/{name}.jsonl")
     row_contents = read_jsonl(f"summaries/rows/{name}.jsonl")
-    dbreader_contents = read_jsonl(f"summaries/dbreader/{name}.jsonl")
     contexts = read_jsonl(f"../data_src/benchmarks/context/{name}/contexts_{name}.jsonl")
 
-    split_schema_summaries(std_contents, "standard", name)
     split_schema_summaries(narration_contents, "narrations", name)
     merge_row_summaries(row_contents, name, "rows")
-    merge_row_summaries(dbreader_contents, name, "dbreader")
     merge_context_summaries(contexts, name)
 
     name = f"chicago"
-    std_contents = read_jsonl(f"summaries/standard/{name}.jsonl")
     narration_contents = read_jsonl(f"summaries/narrations/{name}.jsonl")
     row_contents = read_jsonl(f"summaries/rows/{name}.jsonl")
-    dbreader_contents = read_jsonl(f"summaries/dbreader/{name}.jsonl")
     contexts = read_jsonl(f"../data_src/benchmarks/context/{name}/contexts_{name}.jsonl")
 
-    split_schema_summaries(std_contents, "standard", name)
     split_schema_summaries(narration_contents, "narrations", name)
     merge_row_summaries(row_contents, name, "rows")
-    merge_row_summaries(dbreader_contents, name, "dbreader")
     merge_context_summaries(contexts, name)
 
     name = f"fetaqa"
-    std_contents = read_jsonl(f"summaries/standard/{name}.jsonl")
     narration_contents = read_jsonl(f"summaries/narrations/{name}.jsonl")
     row_contents = read_jsonl(f"summaries/rows/{name}.jsonl")
-    dbreader_contents = read_jsonl(f"summaries/dbreader/{name}.jsonl")
     contexts = read_jsonl(f"../data_src/benchmarks/context/{name}/contexts_{name}.jsonl")
 
-    split_schema_summaries(std_contents, "standard", name)
     split_schema_summaries(narration_contents, "narrations", name)
     merge_row_summaries(row_contents, name, "rows")
-    merge_row_summaries(dbreader_contents, name, "dbreader")
     merge_context_summaries(contexts, name)
