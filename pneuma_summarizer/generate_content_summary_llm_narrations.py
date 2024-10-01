@@ -14,7 +14,7 @@ from benchmark_generator.context.utils.pipeline_initializer import initialize_pi
 from benchmark_generator.context.utils.prompting_interface import prompt_pipeline
 from benchmark_generator.context.utils.jsonl import write_jsonl, read_jsonl
 
-pipe = initialize_pipeline("meta-llama/Meta-Llama-3-8B-Instruct", torch.bfloat16)
+pipe = initialize_pipeline("../models/llama", torch.bfloat16)
 # Specific setting for Llama-3-8B-Instruct for batching
 pipe.tokenizer.pad_token_id = pipe.model.config.eos_token_id
 pipe.tokenizer.padding_side = "left"
