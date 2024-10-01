@@ -115,6 +115,67 @@ def prompt_pipeline(
         torch.cuda.empty_cache()
         return [[{"role": "user", "content": ""}]]
 
+def prompt_pipeline_robust(
+    pipe: TextGenerationPipeline,
+    conversations: list[list[dict[str, str]]],
+    batch_size=2,
+    context_length=8192,
+    max_new_tokens=512,
+    do_sample=False,
+    top_k=0,
+    top_p=1.0,
+    penalty_alpha=0.0,
+    temperature=0.0,
+):
+    """
+    Prompt the pipeline with a conversation in a robust manner (re-try with lower batch size)
+
+    ### Parameters:
+    - pipe (TextGenerationPipeline): An initialized pipeline.
+    - conversations (list[list[dict[str, str]]]): The data type of the model
+    - batch_size (int): The batch size to process conversations
+    - context_length (int): The LLM's context length
+    - max_new_tokens (int): Max number of tokens generated for each prompt
+    - do_sample (bool): Perform sampling or not
+    - top_k (int): The number of tokens to consider when sampling
+    - top_p (float): Minimum cumulative probability of tokens being considered
+    - penalty_alpha (float): The amount of focus being put to ensure non-repetitiveness
+    - temperature (float): Control how sharp the distribution (smaller means sharper)
+
+    ### Returns:
+    - conversations (list[list[dict[str, str]]]): The conversations appended with the model's outputs
+    """
+    generation_configs = {
+        "max_new_tokens": max_new_tokens,
+        "top_k": top_k,
+        "top_p": top_p,
+        "do_sample": do_sample,
+        "penalty_alpha": penalty_alpha,
+        "temperature": temperature,
+        "pad_token_id": pipe.tokenizer.eos_token_id,
+    }
+    remove_unset_generation_configs(generation_configs)
+    while True:
+        try:
+            for i in range(len(conversations)):
+                conversations[i] = truncate_conversation_if_necessary(
+                    pipe.tokenizer, conversations[i], context_length, max_new_tokens
+                )
+            set_seed(42, deterministic=True)
+            answers = pipe(
+                conversations, truncation=True, batch_size=batch_size, **generation_configs
+            )
+            results: list[list[dict[str,str]]] = []
+            if isinstance(answers[0], dict):
+                answers = [answers]
+            for answer in answers:
+                results.append(answer[0]["generated_text"])
+            return (results, batch_size)
+        except:
+            batch_size = max(batch_size - 10, 1)
+            torch.cuda.empty_cache()
+            logger.warning(f"Reducing batch size to {batch_size}")
+
 
 if __name__ == "__main__":
     import torch
