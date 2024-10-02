@@ -43,11 +43,17 @@ class Summarizer:
         self.pipe.tokenizer.pad_token_id = self.pipe.model.config.eos_token_id
         self.pipe.tokenizer.padding_side = "left"
 
+        self.embedding_model = SentenceTransformer(
+            "dunzhang/stella_en_1.5B_v5", trust_remote_code=True, device="cpu"
+        )
+
         # Use small model for local testing
         # self.pipe = initialize_pipeline("TinyLlama/TinyLlama_v1.1", torch.bfloat16)
         # self.pipe.tokenizer.chat_template = "{% for message in messages %}{% if message['role'] == 'user' %}{{ ' ' }}{% endif %}{{ message['content'] }}{% if not loop.last %}{{ '  ' }}{% endif %}{% endfor %}{{ eos_token }}"
         # self.pipe.tokenizer.pad_token_id = self.pipe.model.config.eos_token_id
         # self.pipe.tokenizer.padding_side = "left"
+
+        self.EMBEDDING_MAX_TOKENS = 512
 
     def summarize(self, table_id: str = None) -> str:
         if table_id is None or table_id == "":
@@ -109,31 +115,21 @@ class Summarizer:
 
         table_df = self.connection.sql(f"SELECT * FROM '{table_id}'").to_df()
 
-        standard_summary = self.__generate_column_summary(table_df)
-        narration_summary = self.__generate_column_description(table_df)
+        narration_summaries = self.__generate_column_description(table_df)
         row_summaries = self.__generate_row_summaries(table_df)
 
         summary_ids = []
 
-        standard_payload = json.dumps({"payload": standard_summary})
-        standard_payload = standard_payload.replace("'", "''")
-        summary_ids.append(
-            self.connection.sql(
-                f"""INSERT INTO table_summaries (table_id, summary, summary_type)
-                VALUES ('{table_id}', '{standard_payload}', '{SummaryType.STANDARD}')
-                RETURNING id"""
-            ).fetchone()[0]
-        )
-
-        narration_payload = json.dumps({"payload": narration_summary})
-        narration_payload = narration_payload.replace("'", "''")
-        summary_ids.append(
-            self.connection.sql(
-                f"""INSERT INTO table_summaries (table_id, summary, summary_type)
-                VALUES ('{table_id}', '{narration_payload}', '{SummaryType.NARRATION}')
-                RETURNING id"""
-            ).fetchone()[0]
-        )
+        for narration_summary in narration_summaries:
+            narration_payload = json.dumps({"payload": narration_summary})
+            narration_payload = narration_payload.replace("'", "''")
+            summary_ids.append(
+                self.connection.sql(
+                    f"""INSERT INTO table_summaries (table_id, summary, summary_type)
+                    VALUES ('{table_id}', '{narration_payload}', '{SummaryType.NARRATION}')
+                    RETURNING id"""
+                ).fetchone()[0]
+            )
 
         for row_summary in row_summaries:
             row_payload = json.dumps({"payload": row_summary})
@@ -153,9 +149,6 @@ class Summarizer:
         )
 
         return summary_ids
-
-    def __generate_column_summary(self, df: pd.DataFrame) -> str:
-        return " | ".join(df.columns).strip()
 
     def __generate_column_description(self, df: pd.DataFrame) -> list[str]:
         # Used for quick local testing
@@ -180,11 +173,12 @@ class Summarizer:
 
             col_narrations: list[str] = []
             for output_idx, output in enumerate(outputs):
-                col_narrations.append(f"{cols[output_idx]}: {output[-1]['content']}")
+                col_narrations.append(
+                    f"{cols[output_idx]}: {output[-1]['content']}".strip()
+                )
 
-        # The summaries generated are summaries for each column. We want each document
-        # to be a long string of all the column summaries.
-        return " | ".join(col_narrations).strip()
+        merged_column_descriptions = self.__merge_column_descriptions(col_narrations)
+        return merged_column_descriptions
 
     def __get_col_description_prompt(self, columns: str, column: str):
         return f"""A table has the following columns:
@@ -192,6 +186,31 @@ class Summarizer:
 {columns}
 */
 Describe briefly what the {column} column represents. If not possible, simply state "No description.\""""
+
+    def __merge_column_descriptions(self, column_narrations: list[str]) -> list[str]:
+        tokenizer = self.embedding_model.tokenizer
+        merged_column_descriptions = []
+
+        col_idx = 0
+        while col_idx < len(column_narrations):
+            current_description = column_narrations[col_idx]
+            while col_idx + 1 < len(column_narrations):
+                combined_description = (
+                    current_description + " || " + column_narrations[col_idx + 1]
+                )
+                if (
+                    len(tokenizer.encode(combined_description))
+                    < self.EMBEDDING_MAX_TOKENS
+                ):
+                    current_description = combined_description
+                    col_idx += 1
+                else:
+                    break
+
+            col_idx += 1
+            merged_column_descriptions.append(current_description)
+
+        return merged_column_descriptions
 
     def __generate_row_summaries(self, df: pd.DataFrame) -> list[str]:
         sample_size = math.ceil(min(len(df), 5))
@@ -202,7 +221,28 @@ Describe briefly what the {column} column represents. If not possible, simply st
             formatted_row = " | ".join([f"{col}: {val}" for col, val in row.items()])
             row_summaries.append(formatted_row.strip())
 
-        return row_summaries
+        merged_row_summaries = self.__merge_row_summaries(row_summaries)
+        return merged_row_summaries
+
+    def __merge_row_summaries(self, row_summaries: list[str]) -> list[str]:
+        tokenizer = self.embedding_model.tokenizer
+        merged_row_summaries = []
+
+        row_idx = 0
+        while row_idx < len(row_summaries):
+            current_summary = row_summaries[row_idx]
+            while row_idx + 1 < len(row_summaries):
+                combined_summary = current_summary + " || " + row_summaries[row_idx + 1]
+                if len(tokenizer.encode(combined_summary)) < self.EMBEDDING_MAX_TOKENS:
+                    current_summary = combined_summary
+                    row_idx += 1
+                else:
+                    break
+
+            row_idx += 1
+            merged_row_summaries.append(current_summary)
+
+        return merged_row_summaries
 
 
 if __name__ == "__main__":
