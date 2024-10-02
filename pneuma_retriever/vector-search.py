@@ -2,9 +2,7 @@ import sys
 import time
 import chromadb
 import numpy as np
-import setproctitle
 
-setproctitle.setproctitle("python3.12")
 sys.path.append("..")
 
 from tqdm import tqdm
@@ -84,9 +82,14 @@ def evaluate_benchmark(
     write_jsonl(hitrates_data, "vector.jsonl")
 
 
-def start(dataset: str, content_benchmark: list[dict[str, str]], ks: list[int]):
+def start(
+    dataset: str,
+    content_benchmark: list[dict[str, str]],
+    context_benchmark: list[dict[str, str]],
+    ks: list[int],
+):
     start = time.time()
-    client = chromadb.PersistentClient(f"indices/index-{dataset}-content-narrations")
+    client = chromadb.PersistentClient(f"indices/index-{dataset}-pneuma-summarizer")
     collection = client.get_collection("benchmark")
     end = time.time()
     print(f"Indexing time: {end-start} seconds")
@@ -99,6 +102,14 @@ def start(dataset: str, content_benchmark: list[dict[str, str]], ks: list[int]):
         print(f"BC2 with k={k}")
         evaluate_benchmark(content_benchmark, "content", k, collection, dataset, True)
 
+    for k in ks:
+        print(f"BX1 with k={k}")
+        evaluate_benchmark(context_benchmark, "context", k, collection, dataset)
+
+    for k in ks:
+        print(f"BX2 with k={k}")
+        evaluate_benchmark(context_benchmark, "context", k, collection, dataset, True)
+
 
 if __name__ == "__main__":
     ks = [1, 10, 50]
@@ -107,28 +118,43 @@ if __name__ == "__main__":
     content_benchmark = read_jsonl(
         "../data_src/benchmarks/content/pneuma_chembl_10K_questions_annotated.jsonl"
     )
-    start(dataset, content_benchmark, ks)
+    context_benchmark = read_jsonl(
+        f"../data_src/benchmarks/context/{dataset}/bx_{dataset}.jsonl"
+    )
+    start(dataset, content_benchmark, context_benchmark, ks)
 
     dataset = "adventure"
     content_benchmark = read_jsonl(
         "../data_src/benchmarks/content/pneuma_adventure_works_questions_annotated.jsonl"
     )
-    start(dataset, content_benchmark, ks)
+    context_benchmark = read_jsonl(
+        f"../data_src/benchmarks/context/{dataset}/bx_{dataset}.jsonl"
+    )
+    start(dataset, content_benchmark, context_benchmark, ks)
 
     dataset = "public"
     content_benchmark = read_jsonl(
         "../data_src/benchmarks/content/pneuma_public_bi_questions_annotated.jsonl"
     )
-    start(dataset, content_benchmark, ks)
+    context_benchmark = read_jsonl(
+        f"../data_src/benchmarks/context/{dataset}/bx_{dataset}.jsonl"
+    )
+    start(dataset, content_benchmark, context_benchmark, ks)
 
     dataset = "chicago"
     content_benchmark = read_jsonl(
         "../data_src/benchmarks/content/pneuma_chicago_10K_questions_annotated.jsonl"
     )
-    start(dataset, content_benchmark, ks)
+    context_benchmark = read_jsonl(
+        f"../data_src/benchmarks/context/{dataset}/bx_{dataset}.jsonl"
+    )
+    start(dataset, content_benchmark, context_benchmark, ks)
 
     dataset = "fetaqa"
     content_benchmark = read_jsonl(
         "../data_src/benchmarks/content/pneuma_fetaqa_questions_annotated.jsonl"
     )
-    start(dataset, content_benchmark, ks)
+    context_benchmark = read_jsonl(
+        f"../data_src/benchmarks/context/{dataset}/bx_{dataset}.jsonl"
+    )
+    start(dataset, content_benchmark, context_benchmark, ks)
