@@ -19,6 +19,7 @@ def generate_std_summaries(tables_path: str, summaries_name: str):
     for table in tqdm(tables, "processing tables"):
         df = pd.read_csv(f"{tables_path}/{table}.csv")
         summary = {
+            "id": f"{table}_SEP_contents_SEP_schema",
             "table": table,
             "summary": " | ".join(df.columns),
         }
