@@ -1,7 +1,5 @@
 import os
 import gc
-import setproctitle
-setproctitle.setproctitle("/opt/conda/bin/python3.8")
 
 os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
@@ -146,7 +144,7 @@ def generate_llm_narration_summaries(src_path: str, descriptions_path: str):
             if llm_output[1] == optimal_batch_size:
                 same_batch_size_counter += 1
                 if same_batch_size_counter % 10 == 0:
-                    optimal_batch_size = min(optimal_batch_size+5, max_batch_size)
+                    optimal_batch_size = min(optimal_batch_size+2, max_batch_size)
             else:
                 optimal_batch_size = llm_output[1]
                 same_batch_size_counter = 0
