@@ -47,6 +47,8 @@ class IndexGenerator:
         self.keyword_index_path = os.path.join(index_path, "keyword")
         self.chroma_client = chromadb.PersistentClient(self.vector_index_path)
 
+        self.EMBEDDING_MAX_TOKENS = 512
+
     def generate_index(self, index_name: str, table_ids: list | tuple = None) -> str:
         if table_ids is None:
             logger.info("No table ids provided. Generating index for all tables...")
@@ -324,6 +326,28 @@ class IndexGenerator:
             f"""SELECT id, context FROM table_contexts
             WHERE table_id='{table_id}'"""
         ).fetchall()
+
+    def __merge_contexts(self, contexts: list[tuple[str, str]]) -> list[str]:
+        tokenizer = self.embedding_model.tokenizer
+        table_contexts = [json.loads(context[1])["payload"] for context in contexts]
+
+        context_idx = 0
+        while context_idx < len(table_contexts):
+            current_context = table_contexts[context_idx]
+            while (context_idx + 1) < len(table_contexts):
+                combined_context = (
+                    current_context + " | " + table_contexts[context_idx + 1]
+                )
+                if len(tokenizer.encode(combined_context)) < self.EMBEDDING_MAX_TOKENS:
+                    current_context = combined_context
+                    context_idx += 1
+                else:
+                    break
+
+            context_idx += 1
+            table_contexts.append(current_context)
+
+        return table_contexts
 
     def __get_table_summaries(
         self, table_id: str, summary_type: SummaryType
