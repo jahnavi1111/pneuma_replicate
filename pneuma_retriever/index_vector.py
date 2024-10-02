@@ -13,7 +13,7 @@ from benchmark_generator.context.utils.jsonl import read_jsonl
 
 
 os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
-os.environ["CUDA_VISIBLE_DEVICES"] = "6"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 set_seed(42, deterministic=True)
 
 
@@ -30,7 +30,6 @@ def indexing_vector(
     reindex=False,
 ):
     documents = []
-    metadatas = []
     ids = []
 
     if not reindex:
@@ -54,12 +53,10 @@ def indexing_vector(
 
         for idx, schema_content in enumerate(table_schema_contents):
             documents.append(schema_content["summary"])
-            metadatas.append({"source_ids": str(schema_content["source_ids"])})
             ids.append(f"{table}_SEP_contents_SEP_schema-{idx}")
 
         for idx, row_content in enumerate(table_row_contents):
             documents.append(row_content["summary"])
-            metadatas.append({"source_ids": str(row_content["source_ids"])})
             ids.append(f"{table}_SEP_contents_SEP_row-{idx}")
 
         if contexts is not None:
@@ -68,7 +65,6 @@ def indexing_vector(
             ]
             for context_idx, context in enumerate(table_contexts):
                 documents.append(context["context"])
-                metadatas.append({"source_ids": str(context["source_ids"])})
                 ids.append(f"{table}_SEP_contexts-{context_idx}")
 
     for i in range(0, len(documents), 30000):
@@ -81,7 +77,6 @@ def indexing_vector(
 
         collection.add(
             embeddings=[embed.tolist() for embed in embeddings],
-            metadatas=metadatas[i : i + 30000],
             documents=documents[i : i + 30000],
             ids=ids[i : i + 30000],
         )
@@ -103,7 +98,7 @@ def get_information(dataset: str):
     """
     schema_contents = read_jsonl(
         f"../pneuma_summarizer/summaries/narrations/{dataset}_splitted.jsonl"
-    ) 
+    )
     row_contents = read_jsonl(f"../pneuma_summarizer/summaries/rows/{dataset}_merged.jsonl")
     contexts = read_jsonl(
         f"../data_src/benchmarks/context/{dataset}/contexts_{dataset}_merged.jsonl"
