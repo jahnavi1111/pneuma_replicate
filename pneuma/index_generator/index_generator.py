@@ -156,36 +156,33 @@ class IndexGenerator:
         chroma_collection: chromadb.Collection,
     ) -> Response:
         documents = []
-        embeddings = []
-        metadatas = []
         ids = []
 
         for table_id in table_ids:
             logger.info("Processing table %s...", table_id)
-            contexts = self.__get_table_contexts(table_id)
-            summaries = []
-            summaries.extend(self.__get_table_summaries(table_id, SummaryType.STANDARD))
-            summaries.extend(
-                self.__get_table_summaries(table_id, SummaryType.ROW_SUMMARY)
+
+            narration_summaries = self.__get_table_summaries(
+                table_id, SummaryType.NARRATION
+            )
+            row_summaries = self.__get_table_summaries(
+                table_id, SummaryType.ROW_SUMMARY
             )
 
-            for context in contexts:
-                context_id = context[0]
-                content = json.loads(context[1])
-                payload = content["payload"]
+            for idx, narration_summary in enumerate(narration_summaries):
+                documents.append(json.loads(narration_summary[1])["payload"])
+                ids.append(f"{table_id}_SEP_contents_SEP_schema-{idx}")
 
-                documents.append(payload)
-                metadatas.append({"table": f"{table_id}_SEP_{context_id}"})
-                ids.append(f"{table_id}_SEP_{context_id}")
+            for idx, row_summary in enumerate(row_summaries):
+                documents.append(json.loads(row_summary[1])["payload"])
+                ids.append(f"{table_id}_SEP_contents_SEP_row-{idx}")
 
-            for summary in summaries:
-                summary_id = summary[0]
-                content = json.loads(summary[1])
-                payload = content["payload"]
-
-                documents.append(payload)
-                metadatas.append({"table": f"{table_id}_SEP_contents_{summary_id}"})
-                ids.append(f"{table_id}_SEP_contents_{summary_id}")
+            contexts = self.__get_table_contexts(table_id)
+            if not contexts:
+                continue
+            contexts = self.__merge_contexts(contexts)
+            for context_idx, context in enumerate(contexts):
+                documents.append(context)
+                ids.append(f"{table_id}_SEP_contexts-{context_idx}")
 
         if len(documents) == 0:
             return Response(
@@ -196,14 +193,13 @@ class IndexGenerator:
         for i in range(0, len(documents), 30000):
             embeddings = self.embedding_model.encode(
                 documents[i : i + 30000],
-                batch_size=128,
+                batch_size=100,
                 show_progress_bar=True,
-                # device="cuda",
+                device="cuda",
             )
 
             chroma_collection.add(
                 embeddings=[embed.tolist() for embed in embeddings],
-                metadatas=metadatas[i : i + 30000],
                 documents=documents[i : i + 30000],
                 ids=ids[i : i + 30000],
             )
