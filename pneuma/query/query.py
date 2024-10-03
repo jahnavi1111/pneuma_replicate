@@ -126,17 +126,18 @@ class Query:
     def __process_nodes_vec(self, items):
         # Normalize relevance scores and return the nodes in dict format
         scores: list[float] = [1 - dist for dist in items["distances"][0]]
+        ids: list[str] = items["ids"][0]
+        documents: list[str] = items["documents"][0]
         max_score = max(scores)
         min_score = min(scores)
 
         processed_nodes: dict[str, tuple[float, str]] = {}
-
         for idx in range(len(items["ids"][0])):
             if min_score == max_score:
                 score = 1
             else:
                 score = (scores[idx] - min_score) / (max_score - min_score)
-            processed_nodes[items["ids"][0][idx]] = (score, items["documents"][0][idx])
+            processed_nodes[ids[idx]] = (score, documents[idx])
         return processed_nodes
 
     def __rerank(
@@ -144,28 +145,84 @@ class Query:
         nodes: list[tuple[str, float, str]],
         query: str,
     ):
-        tables_relevancy = defaultdict(bool)
+        tables_relevance = defaultdict(bool)
+        relevance_prompts = []
+        node_ids = []
 
         for node in nodes:
             node_id = node[0]
+            node_ids.append(node_id)
             # table_id = node_id.split("_SEP_")[0]
             node_type = node_id.split("_SEP_")[1]
             if node_type.startswith("contents"):
-                if self.__is_table_content_relevant(node[2], query):
-                    tables_relevancy[node_id] = True
+                relevance_prompts.append(
+                    [
+                        {
+                            "role": "user",
+                            "content": self.__get_relevance_prompt(
+                                node[2], "content", query
+                            ),
+                        }
+                    ]
+                )
             else:
-                if self.__is_table_context_relevant(node[2], query):
-                    tables_relevancy[node_id] = True
+                relevance_prompts.append(
+                    [
+                        {
+                            "role": "user",
+                            "content": self._get_relevance_prompt(
+                                node[2], "context", query
+                            ),
+                        }
+                    ]
+                )
+
+        arguments = prompt_pipeline(
+            self.pipe,
+            relevance_prompts,
+            batch_size=2,
+            context_length=8192,
+            max_new_tokens=2,
+            top_p=None,
+            temperature=None,
+        )
+
+        for arg_idx, argument in enumerate(arguments):
+            if argument[-1]["content"].lower().startswith("yes"):
+                tables_relevance[node_ids[arg_idx]] = True
+
         new_nodes = [
             (node_id, score, doc)
             for node_id, score, doc in nodes
             if tables_relevancy[node_id]
         ] + [
             (node_id, score, doc)
-            for tablnode_id, score, doc in nodes
+            for node_id, score, doc in nodes
             if not tables_relevancy[node_id]
         ]
         return new_nodes
+
+    def _get_relevance_prompt(self, desc: str, desc_type: str, query: str):
+        if desc_type == "content":
+            return f"""Given a table with the following columns:
+*/
+{desc}
+*/
+and this question:
+/*
+{query}
+*/
+Is the table relevant to answer the question? Begin your answer with yes/no."""
+        elif desc_type == "context":
+            return f"""Given this context describing a table:
+*/
+{desc}
+*/
+and this question:
+/*
+{query}
+*/
+Is the table relevant to answer the question? Begin your answer with yes/no."""
 
     def __is_table_content_relevant(self, content: str, question: str):
         prompt = f"""Given a table with the following columns:
