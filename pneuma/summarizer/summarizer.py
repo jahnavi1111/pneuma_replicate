@@ -1,3 +1,4 @@
+import gc
 import json
 import logging
 import math
@@ -14,7 +15,7 @@ from tqdm import tqdm
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from utils.logging_config import configure_logging
 from utils.pipeline_initializer import initialize_pipeline
-from utils.prompting_interface import prompt_pipeline
+from utils.prompting_interface import prompt_pipeline, prompt_pipeline_robust
 from utils.response import Response, ResponseStatus
 from utils.storage_config import get_storage_path
 from utils.summary_types import SummaryType
@@ -156,20 +157,43 @@ class Summarizer:
 
         cols = df.columns
         conversations = []
+        conv_cols = []
+
         for col in cols:
             prompt = self.__get_col_description_prompt(" | ".join(cols), col)
             conversations.append([{"role": "user", "content": prompt}])
+            conv_cols.append(col)
+
+        optimal_batch_size = self.__get_optimal_batch_size(conversations)
+        max_batch_size = optimal_batch_size
+        sorted_indices = self.__get_special_indices(conversations, optimal_batch_size)
+
+        conversations = [conversations[i] for i in sorted_indices]
+        conv_cols = [conv_cols[i] for i in sorted_indices]
 
         if len(conversations) > 0:
-            outputs = prompt_pipeline(
-                self.pipe,
-                conversations,
-                batch_size=2,
-                context_length=8192,
-                max_new_tokens=400,
-                temperature=None,
-                top_p=None,
-            )
+            outputs = []
+
+            same_batch_size_counter = 0
+            for i in range(0, len(conversations), optimal_batch_size):
+                llm_output = prompt_pipeline_robust(
+                    self.pipe,
+                    conversations[i : i + optimal_batch_size],
+                    batch_size=optimal_batch_size,
+                    context_length=8192,
+                    max_new_tokens=400,
+                    temperature=None,
+                    top_p=None,
+                )
+                outputs += llm_output[0]
+
+                if llm_output[1] == optimal_batch_size:
+                    same_batch_size_counter += 1
+                    if same_batch_size_counter % 10 == 0:
+                        optimal_batch_size = min(optimal_batch_size + 2, max_batch_size)
+                else:
+                    optimal_batch_size = llm_output[1]
+                    same_batch_size_counter = 0
 
             col_narrations: list[str] = []
             for output_idx, output in enumerate(outputs):
@@ -186,6 +210,70 @@ class Summarizer:
 {columns}
 */
 Describe briefly what the {column} column represents. If not possible, simply state "No description.\""""
+
+    def __get_optimal_batch_size(self, conversations: list[dict[str, str]]):
+        max_batch_size = 50
+        min_batch_size = 1
+        while min_batch_size < max_batch_size:
+            mid_batch_size = (min_batch_size + max_batch_size) // 2
+            if self.__is_fit_in_memory(conversations, mid_batch_size):
+                min_batch_size = mid_batch_size + 1
+            else:
+                max_batch_size = mid_batch_size - 1
+        optimal_batch_size = min_batch_size
+        return optimal_batch_size
+
+    def __is_fit_in_memory(self, conversations: list[dict[str, str]], batch_size: int):
+        special_indices = self.__get_special_indices(conversations, batch_size)
+        adjusted_conversations = [conversations[i] for i in special_indices]
+
+        conv_low_idx = len(adjusted_conversations) // 2 - batch_size // 2
+        conv_high_dx = conv_low_idx + batch_size
+        output = prompt_pipeline(
+            self.pipe,
+            adjusted_conversations[conv_low_idx:conv_high_dx],
+            batch_size=batch_size,
+            context_length=8192,
+            max_new_tokens=1,
+            temperature=None,
+            top_p=None,
+        )
+
+        torch.cuda.empty_cache()
+        gc.collect()
+
+        if output[0][0]["content"] == "":
+            del output
+            return False
+        else:
+            del output
+            return True
+
+    def __get_special_indices(texts: list[str], batch_size: int):
+        # Step 1: Sort the conversations (indices) in decreasing order
+        sorted_indice = sorted(
+            range(len(texts)), key=lambda x: len(texts[x]), reverse=True
+        )
+
+        # Step 2: Interleave the indices (longest, shortest, second longest, second shortest, ...)
+        final_indices = []
+        i, j = 0, len(sorted_indices) - 1
+
+        while i <= j:
+            if i == j:
+                final_indices.append(sorted_indices[i])
+                break
+
+            final_indices.append(sorted_indices[i])
+            i += 1
+
+            for _ in range(batch_size - 1):
+                if i <= j:
+                    final_indices.append(sorted_indices[j])
+                    j -= 1
+                else:
+                    break
+        return final_indices
 
     def __merge_column_descriptions(self, column_narrations: list[str]) -> list[str]:
         tokenizer = self.embedding_model.tokenizer
