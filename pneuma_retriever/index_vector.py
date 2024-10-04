@@ -17,7 +17,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 set_seed(42, deterministic=True)
 
 
-embedding_model = SentenceTransformer("../models/stella", local_files_only=True)
+embedding_model = SentenceTransformer("../models/bge-base", local_files_only=True)
 
 
 def indexing_vector(
@@ -43,13 +43,22 @@ def indexing_vector(
     except:
         pass
     collection = client.create_collection(
-        name=collection_name, metadata={"hnsw:space": "cosine", "hnsw:random_seed": 42}
+        name=collection_name,
+        metadata={
+            "hnsw:space": "cosine",
+            "hnsw:random_seed": 42,
+            "hnsw:M": 48,
+        },
     )
 
     tables = sorted({content["table"] for content in schema_contents})
     for table in tables:
-        table_schema_contents = [content for content in schema_contents if content["table"] == table]
-        table_row_contents = [content for content in row_contents if content["table"] == table]
+        table_schema_contents = [
+            content for content in schema_contents if content["table"] == table
+        ]
+        table_row_contents = [
+            content for content in row_contents if content["table"] == table
+        ]
 
         for idx, schema_content in enumerate(table_schema_contents):
             documents.append(schema_content["summary"])
