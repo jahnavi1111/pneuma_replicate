@@ -6,10 +6,11 @@ from time import time
 
 from pneuma import Pneuma
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "7"
+os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
+os.environ["CUDA_VISIBLE_DEVICES"] = "2"
+
 dataset = "fetaqa"
 benchmark_type = "content"
-use_rephrased_questions = True
 out_path = "out_benchmark/storage"
 
 
@@ -69,10 +70,18 @@ def main():
         )
         data_path = "../data_src/tables/pneuma_fetaqa"
 
-    question_key = get_question_key(benchmark_type, use_rephrased_questions)
-    questions = []
+    question_key = get_question_key(benchmark_type, False)
+    questions_bc1 = []
     for data in content_benchmark:
-        questions.append(data[question_key])
+        questions_bc1.append(data[question_key])
+    questions_bc1 = questions_bc1[:50]
+
+    question_key = get_question_key(benchmark_type, True)
+    questions_bc2 = []
+    for data in content_benchmark:
+        questions_bc2.append(data[question_key])
+    questions_bc2 = questions_bc2[:50]
+
     metadata_path = ""
     shutil.rmtree(out_path, ignore_errors=True)
     pneuma = Pneuma(out_path=out_path)
@@ -135,7 +144,6 @@ def main():
         json_results = {
             "dataset": dataset,
             "benchmark_type": benchmark_type,
-            "use_rephrased_questions": use_rephrased_questions,
             "timestamp": timestamp,
             "results": results,
             "responses": responses,
@@ -171,7 +179,6 @@ def main():
         json_results = {
             "dataset": dataset,
             "benchmark_type": benchmark_type,
-            "use_rephrased_questions": use_rephrased_questions,
             "timestamp": timestamp,
             "results": results,
             "responses": responses,
@@ -179,34 +186,54 @@ def main():
         json.dump(json_results, f, indent=4)
 
     # Query Index
-    # start_time = time()
-    # for question in questions:
-    #     response = pneuma.query_index("benchmark_index", question, 3)
-    #     response = json.loads(response)
-    # end_time = time()
-    # print(
-    #     f"Time to query index with {len(questions)} questions: {end_time - start_time} seconds"
-    # )
-    # results["query_index"] = {
-    #     "query_count": len(questions),
-    #     "time": end_time - start_time,
-    #     "query_throughput": len(questions) / (end_time - start_time),
-    # }
+    start_time = time()
+    for question in questions_bc1:
+        response = pneuma.query_index("benchmark_index", question, 3)
+    end_time = time()
+    print(
+        f"Time to query index with {len(questions_bc1)} BC1 questions: {end_time - start_time} seconds"
+    )
+    results["BC1_query_index"] = {
+        "query_count": len(questions_bc1),
+        "time": end_time - start_time,
+        "query_throughput": len(questions_bc1) / (end_time - start_time),
+    }
 
-    # # Write results to file
-    # timestamp = datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
-    # with open(
-    #     f"{out_path}/../benchmark-{dataset}-{timestamp}.json", "w", encoding="utf-8"
-    # ) as f:
-    #     json_results = {
-    #         "dataset": dataset,
-    #         "benchmark_type": benchmark_type,
-    #         "use_rephrased_questions": use_rephrased_questions,
-    #         "timestamp": timestamp,
-    #         "results": results,
-    #         "responses": responses,
-    #     }
-    #     json.dump(json_results, f, indent=4)
+    start_time = time()
+    for question in questions_bc2:
+        response = pneuma.query_index("benchmark_index", question, 3)
+    end_time = time()
+    print(
+        f"Time to query index with {len(questions_bc2)} BC2 questions: {end_time - start_time} seconds"
+    )
+    results["BC2_query_index"] = {
+        "query_count": len(questions_bc2),
+        "time": end_time - start_time,
+        "query_throughput": len(questions_bc2) / (end_time - start_time),
+    }
+
+    results["query_index"] = {
+        "query_count": results["BC1_query_index"]["query_count"]
+        + results["BC2_query_index"]["query_count"],
+        "time": results["BC1_query_index"]["time"] + results["BC2_query_index"]["time"],
+    }
+    results["query_throughput"] = (
+        results["query_index"]["query_count"] / results["query_index"]["time"]
+    )
+
+    # Write results to file
+    timestamp = datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
+    with open(
+        f"{out_path}/../benchmark-{dataset}-{timestamp}.json", "w", encoding="utf-8"
+    ) as f:
+        json_results = {
+            "dataset": dataset,
+            "benchmark_type": benchmark_type,
+            "timestamp": timestamp,
+            "results": results,
+            "responses": responses,
+        }
+        json.dump(json_results, f, indent=4)
 
 
 if __name__ == "__main__":
