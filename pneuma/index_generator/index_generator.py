@@ -33,7 +33,7 @@ class IndexGenerator:
         self.db_path = db_path
         self.connection = duckdb.connect(db_path)
         self.embedding_model = SentenceTransformer(
-            "dunzhang/stella_en_1.5B_v5", trust_remote_code=True
+            "BAAI/bge-reranker-v2-m3", trust_remote_code=True
         )
         self.stemmer = Stemmer.Stemmer("english")
 
@@ -124,7 +124,11 @@ class IndexGenerator:
     def __generate_vector_index(self, index_name: str) -> Response:
         try:
             chroma_collection = self.chroma_client.create_collection(
-                name=index_name, metadata={"hnsw:space": "cosine"}
+                name=index_name,
+                metadata={
+                    "hnsw:space": "cosine",
+                    "hnsw:M": 48,
+                },
             )
         except UniqueConstraintError:
             return Response(
