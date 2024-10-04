@@ -194,15 +194,15 @@ class Query:
         new_nodes = [
             (node_id, score, doc)
             for node_id, score, doc in nodes
-            if tables_relevancy[node_id]
+            if tables_relevance[node_id]
         ] + [
             (node_id, score, doc)
             for node_id, score, doc in nodes
-            if not tables_relevancy[node_id]
+            if not tables_relevance[node_id]
         ]
         return new_nodes
 
-    def _get_relevance_prompt(self, desc: str, desc_type: str, query: str):
+    def __get_relevance_prompt(self, desc: str, desc_type: str, query: str):
         if desc_type == "content":
             return f"""Given a table with the following columns:
 */
