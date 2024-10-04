@@ -4,12 +4,14 @@ import logging
 import math
 import os
 import sys
+from collections import defaultdict
 from pathlib import Path
 
 import duckdb
 import fire
 import pandas as pd
 import torch
+from sentence_transformers.SentenceTransformer import SentenceTransformer
 from tqdm import tqdm
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
@@ -70,10 +72,10 @@ class Summarizer:
         else:
             table_ids = [table_id.replace("'", "''")]
 
-        all_summary_ids = []
-        for table_id in table_ids:
-            logger.info("Summarizing table with ID: %s", table_id)
-            all_summary_ids.extend(self.__summarize_table_by_id(table_id))
+        if len(table_ids) == 1:
+            all_summary_ids = self.__summarize_table_by_id(table_ids[0])
+        else:
+            all_summary_ids = self.__batch_summarize_tables(table_ids)
 
         return Response(
             status=ResponseStatus.SUCCESS,
@@ -110,9 +112,9 @@ class Summarizer:
         status = self.connection.sql(
             f"SELECT status FROM table_status WHERE id = '{table_id}'"
         ).fetchone()[0]
-        # if status == str(TableStatus.SUMMARIZED) or status == str(TableStatus.DELETED):
-        #     logger.warning("Table with ID %s has already been summarized.", table_id)
-        #     return []
+        if status == str(TableStatus.SUMMARIZED) or status == str(TableStatus.DELETED):
+            logger.warning("Table with ID %s has already been summarized.", table_id)
+            return []
 
         table_df = self.connection.sql(f"SELECT * FROM '{table_id}'").to_df()
 
@@ -151,31 +153,118 @@ class Summarizer:
 
         return summary_ids
 
+    def __batch_summarize_tables(self, table_ids: list[str]) -> list[str]:
+        print("BATCH SUMMARIZING")
+        for table_id in table_ids:
+            status = self.connection.sql(
+                f"SELECT status FROM table_status WHERE id = '{table_id}'"
+            ).fetchone()[0]
+            if status == str(TableStatus.SUMMARIZED) or status == str(
+                TableStatus.DELETED
+            ):
+                logger.warning(
+                    "Table with ID %s has already been summarized.", table_id
+                )
+                table_ids.remove(table_id)
+
+        all_narration_summaries = self.__batch_generate_column_description(table_ids)
+        summary_ids = []
+
+        for table_id, narration_summaries in all_narration_summaries.items():
+            table_df = self.connection.sql(f"SELECT * FROM '{table_id}'").to_df()
+            row_summaries = self.__generate_row_summaries(table_df)
+
+            for narration_summary in narration_summaries:
+                narration_payload = json.dumps({"payload": narration_summary})
+                narration_payload = narration_payload.replace("'", "''")
+                summary_ids.append(
+                    self.connection.sql(
+                        f"""INSERT INTO table_summaries (table_id, summary, summary_type)
+                        VALUES ('{table_id}', '{narration_payload}', '{SummaryType.NARRATION}')
+                        RETURNING id"""
+                    ).fetchone()[0]
+                )
+
+            for row_summary in row_summaries:
+                row_payload = json.dumps({"payload": row_summary})
+                row_payload = row_payload.replace("'", "''")
+                summary_ids.append(
+                    self.connection.sql(
+                        f"""INSERT INTO table_summaries (table_id, summary, summary_type)
+                        VALUES ('{table_id}', '{row_payload}', '{SummaryType.ROW_SUMMARY}')
+                        RETURNING id"""
+                    ).fetchone()[0]
+                )
+
+            self.connection.sql(
+                f"""UPDATE table_status
+                SET status = '{TableStatus.SUMMARIZED}'
+                WHERE id = '{table_id}'"""
+            )
+
+        return summary_ids
+
     def __generate_column_description(self, df: pd.DataFrame) -> list[str]:
         # Used for quick local testing
         # return " description | ".join(df.columns).strip() + " description"
 
         cols = df.columns
         conversations = []
-        conv_cols = []
-
         for col in cols:
             prompt = self.__get_col_description_prompt(" | ".join(cols), col)
             conversations.append([{"role": "user", "content": prompt}])
-            conv_cols.append(col)
+
+        if len(conversations) > 0:
+            outputs = prompt_pipeline(
+                self.pipe,
+                conversations,
+                batch_size=2,
+                context_length=8192,
+                max_new_tokens=400,
+                temperature=None,
+                top_p=None,
+            )
+
+            col_narrations: list[str] = []
+            for output_idx, output in enumerate(outputs):
+                col_narrations.append(
+                    f"{cols[output_idx]}: {output[-1]['content']}".strip()
+                )
+
+        merged_column_descriptions = self.__merge_column_descriptions(col_narrations)
+        return merged_column_descriptions
+
+    def __batch_generate_column_description(
+        self, table_ids: list[str]
+    ) -> dict[str, list[str]]:
+        summaries: dict[str, list[str]] = {}
+        conversations = []
+        conv_tables = []
+        conv_cols = []
+
+        for table_id in table_ids:
+            table_df = self.connection.sql(f"SELECT * FROM '{table_id}'").to_df()
+            cols = table_df.columns
+            for col in cols:
+                prompt = self.__get_col_description_prompt(" | ".join(cols), col)
+                conversations.append([{"role": "user", "content": prompt}])
+                conv_tables.append(table_id)
+                conv_cols.append(col)
 
         optimal_batch_size = self.__get_optimal_batch_size(conversations)
         max_batch_size = optimal_batch_size
         sorted_indices = self.__get_special_indices(conversations, optimal_batch_size)
 
         conversations = [conversations[i] for i in sorted_indices]
+        conv_tables = [conv_tables[i] for i in sorted_indices]
         conv_cols = [conv_cols[i] for i in sorted_indices]
 
         if len(conversations) > 0:
             outputs = []
 
             same_batch_size_counter = 0
-            for i in range(0, len(conversations), optimal_batch_size):
+            print(f"Optimal batch size: {optimal_batch_size}")
+            for i in tqdm(range(0, len(conversations), optimal_batch_size)):
                 llm_output = prompt_pipeline_robust(
                     self.pipe,
                     conversations[i : i + optimal_batch_size],
@@ -195,14 +284,16 @@ class Summarizer:
                     optimal_batch_size = llm_output[1]
                     same_batch_size_counter = 0
 
-            col_narrations: list[str] = []
+            col_narrations: dict[str, list[str]] = defaultdict(list)
             for output_idx, output in enumerate(outputs):
-                col_narrations.append(
-                    f"{cols[output_idx]}: {output[-1]['content']}".strip()
-                )
+                col_narrations[conv_tables[output_idx]] += [
+                    f"{conv_cols[output_idx]}: {output[-1]['content']}".strip()
+                ]
 
-        merged_column_descriptions = self.__merge_column_descriptions(col_narrations)
-        return merged_column_descriptions
+        for key, value in col_narrations.items():
+            summaries[key] = self.__merge_column_descriptions(value)
+
+        return summaries
 
     def __get_col_description_prompt(self, columns: str, column: str):
         return f"""A table has the following columns:
@@ -249,9 +340,9 @@ Describe briefly what the {column} column represents. If not possible, simply st
             del output
             return True
 
-    def __get_special_indices(texts: list[str], batch_size: int):
+    def __get_special_indices(self, texts: list[str], batch_size: int):
         # Step 1: Sort the conversations (indices) in decreasing order
-        sorted_indice = sorted(
+        sorted_indices = sorted(
             range(len(texts)), key=lambda x: len(texts[x]), reverse=True
         )
 
