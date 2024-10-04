@@ -21,7 +21,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 set_seed(42, deterministic=True)
 
 
-embedding_model = SentenceTransformer("../models/stella", local_files_only=True)
+embedding_model = SentenceTransformer("../models/bge-base", local_files_only=True)
 stemmer = Stemmer.Stemmer("english")
 
 
