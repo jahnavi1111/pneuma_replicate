@@ -28,6 +28,13 @@ Rephrase the above question with different wordings. Respond in the following fo
 Rephrased Question: ..."""
 
 
+def get_bx2_extra_rephrase_prompt(question: str):
+    return f"""Original Question:"{question}"
+
+Rephrase the above question with completely different words (do not share any keywords). Respond in the following format:
+Rephrased Question: ..."""
+
+
 def get_labeling_prompt(context: str, question: str):
     return f"""Context:"{context}"
 
