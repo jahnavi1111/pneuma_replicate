@@ -6,3 +6,4 @@ We provide the script to generate the context benchmarks, including the contexts
 2. Install the requirements with `pip install -r requirements.txt`.
 3. Run the generator with `nohup python -u generate_benchmark.py >> generate_benchmark.out &`.
 4. Perform processing for BX2 questions using `final_processing.ipynb`.
+5. Further rephrase the BX2 questions using `extra_rephrase.py`, then process it with `final_processing.ipynb`.

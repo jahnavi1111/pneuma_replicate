@@ -8,6 +8,7 @@ from .prompts import (
     get_generate_bx1_prompt,
     get_generate_bx2_prompt,
     get_labeling_prompt,
+    get_bx2_extra_rephrase_prompt,
 )
 from .jsonl import write_jsonl, read_jsonl
 from transformers.pipelines.text_generation import TextGenerationPipeline
@@ -145,6 +146,39 @@ def generate_questions(
                 benchmark[base_bx2_index+output_idx]["question_bx2"] = question_bx2
                 write_jsonl(benchmark, f"{benchmark_name}.jsonl")
 
+def further_rephrase_bx2_questions(
+    dataset_name: str,
+    pipe: TextGenerationPipeline,
+    generation_params={},
+):
+    print(f"Processing dataset {dataset_name}")
+    benchmark = read_jsonl(
+        f"../../data_src/benchmarks/context/{dataset_name}/bx_{dataset_name}.jsonl"
+    )
+    prompts = [
+        [
+            {
+                "role": "user",
+                "content": get_bx2_extra_rephrase_prompt(row["question_bx2"]),
+            }
+        ]
+        for row in benchmark
+    ]
+
+    for i in tqdm(range(0, len(prompts), 2)):
+        outputs = prompt_pipeline(
+            pipe,
+            prompts[i:i+2],
+            batch_size=2,
+            context_length=8192,
+            top_p=None,
+            temperature=None,
+            **generation_params,
+        )
+        for output_idx, output in enumerate(outputs):
+            rephrased_bx2_question = output[-1]["content"]
+            benchmark[i+output_idx]["question_bx2"] = rephrased_bx2_question
+            write_jsonl(benchmark, f"bx_{dataset_name}_final.jsonl")
 
 def label_questions(
     benchmark_name: str,
