@@ -1,23 +1,23 @@
 {
     "dataset": "fetaqa",
     "benchmark_type": "content",
-    "timestamp": "2024-10-04T14-49-45",
+    "timestamp": "2024-10-06T06-13-23",
     "results": {
         "BC1_query_index": {
             "query_count": 50,
-            "time": 30.659528017044067,
-            "query_throughput": 1.6308144069342585
+            "time": 27.741633653640747,
+            "query_throughput": 1.8023451907792791
         },
         "BC2_query_index": {
             "query_count": 50,
-            "time": 17.43079161643982,
-            "query_throughput": 2.868487048680141
+            "time": 16.16245675086975,
+            "query_throughput": 3.093589097914174
         },
         "query_index": {
             "query_count": 100,
-            "time": 48.09031963348389
+            "time": 43.9040904045105
         },
-        "query_throughput": 2.0794205728333925
+        "query_throughput": 2.2776921029145494
     },
     "responses": {}
 }
