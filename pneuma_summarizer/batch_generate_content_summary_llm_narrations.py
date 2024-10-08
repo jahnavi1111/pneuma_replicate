@@ -17,8 +17,8 @@ from benchmark_generator.context.utils.pipeline_initializer import initialize_pi
 from benchmark_generator.context.utils.prompting_interface import prompt_pipeline, prompt_pipeline_robust
 from benchmark_generator.context.utils.jsonl import write_jsonl, read_jsonl
 
-pipe = initialize_pipeline("../models/llama", torch.bfloat16)
-# Specific setting for Llama-3-8B-Instruct for batching
+pipe = initialize_pipeline("../models/qwen", torch.bfloat16, context_length=32768)
+# Specific setting for batching
 pipe.tokenizer.pad_token_id = pipe.model.config.eos_token_id
 pipe.tokenizer.padding_side = "left"
 
@@ -28,7 +28,7 @@ def get_col_description_prompt(columns: str, column: str):
 /*
 {columns}
 */
-Describe briefly what the {column} column represents. If not possible, simply state "No description.\""""
+Describe very briefly what the {column} column represents. If not possible, simply state "No description.\""""
 
 def get_special_indices(texts: list[str], batch_size: int):
     # Step 1: Sort the conversations (indices) in decreasing order
@@ -64,10 +64,11 @@ def is_fit_in_memory(conversations, batch_size: int):
         pipe,
         adjusted_conversations[conv_low_idx:conv_high_idx],
         batch_size=batch_size,
-        context_length=8192,
+        context_length=32768,
         max_new_tokens=1,
         temperature=None,
         top_p=None,
+        top_k=None
     )
 
     torch.cuda.empty_cache()
@@ -118,7 +119,6 @@ def generate_llm_narration_summaries(src_path: str, descriptions_path: str):
             conv_cols.append(col)
 
     optimal_batch_size = get_optimal_batch_size(conversations)
-    max_batch_size = optimal_batch_size
     sorted_indices = get_special_indices(conversations, optimal_batch_size)
 
     conversations = [conversations[i] for i in sorted_indices]
@@ -127,17 +127,18 @@ def generate_llm_narration_summaries(src_path: str, descriptions_path: str):
 
     if len(conversations) > 0:
         outputs = []
-
+        max_batch_size = optimal_batch_size
         same_batch_size_counter = 0
-        for i in tqdm(range(0, len(conversations), optimal_batch_size)):
+        for i in tqdm(range(0, len(conversations), max_batch_size)):
             llm_output = prompt_pipeline_robust(
                 pipe,
-                conversations[i:i+optimal_batch_size],
+                conversations[i:i+max_batch_size],
                 batch_size=optimal_batch_size,
-                context_length=8192,
+                context_length=32768,
                 max_new_tokens=400,
                 temperature=None,
                 top_p=None,
+                top_k=None,
             )
             outputs += llm_output[0]
 
@@ -164,26 +165,26 @@ def generate_llm_narration_summaries(src_path: str, descriptions_path: str):
     write_jsonl(summaries, descriptions_path)
 
 if __name__ == "__main__":
-    # start = time.time()
-    # src_path = "../data_src/tables/pneuma_chembl_10K"
-    # descriptions_path = "chembl.jsonl"
-    # generate_llm_narration_summaries(src_path, descriptions_path)
-    # end = time.time()
-    # print(f"Total time: {end - start} seconds")
+    start = time.time()
+    src_path = "../data_src/tables/pneuma_chembl_10K"
+    descriptions_path = "chembl.jsonl"
+    generate_llm_narration_summaries(src_path, descriptions_path)
+    end = time.time()
+    print(f"Total time: {end - start} seconds")
 
-    # start = time.time()
-    # src_path = "../data_src/tables/pneuma_adventure_works"
-    # descriptions_path = "adventure.jsonl"
-    # generate_llm_narration_summaries(src_path, descriptions_path)
-    # end = time.time()
-    # print(f"Total time: {end - start} seconds")
+    start = time.time()
+    src_path = "../data_src/tables/pneuma_adventure_works"
+    descriptions_path = "adventure.jsonl"
+    generate_llm_narration_summaries(src_path, descriptions_path)
+    end = time.time()
+    print(f"Total time: {end - start} seconds")
 
-    # start = time.time()
-    # src_path = "../data_src/tables/pneuma_public_bi"
-    # descriptions_path = "public.jsonl"
-    # generate_llm_narration_summaries(src_path, descriptions_path)
-    # end = time.time()
-    # print(f"Total time: {end - start} seconds")
+    start = time.time()
+    src_path = "../data_src/tables/pneuma_fetaqa"
+    descriptions_path = "fetaqa.jsonl"
+    generate_llm_narration_summaries(src_path, descriptions_path)
+    end = time.time()
+    print(f"Total time: {end - start} seconds")
 
     start = time.time()
     src_path = "../data_src/tables/pneuma_chicago_10K"
@@ -192,9 +193,9 @@ if __name__ == "__main__":
     end = time.time()
     print(f"Total time: {end - start} seconds")
 
-    # start = time.time()
-    # src_path = "../data_src/tables/pneuma_fetaqa"
-    # descriptions_path = "fetaqa.jsonl"
-    # generate_llm_narration_summaries(src_path, descriptions_path)
-    # end = time.time()
-    # print(f"Total time: {end - start} seconds")
+    start = time.time()
+    src_path = "../data_src/tables/pneuma_public_bi"
+    descriptions_path = "public.jsonl"
+    generate_llm_narration_summaries(src_path, descriptions_path)
+    end = time.time()
+    print(f"Total time: {end - start} seconds")
