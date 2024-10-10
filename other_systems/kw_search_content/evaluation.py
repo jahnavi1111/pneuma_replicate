@@ -1,10 +1,12 @@
 import sys
+
 import bm25s
 import Stemmer
 
 sys.path.append("../..")
 
 from tqdm import tqdm
+
 from benchmark_generator.context.utils.jsonl import read_jsonl, write_jsonl
 
 hitrates_data: list[dict[str, str]] = []
@@ -77,9 +79,7 @@ def start(
     context_benchmark: list[dict[str, str]],
     ks: list[int],
 ):
-    retriever = bm25s.BM25.load(
-        f"indices/keyword-index-{dataset}", load_corpus=True
-    )
+    retriever = bm25s.BM25.load(f"indices/keyword-index-{dataset}", load_corpus=True)
 
     for k in ks:
         print(f"BC1 with k={k}")
@@ -112,23 +112,33 @@ if __name__ == "__main__":
     datasets = [
         {
             "name": "chembl",
-            "content_benchmark": read_jsonl("../../data_src/benchmarks/content/pneuma_chembl_10K_questions_annotated.jsonl"),
+            "content_benchmark": read_jsonl(
+                "../../data_src/benchmarks/content/pneuma_chembl_10K_questions_annotated.jsonl"
+            ),
         },
         {
             "name": "adventure",
-            "content_benchmark": read_jsonl("../../data_src/benchmarks/content/pneuma_adventure_works_questions_annotated.jsonl"),
+            "content_benchmark": read_jsonl(
+                "../../data_src/benchmarks/content/pneuma_adventure_works_questions_annotated.jsonl"
+            ),
         },
         {
             "name": "public",
-            "content_benchmark": read_jsonl("../../data_src/benchmarks/content/pneuma_public_bi_questions_annotated.jsonl"),
+            "content_benchmark": read_jsonl(
+                "../../data_src/benchmarks/content/pneuma_public_bi_questions_annotated.jsonl"
+            ),
         },
         {
             "name": "chicago",
-            "content_benchmark": read_jsonl("../../data_src/benchmarks/content/pneuma_chicago_10K_questions_annotated.jsonl"),
+            "content_benchmark": read_jsonl(
+                "../../data_src/benchmarks/content/pneuma_chicago_10K_questions_annotated.jsonl"
+            ),
         },
         {
             "name": "fetaqa",
-            "content_benchmark": read_jsonl("../../data_src/benchmarks/content/pneuma_fetaqa_questions_annotated.jsonl"),
+            "content_benchmark": read_jsonl(
+                "../../data_src/benchmarks/content/pneuma_fetaqa_questions_annotated.jsonl"
+            ),
         },
     ]
 
@@ -136,6 +146,8 @@ if __name__ == "__main__":
         start(
             dataset["name"],
             dataset["content_benchmark"],
-            read_jsonl(f"../../data_src/benchmarks/context/{dataset["name"]}/bx_{dataset["name"]}.jsonl"),
-            ks
+            read_jsonl(
+                f"../../data_src/benchmarks/context/{dataset['name']}/bx_{dataset['name']}.jsonl"
+            ),
+            ks,
         )
