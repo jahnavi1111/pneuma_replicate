@@ -47,7 +47,7 @@ class Summarizer:
         self.pipe.tokenizer.padding_side = "left"
 
         self.embedding_model = SentenceTransformer(
-            "BAAI/bge-reranker-v2-m3", trust_remote_code=True, device="cpu"
+            "../models/bge-base", local_files_only=True, device="cpu"
         )
 
         # Use small model for local testing

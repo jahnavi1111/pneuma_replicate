@@ -28,7 +28,7 @@ class Query:
         self.db_path = db_path
         self.connection = duckdb.connect(db_path)
         self.embedding_model = SentenceTransformer(
-            "BAAI/bge-reranker-v2-m3", trust_remote_code=True
+            "../models/bge-base", local_files_only=True
         )
         self.stemmer = Stemmer.Stemmer("english")
 

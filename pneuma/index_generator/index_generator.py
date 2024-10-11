@@ -32,9 +32,7 @@ class IndexGenerator:
     ):
         self.db_path = db_path
         self.connection = duckdb.connect(db_path)
-        self.embedding_model = SentenceTransformer(
-            "BAAI/bge-reranker-v2-m3", trust_remote_code=True
-        )
+        self.embedding_model = SentenceTransformer("../models/bge-base", local_files_only=True)
         self.stemmer = Stemmer.Stemmer("english")
 
         # Small model for local testing purposes
@@ -197,7 +195,7 @@ class IndexGenerator:
         for i in range(0, len(documents), 30000):
             embeddings = self.embedding_model.encode(
                 documents[i : i + 30000],
-                batch_size=100,
+                batch_size=10,
                 show_progress_bar=True,
                 device="cuda",
             )
