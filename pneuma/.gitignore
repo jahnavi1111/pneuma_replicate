@@ -295,5 +295,5 @@ scratch.py
 
 out/
 
-out_benchmark/storage
+out_benchmark/storage*
 out_benchmark/fetaqa_storages
