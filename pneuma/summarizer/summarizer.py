@@ -40,9 +40,9 @@ class Summarizer:
         # [WARNING] '>' not supported between instances of 'int' and 'str'
         # And the LLM won't generate output for some reason.
         self.pipe = initialize_pipeline(
-            "meta-llama/Meta-Llama-3-8B-Instruct", torch.bfloat16
+            "../models/qwen", torch.bfloat16, context_length=32768
         )
-        # Specific setting for Llama-3-8B-Instruct for batching
+        # Specific setting for batching
         self.pipe.tokenizer.pad_token_id = self.pipe.model.config.eos_token_id
         self.pipe.tokenizer.padding_side = "left"
 
