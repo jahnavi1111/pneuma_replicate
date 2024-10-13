@@ -155,11 +155,11 @@ def start(
 ):
     print(f"Processing {dataset} dataset")
     client = chromadb.PersistentClient(
-        f"indices/index-{dataset}-pneuma-summarizer-qwen"
+        f"indices/index-{dataset}-pneuma-summarizer"
     )
     collection = client.get_collection("benchmark")
     retriever = bm25s.BM25.load(
-        f"indices/keyword-index-{dataset}-pneuma-summarizer-qwen", load_corpus=True
+        f"indices/keyword-index-{dataset}-pneuma-summarizer", load_corpus=True
     )
 
     dictionary_id_bm25 = {
