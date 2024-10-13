@@ -266,10 +266,11 @@ class Query:
             self.pipe,
             relevance_prompts,
             batch_size=2,
-            context_length=8192,
+            context_length=32768,
             max_new_tokens=2,
             top_p=None,
             temperature=None,
+            top_k=None,
         )
 
         for arg_idx, argument in enumerate(arguments):
@@ -308,54 +309,6 @@ and this question:
 {query}
 */
 Is the table relevant to answer the question? Begin your answer with yes/no."""
-
-    def __is_table_content_relevant(self, content: str, question: str):
-        prompt = f"""Given a table with the following columns:
-*/
-{content}
-*/
-and this question:
-/*
-{question}
-*/
-Is the table relevant to answer the question? Begin your answer with yes/no."""
-
-        answer: str = prompt_pipeline(
-            self.pipe,
-            [[{"role": "user", "content": prompt}]],
-            context_length=8192,
-            max_new_tokens=2,
-            top_p=None,
-            temperature=None,
-        )[0][-1]["content"]
-
-        if answer.lower().startswith("yes"):
-            return True
-        return False
-
-    def __is_table_context_relevant(self, context: str, question: str):
-        prompt = f"""Given this context describing a table:
-*/
-{context}
-*/
-and this question:
-/*
-{question}
-*/
-Is the table relevant to answer the question? Begin your answer with yes/no."""
-
-        answer: str = prompt_pipeline(
-            self.pipe,
-            [[{"role": "user", "content": prompt}]],
-            context_length=8192,
-            max_new_tokens=3,
-            top_p=None,
-            temperature=None,
-        )[0][-1]["content"]
-
-        if answer.lower().startswith("yes"):
-            return True
-        return False
 
 
 if __name__ == "__main__":
