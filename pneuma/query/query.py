@@ -9,6 +9,9 @@ import duckdb
 import fire
 import Stemmer
 import torch
+from bm25s.tokenization import convert_tokenized_to_string_list
+from chromadb.api.models.Collection import Collection
+from scipy.spatial.distance import cosine
 from sentence_transformers import SentenceTransformer
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
@@ -38,7 +41,7 @@ class Query:
         # )
 
         self.pipe = initialize_pipeline(
-            "meta-llama/Meta-Llama-3-8B-Instruct", torch.bfloat16
+            "../models/qwen", torch.bfloat16, context_length=32768
         )
         # Specific setting for Llama-3-8B-Instruct for batching
         self.pipe.tokenizer.pad_token_id = self.pipe.model.config.eos_token_id
@@ -55,27 +58,55 @@ class Query:
         self.keyword_index_path = os.path.join(index_path, "keyword")
         self.chroma_client = chromadb.PersistentClient(self.vector_index_path)
 
-    def query(self, index_name: str, query: str, k: int = 10) -> str:
+    def query(
+        self,
+        index_name: str,
+        query: str,
+        k: int = 10,
+        n: int = 3,
+        alpha: int = 0.5,
+        dictionary_id_bm25=None,
+    ) -> str:
         try:
             chroma_collection = self.chroma_client.get_collection(index_name)
         except ValueError:
             return f"Index with name {index_name} does not exist."
+
+        increased_k = k * n
 
         retriever = bm25s.BM25.load(
             os.path.join(self.keyword_index_path, index_name),
             load_corpus=True,
         )
 
-        query_embedding = self.embedding_model.encode(query).tolist()
-        vec_res = chroma_collection.query(
-            query_embeddings=[query_embedding], n_results=k
-        )
+        dictionary_id_bm25 = dictionary_id_bm25 or {
+            datum["metadata"]["table"]: idx
+            for idx, datum in enumerate(retriever.corpus)
+        }
 
         query_tokens = bm25s.tokenize(query, stemmer=self.stemmer, show_progress=False)
-        results, scores = retriever.retrieve(query_tokens, k=k, show_progress=False)
-        bm25_res = (results, scores)
+        query_embedding = self.embedding_model.encode(query).tolist()
 
-        all_nodes = self.__hybrid_retriever(bm25_res, vec_res, k, query)
+        results, scores = retriever.retrieve(
+            query_tokens, k=increased_k, show_progress=False
+        )
+        bm25_res = (results, scores)
+        vec_res = chroma_collection.query(
+            query_embeddings=[query_embedding], n_results=increased_k
+        )
+
+        all_nodes = self.__hybrid_retriever(
+            retriever,
+            chroma_collection,
+            bm25_res,
+            vec_res,
+            increased_k,
+            query,
+            alpha,
+            query_tokens,
+            query_embedding,
+            dictionary_id_bm25,
+        )
 
         return Response(
             status=ResponseStatus.SUCCESS,
@@ -83,19 +114,38 @@ class Query:
             data={"query": query, "response": all_nodes},
         ).to_json()
 
-    def __hybrid_retriever(self, bm25_res, vec_res, k: int, query: str):
-        processed_nodes_bm25 = self.__process_nodes_bm25(bm25_res)
-        processed_nodes_vec = self.__process_nodes_vec(vec_res)
+    def __hybrid_retriever(
+        self,
+        bm_25_retriever,
+        vec_retriever,
+        bm25_res,
+        vec_res,
+        k: int,
+        query: str,
+        alpha: float = 0.5,
+        query_tokens=None,
+        question_embedding=None,
+        dictionary_id_bm25=None,
+    ):
+        vec_ids = {vec_id for vec_id in vec_res["ids"][0]}
+        bm25_ids = {node["metadata"]["table"] for node in bm25_res[0][0]}
 
-        node_ids = set(
-            list(processed_nodes_bm25.keys()) + list(processed_nodes_vec.keys())
+        processed_nodes_bm25 = self.__process_nodes_bm25(
+            bm25_res,
+            list(vec_ids - bm25_ids),
+            dictionary_id_bm25,
+            bm_25_retriever,
+            query_tokens,
         )
-        all_nodes: list[tuple[str, float, str]] = []
-        for node_id in node_ids:
-            bm25_score_doc = processed_nodes_bm25.get(node_id, (0.0, None))
-            vec_score_doc = processed_nodes_vec.get(node_id, (0.0, None))
+        processed_nodes_vec = self.__process_nodes_vec(
+            vec_res, list(bm25_ids - vec_ids), vec_retriever, question_embedding
+        )
 
-            combined_score = 0.5 * bm25_score_doc[0] + 0.5 * vec_score_doc[0]
+        all_nodes: list[tuple[str, float, str]] = []
+        for node_id in sorted(vec_ids | bm25_ids):
+            bm25_score_doc = processed_nodes_bm25.get(node_id)
+            vec_score_doc = processed_nodes_vec.get(node_id)
+            combined_score = alpha * bm25_score_doc[0] + (1 - alpha) * vec_score_doc[0]
             if bm25_score_doc[1] is None:
                 doc = vec_score_doc[1]
             else:
@@ -107,37 +157,72 @@ class Query:
         reranked_nodes = self.__rerank(sorted_nodes, query)
         return reranked_nodes
 
-    def __process_nodes_bm25(self, items):
-        # Normalize relevance scores and return the nodes in dict format
-        results, scores = items
-        scores: list[float] = scores[0]
+    def __process_nodes_bm25(
+        self, items, all_ids, dictionary_id_bm25, bm25_retriever, query_tokens
+    ):
+        results = [node for node in items[0][0]]
+        scores = [node for node in items[1][0]]
+
+        extra_results = [
+            bm25_retriever.corpus[dictionary_id_bm25[idx]] for idx in all_ids
+        ]
+        extra_scores = [
+            bm25_retriever.get_scores(
+                convert_tokenized_to_string_list(query_tokens)[0]
+            )[dictionary_id_bm25[idx]]
+            for idx in all_ids
+        ]
+
+        results.extend(extra_results)
+        scores.extend(extra_scores)
+
         max_score = max(scores)
         min_score = min(scores)
 
-        processed_nodes: dict[str, tuple[float, str]] = {}
-        for i, node in enumerate(results[0]):
-            if min_score == max_score:
-                score = 1
-            else:
-                score = (scores[i] - min_score) / (max_score - min_score)
-            processed_nodes[node["metadata"]["table"]] = (score, node["text"])
+        processed_nodes = {
+            node["metadata"]["table"]: (
+                (
+                    1
+                    if min_score == max_score
+                    else (scores[i] - min_score) / (max_score - min_score)
+                ),
+                node["text"],
+            )
+            for i, node in enumerate(results)
+        }
         return processed_nodes
 
-    def __process_nodes_vec(self, items):
-        # Normalize relevance scores and return the nodes in dict format
+    def __process_nodes_vec(
+        self, items, missing_ids, collection: Collection, question_embedding
+    ):
+        extra_information = collection.get_fast(
+            ids=missing_ids, limit=len(missing_ids), include=["documents", "embeddings"]
+        )
+        items["ids"][0].extend(extra_information["ids"])
+        items["documents"][0].extend(extra_information["documents"])
+        items["distances"][0].extend(
+            cosine(question_embedding, extra_information["embeddings"][i])
+            for i in range(len(missing_ids))
+        )
+
         scores: list[float] = [1 - dist for dist in items["distances"][0]]
-        ids: list[str] = items["ids"][0]
         documents: list[str] = items["documents"][0]
+        ids: list[str] = items["ids"][0]
+
         max_score = max(scores)
         min_score = min(scores)
 
-        processed_nodes: dict[str, tuple[float, str]] = {}
-        for idx in range(len(items["ids"][0])):
-            if min_score == max_score:
-                score = 1
-            else:
-                score = (scores[idx] - min_score) / (max_score - min_score)
-            processed_nodes[ids[idx]] = (score, documents[idx])
+        processed_nodes = {
+            ids[idx]: (
+                (
+                    1
+                    if min_score == max_score
+                    else (scores[idx] - min_score) / (max_score - min_score)
+                ),
+                documents[idx],
+            )
+            for idx in range(len(scores))
+        }
         return processed_nodes
 
     def __rerank(
