@@ -219,10 +219,11 @@ class Summarizer:
                 self.pipe,
                 conversations,
                 batch_size=2,
-                context_length=8192,
+                context_length=32768,
                 max_new_tokens=400,
                 temperature=None,
                 top_p=None,
+                top_k=None,
             )
 
             col_narrations: list[str] = []
@@ -252,7 +253,6 @@ class Summarizer:
                 conv_cols.append(col)
 
         optimal_batch_size = self.__get_optimal_batch_size(conversations)
-        max_batch_size = optimal_batch_size
         sorted_indices = self.__get_special_indices(conversations, optimal_batch_size)
 
         conversations = [conversations[i] for i in sorted_indices]
@@ -261,7 +261,7 @@ class Summarizer:
 
         if len(conversations) > 0:
             outputs = []
-
+            max_batch_size = optimal_batch_size
             same_batch_size_counter = 0
             print(f"Optimal batch size: {optimal_batch_size}")
             for i in tqdm(range(0, len(conversations), optimal_batch_size)):
@@ -269,7 +269,7 @@ class Summarizer:
                     self.pipe,
                     conversations[i : i + optimal_batch_size],
                     batch_size=optimal_batch_size,
-                    context_length=8192,
+                    context_length=32768,
                     max_new_tokens=400,
                     temperature=None,
                     top_p=None,
@@ -324,10 +324,11 @@ Describe briefly what the {column} column represents. If not possible, simply st
             self.pipe,
             adjusted_conversations[conv_low_idx:conv_high_dx],
             batch_size=batch_size,
-            context_length=8192,
+            context_length=32768,
             max_new_tokens=1,
             temperature=None,
             top_p=None,
+            top_k=None,
         )
 
         torch.cuda.empty_cache()
