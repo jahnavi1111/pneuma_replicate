@@ -8,7 +8,7 @@ from benchmark_generator.context.utils.jsonl import read_jsonl, write_jsonl
 from tqdm import tqdm
 
 embedding_model = SentenceTransformer(
-    "../models/stella", local_files_only=True, device="cpu"
+    "../models/bge-base", local_files_only=True, device="cpu"
 )
 
 EMBEDDING_MAX_TOKENS = 512
