@@ -26,6 +26,7 @@ class Query:
         self,
         db_path: str = os.path.join(get_storage_path(), "storage.db"),
         index_path: str = os.path.join(get_storage_path(), "indexes"),
+        index_name: str = "benchmark_index",
         hf_token: str = "",
     ):
         self.db_path = db_path
@@ -43,7 +44,7 @@ class Query:
         self.pipe = initialize_pipeline(
             "../models/qwen", torch.bfloat16, context_length=32768
         )
-        # Specific setting for Llama-3-8B-Instruct for batching
+        # Specific setting for batching
         self.pipe.tokenizer.pad_token_id = self.pipe.model.config.eos_token_id
         self.pipe.tokenizer.padding_side = "left"
 
@@ -58,6 +59,13 @@ class Query:
         self.keyword_index_path = os.path.join(index_path, "keyword")
         self.chroma_client = chromadb.PersistentClient(self.vector_index_path)
 
+        self.index_name = index_name
+        self.retriever = bm25s.BM25.load(
+            os.path.join(self.keyword_index_path, self.index_name),
+            load_corpus=True,
+        )
+        self.chroma_collection = self.chroma_client.get_collection(self.index_name)
+
     def query(
         self,
         index_name: str,
@@ -69,37 +77,41 @@ class Query:
     ) -> str:
         k = 1
         n = 5
-        try:
-            chroma_collection = self.chroma_client.get_collection(index_name)
-        except ValueError:
-            return f"Index with name {index_name} does not exist."
-
         increased_k = k * n
 
-        retriever = bm25s.BM25.load(
-            os.path.join(self.keyword_index_path, index_name),
-            load_corpus=True,
-        )
+        if index_name != self.index_name:
+            try:
+                self.chroma_collection = self.chroma_client.get_collection(index_name)
+            except ValueError:
+                return f"Index with name {index_name} does not exist."
+
+            self.retriever = bm25s.BM25.load(
+                os.path.join(self.keyword_index_path, index_name),
+                load_corpus=True,
+            )
+            self.index_name = index_name
 
         dictionary_id_bm25 = dictionary_id_bm25 or {
             datum["metadata"]["table"]: idx
-            for idx, datum in enumerate(retriever.corpus)
+            for idx, datum in enumerate(self.retriever.corpus)
         }
 
         query_tokens = bm25s.tokenize(query, stemmer=self.stemmer, show_progress=False)
-        query_embedding = self.embedding_model.encode(query).tolist()
+        query_embedding = self.embedding_model.encode(
+            query, show_progress_bar=False
+        ).tolist()
 
-        results, scores = retriever.retrieve(
+        results, scores = self.retriever.retrieve(
             query_tokens, k=increased_k, show_progress=False
         )
         bm25_res = (results, scores)
-        vec_res = chroma_collection.query(
+        vec_res = self.chroma_collection.query(
             query_embeddings=[query_embedding], n_results=increased_k
         )
 
         all_nodes = self.__hybrid_retriever(
-            retriever,
-            chroma_collection,
+            self.retriever,
+            self.chroma_collection,
             bm25_res,
             vec_res,
             increased_k,
@@ -232,37 +244,25 @@ class Query:
         nodes: list[tuple[str, float, str]],
         query: str,
     ):
-        tables_relevance = defaultdict(bool)
-        relevance_prompts = []
-        node_ids = []
+        node_tables = [node[0] for node in nodes]
 
-        for node in nodes:
-            node_id = node[0]
-            node_ids.append(node_id)
-            # table_id = node_id.split("_SEP_")[0]
-            node_type = node_id.split("_SEP_")[1]
-            if node_type.startswith("contents"):
-                relevance_prompts.append(
-                    [
-                        {
-                            "role": "user",
-                            "content": self.__get_relevance_prompt(
-                                node[2], "content", query
-                            ),
-                        }
-                    ]
-                )
-            else:
-                relevance_prompts.append(
-                    [
-                        {
-                            "role": "user",
-                            "content": self._get_relevance_prompt(
-                                node[2], "context", query
-                            ),
-                        }
-                    ]
-                )
+        relevance_prompts = [
+            [
+                {
+                    "role": "user",
+                    "content": self.__get_relevance_prompt(
+                        node[2],
+                        (
+                            "content"
+                            if node[0].split("_SEP_")[1].startswith("contents")
+                            else "context"
+                        ),
+                        query,
+                    ),
+                }
+            ]
+            for node in nodes
+        ]
 
         arguments = prompt_pipeline(
             self.pipe,
@@ -272,20 +272,22 @@ class Query:
             max_new_tokens=2,
             top_p=None,
             temperature=None,
+            top_k=None,
         )
 
-        for arg_idx, argument in enumerate(arguments):
-            if argument[-1]["content"].lower().startswith("yes"):
-                tables_relevance[node_ids[arg_idx]] = True
+        tables_relevance = {
+            node_tables[arg_idx]: argument[-1]["content"].lower().startswith("yes")
+            for arg_idx, argument in enumerate(arguments)
+        }
 
         new_nodes = [
-            (node_id, score, doc)
-            for node_id, score, doc in nodes
-            if tables_relevance[node_id]
+            (table_name, score, doc)
+            for table_name, score, doc in nodes
+            if tables_relevance[table_name]
         ] + [
-            (node_id, score, doc)
-            for node_id, score, doc in nodes
-            if not tables_relevance[node_id]
+            (table_name, score, doc)
+            for table_name, score, doc in nodes
+            if not tables_relevance[table_name]
         ]
         return new_nodes
 
