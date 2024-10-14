@@ -3,7 +3,7 @@ import os
 
 
 def main():
-    results_path = "BC2/"
+    results_path = "Mixed/"
     batch_names = os.listdir(results_path)
     batch_names.sort(key=lambda x: (len(x), x))
 
@@ -35,7 +35,18 @@ def main():
         batch_score["query_index"] = batch_score["query_index"][:10]
         all_scores[batch] = batch_score
 
-    print(json.dumps(all_scores, indent=4))
+    for key in all_scores:
+        print(key)
+        print("Ingestion")
+        print(all_scores[key]["data_ingestion"][0])
+        print("Generate index")
+        print(all_scores[key]["generate_index"][0])
+        print("Query index")
+        for score in all_scores[key]["query_index"]:
+            print(score)
+        print("====================================")
+
+    # print(json.dumps(all_scores, indent=4))
 
 
 if __name__ == "__main__":
