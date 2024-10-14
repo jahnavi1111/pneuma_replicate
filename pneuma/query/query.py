@@ -62,11 +62,13 @@ class Query:
         self,
         index_name: str,
         query: str,
-        k: int = 10,
+        k: int = 1,
         n: int = 5,
         alpha: int = 0.5,
         dictionary_id_bm25=None,
     ) -> str:
+        k = 1
+        n = 5
         try:
             chroma_collection = self.chroma_client.get_collection(index_name)
         except ValueError:
@@ -230,26 +232,37 @@ class Query:
         nodes: list[tuple[str, float, str]],
         query: str,
     ):
-        # Each node is of the form (node_id, score, doc)
-        node_ids = [node[0] for node in nodes]
+        tables_relevance = defaultdict(bool)
+        relevance_prompts = []
+        node_ids = []
 
-        relevance_prompts = [
-            [
-                {
-                    "role": "user",
-                    "content": self.__get_relevance_prompt(
-                        node[2],
-                        (
-                            "content"
-                            if node[0].split("_SEP_")[1].startswith("contents")
-                            else "context"
-                        ),
-                        query,
-                    ),
-                }
-            ]
-            for node in nodes
-        ]
+        for node in nodes:
+            node_id = node[0]
+            node_ids.append(node_id)
+            # table_id = node_id.split("_SEP_")[0]
+            node_type = node_id.split("_SEP_")[1]
+            if node_type.startswith("contents"):
+                relevance_prompts.append(
+                    [
+                        {
+                            "role": "user",
+                            "content": self.__get_relevance_prompt(
+                                node[2], "content", query
+                            ),
+                        }
+                    ]
+                )
+            else:
+                relevance_prompts.append(
+                    [
+                        {
+                            "role": "user",
+                            "content": self._get_relevance_prompt(
+                                node[2], "context", query
+                            ),
+                        }
+                    ]
+                )
 
         arguments = prompt_pipeline(
             self.pipe,
@@ -259,13 +272,7 @@ class Query:
             max_new_tokens=2,
             top_p=None,
             temperature=None,
-            top_k=None,
         )
-
-        table_relevance = {
-            node_ids[arg_idx]: argument[-1]["content"].lower().startswith("yes")
-            for arg_idx, argument in enumerate(arguments)
-        }
 
         for arg_idx, argument in enumerate(arguments):
             if argument[-1]["content"].lower().startswith("yes"):
