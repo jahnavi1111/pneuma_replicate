@@ -64,6 +64,10 @@ class Query:
             os.path.join(self.keyword_index_path, self.index_name),
             load_corpus=True,
         )
+        self.dictionary_id_bm25 = {
+            datum["metadata"]["table"]: idx
+            for idx, datum in enumerate(self.retriever.corpus)
+        }
         self.chroma_collection = self.chroma_client.get_collection(self.index_name)
 
     def query(
@@ -89,12 +93,11 @@ class Query:
                 os.path.join(self.keyword_index_path, index_name),
                 load_corpus=True,
             )
+            self.dictionary_id_bm25 = dictionary_id_bm25 or {
+                datum["metadata"]["table"]: idx
+                for idx, datum in enumerate(self.retriever.corpus)
+            }
             self.index_name = index_name
-
-        dictionary_id_bm25 = dictionary_id_bm25 or {
-            datum["metadata"]["table"]: idx
-            for idx, datum in enumerate(self.retriever.corpus)
-        }
 
         query_tokens = bm25s.tokenize(query, stemmer=self.stemmer, show_progress=False)
         query_embedding = self.embedding_model.encode(
@@ -119,7 +122,7 @@ class Query:
             alpha,
             query_tokens,
             query_embedding,
-            dictionary_id_bm25,
+            self.dictionary_id_bm25,
         )
 
         return Response(
