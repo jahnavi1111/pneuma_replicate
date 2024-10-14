@@ -27,16 +27,20 @@ class Pneuma:
         self.query = None
 
     def __init_registration(self):
-        self.registration = Registration(self.db_path)
+        self.registration = Registration(db_path=self.db_path)
 
     def __init_summarizer(self):
-        self.summarizer = Summarizer(self.db_path, self.hf_token)
+        self.summarizer = Summarizer(db_path=self.db_path, hf_token=self.hf_token)
 
     def __init_index_generator(self):
-        self.index_generator = IndexGenerator(self.db_path, self.index_location)
+        self.index_generator = IndexGenerator(
+            db_path=self.db_path, index_path=self.index_location
+        )
 
     def __init_query(self):
-        self.query = Query(self.db_path, self.index_location, self.hf_token)
+        self.query = Query(
+            db_path=self.db_path, index_path=self.index_location, hf_token=self.hf_token
+        )
 
     def setup(self) -> str:
         if self.registration is None:
