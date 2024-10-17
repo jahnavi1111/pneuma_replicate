@@ -16,8 +16,12 @@ Create a folder named `input_files` in each dataset folder.
         nyc_open
             input_files
 ```
-Put csv files in `input_files`
-
+Put csv files in `input_files`. 
+To assign a ID for each tabble(csv), use the file name format:
+```
+<table_caption>_SEP_<table_ID>.csv
+``` 
+Othewise the table ID will be assigned automatically.
 Run
 ```
 ./import_tables.sh <dataset>
@@ -52,5 +56,5 @@ The output quations is at `./output/<dataset>/<dataset>_questions_annotated.json
 Each line of this file is a json object:
 ```
 "question": the question text
-"answer_tables": identifiers of answr tables.
+"answer_tables": identifiers of answer tables
 ```
