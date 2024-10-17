@@ -50,5 +50,7 @@ Run
 ```
 The output quations is at `./output/<dataset>/<dataset>_questions_annotated.jsonl`.
 Each line of this file is a json object:
+```
 "question": the question text
 "answer_tables": identifiers of answr tables.
+```
