@@ -21,3 +21,6 @@ share/python-wheels/
 *.out
 *.duckdb
 MANIFEST
+
+.idea
+.vscode
