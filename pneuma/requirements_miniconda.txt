@@ -16,7 +16,7 @@ certifi==2024.7.4
 cffi @ file:///croot/cffi_1714483155441/work
 charset-normalizer @ file:///croot/charset-normalizer_1721748349566/work
 chroma-hnswlib==0.7.6
-chromadb @ git+https://github.com/luthfibalaka/chroma.git@e302f79917c41337d042dc7a8a39c80e0416dd2b
+chromadb @ git+https://github.com/luthfibalaka/chroma.git@3cbf2bdedaa7383f1385f4ff08c5bdd1b2ccbde1
 click==8.1.7
 colorama==0.4.6
 coloredlogs==15.0.1
@@ -115,7 +115,7 @@ platformdirs==4.2.2
 pluggy @ file:///work/perseverance-python-buildout/croot/pluggy_1698805497733/work
 posthog==3.5.0
 prompt_toolkit==3.0.47
-protobuf==5.28.0
+protobuf==4.25.5
 psutil==6.0.0
 pyasn1==0.6.0
 pyasn1_modules==0.4.0
