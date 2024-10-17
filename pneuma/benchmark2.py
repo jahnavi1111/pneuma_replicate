@@ -4,10 +4,11 @@ import shutil
 from datetime import datetime
 from time import time
 
+from tqdm import tqdm
+
 from pneuma import Pneuma
 
 os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
-os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 
 dataset = "fetaqa"
 benchmark_type = "content"
@@ -88,12 +89,13 @@ def main():
     results = {}
     responses = {}
 
-    # Generate Index
+    # # Generate Index
     # print("Starting generating index...")
     # start_time = time()
     # response = pneuma.generate_index("benchmark_index")
     # end_time = time()
     # response = json.loads(response)
+    # print(response)
     # print(
     #     f"Time to generate index with {len(response['data']['table_ids'])} tables: {end_time - start_time} seconds"
     # )
@@ -109,23 +111,13 @@ def main():
     # }
     # responses["generate_index"] = response
 
+    print("Pre Query")
+    pneuma.query_index("benchmark_index", "What is the total number of employees?", 1)
+
     # Query Index
     start_time = time()
-    for question in questions_bc1:
-        response = pneuma.query_index("benchmark_index", question, 3)
-    end_time = time()
-    print(
-        f"Time to query index with {len(questions_bc1)} BC1 questions: {end_time - start_time} seconds"
-    )
-    results["BC1_query_index"] = {
-        "query_count": len(questions_bc1),
-        "time": end_time - start_time,
-        "query_throughput": len(questions_bc1) / (end_time - start_time),
-    }
-
-    start_time = time()
-    for question in questions_bc2:
-        response = pneuma.query_index("benchmark_index", question, 3)
+    for question in tqdm(questions_bc2):
+        response = pneuma.query_index("benchmark_index", question, 1)
     end_time = time()
     print(
         f"Time to query index with {len(questions_bc2)} BC2 questions: {end_time - start_time} seconds"
@@ -134,6 +126,19 @@ def main():
         "query_count": len(questions_bc2),
         "time": end_time - start_time,
         "query_throughput": len(questions_bc2) / (end_time - start_time),
+    }
+
+    start_time = time()
+    for question in tqdm(questions_bc1):
+        response = pneuma.query_index("benchmark_index", question, 1)
+    end_time = time()
+    print(
+        f"Time to query index with {len(questions_bc1)} BC1 questions: {end_time - start_time} seconds"
+    )
+    results["BC1_query_index"] = {
+        "query_count": len(questions_bc1),
+        "time": end_time - start_time,
+        "query_throughput": len(questions_bc1) / (end_time - start_time),
     }
 
     results["query_index"] = {
