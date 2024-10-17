@@ -1,24 +1,22 @@
 ## 1. Setup
 Python 3.8 or higher.
 ```
-pip install -r ../requirements.txt 
+pip install -r requirements.txt 
 ```
 
 ## 2. Import data
-If you want to download data, go to section 3, otherwise,
-
-Create a folder named `data` side by side with the repo folder `table_ingestion` (by default)
+Create a folder named `data` side by side with the repo folder `content` (by default)
 
 Create a folder for each dataset in `data`, e.g. `nyc_open`
 
-Create a folder named `tables_csv` in each dataset folder. 
+Create a folder named `input_files` in each dataset folder. 
 
 ```
     data
         nyc_open
-            tables_csv
+            input_files
 ```
-Put csv files in `tables_csv`
+Put csv files in `input_files`
 
 Run
 ```
@@ -26,18 +24,12 @@ Run
 ```
 To import data
 
-## 3. Download data
-We prepared `chembl_10K` (Capital K) (https://www.ebi.ac.uk/chembl/)
-```
-./get_data.sh chembl_10K
-```
-
-## 4. Generate questions
-4.1) Set OpenAI key
+## 3. Generate questions
+3.1) Set OpenAI key
 ```
 export OPENAI_API_KEY=<key>
 ```
-4.2) Run
+3.2) Run
 ```
 ./gen_questions.sh <dataset> <number of questions>
 ```
@@ -51,5 +43,12 @@ Table Caption:
 Table Data:
 ...
 ```
-## 5. Annotate answer tables
-To be continued
+## 4. Annotate answer tables
+Run
+```
+./annotate.sh <dataset>
+```
+The output quations is at `./output/<dataset>/<dataset>_questions_annotated.jsonl`.
+Each line of this file is a json object:
+"question": the question text
+"answer_tables": identifiers of answr tables.
