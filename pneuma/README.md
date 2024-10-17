@@ -42,6 +42,8 @@ conda create --name pneuma-sigmod python=3.12 -y
 conda activate pneuma-sigmod
 conda install -c nvidia cuda-toolkit -y
 export CUDA_HOME=$CONDA_PREFIX
+export CUBLAS_WORKSPACE_CONFIG=:4096:8
+export CUDA_VISIBLE_DEVICES=0
 ```
 
 **Install required Python modules.**
