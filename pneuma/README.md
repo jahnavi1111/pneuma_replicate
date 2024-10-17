@@ -99,7 +99,7 @@ registration.py add_table --db_path=PATH/TO/DATABASE_NAME.db [OPTION]... (PATH_T
 **Examples Usage**:
 
 ```shell
-registration.py add_table --db_path=../out/storage.db ../sample_data/5cq6-qygt.csv david
+registration.py add_table --db_path=../out/storage.db ../sample_data/5cq6-qygt.csv SampleUser
 ```
 
 ### Add Metadata

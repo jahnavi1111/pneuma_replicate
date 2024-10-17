@@ -18,8 +18,8 @@ requirements = read_requirements("pneuma/requirements.txt")
 setup(
     name="pneuma_wip",
     version=VERSION,
-    author="University of Chicago",
-    author_email="davidalexander@uchicago.edu",
+    author="Author",
+    author_email="name@mail.com",
     url="https://github.com/TheDataStation/Pneuma",
     description="Pneuma is a Python package for indexing and querying tables.",
     long_description_content_type="text/markdown",
