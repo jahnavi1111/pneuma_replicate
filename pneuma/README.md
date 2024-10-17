@@ -20,7 +20,7 @@ This setup guide is written on a Windows environment with Python version 3.10.6.
 
 ### Private/Gated models Access
 
-For the summarizer module, you may want to access private/gated models such as `Meta-Llama-3-8B-Instruct`, as used in the paper. To do this, create a user access token in HuggingFace, then login using the following commands:
+For the summarizer module, you may want to access private/gated models such as `Qwen2.5-7B-Instruct`, as used in the paper. To do this, create a user access token in HuggingFace, then login using the following commands:
 
 ```shell
 pip install -U "huggingface_hub[cli]"
@@ -33,7 +33,7 @@ Alternatively, you can pass the token directly, as instructed in [Summarize](#su
 
 ```shell
 git clone https://github.com/TheDataStation/Pneuma
-cd modules
+cd pneuma
 ```
 
 **(Recommended but not required) Create a virtual environment.**
@@ -51,7 +51,7 @@ pip install -r requirements.txt
 
 ## Registration Module
 
-This module is used to load data from various sources and context into DuckDB. Transformations, such as sorting rows, filtering out repeated values, etc. will also be done.
+This module is used to load data from various sources and context into DuckDB.
 
 ### Setup
 
@@ -99,7 +99,7 @@ registration.py add_table --db_path=PATH/TO/DATABASE_NAME.db [OPTION]... (PATH_T
 **Examples Usage**:
 
 ```shell
-registration.py add_table --db_path=../out/storage.db ../sample_data/5cq6-qygt.csv david csv
+registration.py add_table --db_path=../out/storage.db ../sample_data/5cq6-qygt.csv david
 ```
 
 ### Add Metadata
@@ -110,7 +110,7 @@ registration.py add_table --db_path=../out/storage.db ../sample_data/5cq6-qygt.c
 registration.py add_metadata --db_path=PATH/TO/DATABASE_NAME.db (PATH_TO_FOLDER/PATH_TO_FILE.txt) (context/summary) [TABLE_ID]
 ```
 
-**Description**: Creates a context or summary entry for the specified table.
+**Description**: Creates a context or summary entry for the specified table. If the metadata file is a CSV, TABLE_ID is not needed.
 
 **Example Usage**:
 
@@ -127,10 +127,10 @@ The summarized module generates content summaries of registered tables, which wi
 **Usage**:
 
 ```shell
-summarizer.py summarize --db_path=PATH/TO/DATABASE_NAME.db [OPTION]... TABLE_ID
+summarizer.py summarize --db_path=PATH/TO/DATABASE_NAME.db [OPTION]... [TABLE_ID]
 ```
 
-**Description**: Generates summary entries for the specified table.
+**Description**: Generates summary entries for the specified table. If TABLE_ID is not provided, generate summaries for all unsummarized tables.
 
 **Options**:
 
@@ -151,10 +151,10 @@ We store registered context and generated summaries as documents in a searchable
 **Usage**:
 
 ```shell
-index_generator.py generate_index --db_path=PATH/TO/DATABASE_NAME.db INDEX_NAME 'TABLE_ID1','TABLEID2','TABLEID3',...
+index_generator.py generate_index --db_path=PATH/TO/DATABASE_NAME.db INDEX_NAME ['TABLE_ID1','TABLEID2','TABLEID3',...]
 ```
 
-**Description**: Generates an index with the name INDEX_NAME containing context and summary entries from the tables listed.
+**Description**: Generates an index with the name INDEX_NAME containing context and summary entries from the tables listed. If the list of tables is not provided, generate an index from all tables.
 
 **Example Usage**:
 
@@ -171,13 +171,27 @@ The query module answers users’ queries by searching through the index generat
 **Usage**:
 
 ```shell
-query.py query --db_path=PATH/TO/DATABASE_NAME.db INDEX_NAME QUERY [K]
+query.py query --db_path=PATH/TO/DATABASE_NAME.db INDEX_NAME QUERY [OPTIONS]
 ```
 
-**Description**: Queries an index with name INDEX_NAME with the query QUERY. The option K (default value: 10) defines the number of documents retrieved.
+**Description**: Queries an index with name INDEX_NAME with the query QUERY. Returns a list of potentially relevant tables.
+
+**Options**:
+
+- --k=K
+
+    The number of tables returned (default value: 1)
+
+- --n=N
+
+    A multiplicative factor that determines the number of documents to initially retrieve for each retriever.
+
+- --alpha=ALPHA
+
+    Weighing factor to prioritize keyword vs vector index. Alpha=0 means vector index results are ignored.
 
 **Example Usage**:
 
 ```shell
-query.py query --db_path=../out/storage.db sample_index "Why was this dataset created?" 2
+query.py query --db_path=../out/storage.db sample_index "Why was this dataset created?"
 ```
