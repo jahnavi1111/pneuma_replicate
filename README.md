@@ -1,6 +1,6 @@
 # The Pneuma Project
 
-Pneuma is a data discovery system for tabular data. It consists of multiple components that can be utilized separately.
+Pneuma is a data discovery system for tabular data. A table may be relevant to a data problem because of its content, i.e., columns and rows in tabular data. A table may also be relevant to a data problem because of its context e.g., documentation explaining how the data was collected. Pneuma retrieves tables from table repositories based on both their content and context. It consists of multiple components that can be utilized separately.
 
 ## Pneuma-Summarizer
 
