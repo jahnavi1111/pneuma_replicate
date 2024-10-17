@@ -11,37 +11,24 @@ sys.path.append("..")
 
 from tqdm import tqdm
 from transformers import set_seed
-from FlagEmbedding import FlagLLMReranker
 from chromadb.api.models.Collection import Collection
 from benchmark_generator.context.utils.jsonl import read_jsonl, write_jsonl
-from sentence_transformers.SentenceTransformer import SentenceTransformer
 from benchmark_generator.context.utils.pipeline_initializer import initialize_pipeline
-from hybrid_retriever import HybridRetriever, RerankingMode
+from og_hybrid_retriever import HybridRetriever, RerankingMode
 
 
 os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ["CUDA_VISIBLE_DEVICES"] = "5"
 set_seed(42, deterministic=True)
 
 stemmer = Stemmer.Stemmer("english")
-
-# OPTION 1: No Re-Ranker
 reranker = None
 reranking_mode = RerankingMode.NONE
 
-# OPTION 2: Pneuma-Reranker
-# reranker = initialize_pipeline("../models/llama", torch.bfloat16)
+# reranker = initialize_pipeline("../models/qwen", torch.bfloat16)
 # reranker.tokenizer.pad_token_id = reranker.model.config.eos_token_id
 # reranker.tokenizer.padding_side = "left"
 # reranking_mode = RerankingMode.LLM
-
-# OPTION 3: BGE Re-Ranker
-# reranker = FlagLLMReranker("../models/bge-reranker")
-# reranking_mode = RerankingMode.DIRECT_SCORE
-
-# OPTION 4: Stella Re-Ranker
-# reranker = SentenceTransformer("../models/stella", local_files_only=True)
-# reranking_mode = RerankingMode.COSINE
 
 hybrid_retriever = HybridRetriever(reranker, reranking_mode)
 hitrates_data: list[dict[str, str]] = []
@@ -76,12 +63,15 @@ def evaluate_benchmark(
     n=3,
     alpha=0.5,
     use_rephrased_questions=False,
+    dictionary_id_bm25=None,
 ):
     start = time.time()
     hitrate_sum = 0
     wrong_questions = []
     increased_k = k * n
-    question_key, benchmark_name = get_question_key(benchmark_type, use_rephrased_questions)
+    question_key, benchmark_name = get_question_key(
+        benchmark_type, use_rephrased_questions
+    )
 
     questions = []
     for data in benchmark:
@@ -108,7 +98,16 @@ def evaluate_benchmark(
         )
 
         all_nodes = hybrid_retriever.retrieve(
-            bm25_res, vec_res, increased_k, questions[idx], alpha
+            retriever,
+            collection,
+            bm25_res,
+            vec_res,
+            increased_k,
+            questions[idx],
+            alpha,
+            query_tokens,
+            question_embedding,
+            dictionary_id_bm25,
         )
         before = hitrate_sum
         for table, _, _ in all_nodes[:k]:
@@ -139,7 +138,8 @@ def evaluate_benchmark(
             "n": n,
             "alpha": alpha,
             "hitrate": round(hitrate_sum / len(benchmark) * 100, 2),
-            "wrong_questions": wrong_questions,
+            "sum": hitrate_sum,
+            # "wrong_questions": wrong_questions,
         }
     )
     write_jsonl(hitrates_data, f"hybrid-{reranking_mode}-{k}.jsonl")
@@ -151,83 +151,95 @@ def start(
     context_benchmark: list[dict[str, str]],
     alphas: list[int],
     ns: list[int],
-    k=1,
+    ks=[1],
 ):
     print(f"Processing {dataset} dataset")
-    client = chromadb.PersistentClient(f"indices/index-{dataset}-pneuma-summarizer")
+    client = chromadb.PersistentClient(
+        f"indices/index-{dataset}-pneuma-summarizer"
+    )
     collection = client.get_collection("benchmark")
     retriever = bm25s.BM25.load(
         f"indices/keyword-index-{dataset}-pneuma-summarizer", load_corpus=True
     )
 
-    for alpha in alphas:
-        for n in ns:
-            print(f"BC1 (k = {k}) with alpha={alpha} n={n}")
-            evaluate_benchmark(
-                benchmark=content_benchmark,
-                benchmark_type="content",
-                k=k,
-                collection=collection,
-                retriever=retriever,
-                stemmer=stemmer,
-                dataset=dataset,
-                n=n,
-                alpha=alpha,
-                use_rephrased_questions=False,
-            )
-            print("=" * 50)
+    dictionary_id_bm25 = {
+        datum["metadata"]["table"]: datum_idx
+        for datum_idx, datum in enumerate(retriever.corpus)
+    }
 
-            print(f"BC2 (k = {k}) with alpha={alpha} n={n}")
-            evaluate_benchmark(
-                benchmark=content_benchmark,
-                benchmark_type="content",
-                k=k,
-                collection=collection,
-                retriever=retriever,
-                stemmer=stemmer,
-                dataset=dataset,
-                n=n,
-                alpha=alpha,
-                use_rephrased_questions=True,
-            )
-            print("=" * 50)
+    for k in ks:
+        for alpha in alphas:
+            for n in ns:
+                print(f"BC1 (k = {k}) with alpha={alpha} n={n}")
+                evaluate_benchmark(
+                    benchmark=content_benchmark,
+                    benchmark_type="content",
+                    k=k,
+                    collection=collection,
+                    retriever=retriever,
+                    stemmer=stemmer,
+                    dataset=dataset,
+                    n=n,
+                    alpha=alpha,
+                    use_rephrased_questions=False,
+                    dictionary_id_bm25=dictionary_id_bm25,
+                )
+                print("=" * 50)
 
-            print(f"BX1 (k = {k}) with alpha={alpha} n={n}")
-            evaluate_benchmark(
-                benchmark=context_benchmark,
-                benchmark_type="context",
-                k=k,
-                collection=collection,
-                retriever=retriever,
-                stemmer=stemmer,
-                dataset=dataset,
-                n=n,
-                alpha=alpha,
-                use_rephrased_questions=False,
-            )
-            print("=" * 50)
+                print(f"BC2 (k = {k}) with alpha={alpha} n={n}")
+                evaluate_benchmark(
+                    benchmark=content_benchmark,
+                    benchmark_type="content",
+                    k=k,
+                    collection=collection,
+                    retriever=retriever,
+                    stemmer=stemmer,
+                    dataset=dataset,
+                    n=n,
+                    alpha=alpha,
+                    use_rephrased_questions=True,
+                    dictionary_id_bm25=dictionary_id_bm25,
+                )
+                print("=" * 50)
 
-            print(f"BX2 (k = {k}) with alpha={alpha} n={n}")
-            evaluate_benchmark(
-                benchmark=context_benchmark,
-                benchmark_type="context",
-                k=k,
-                collection=collection,
-                retriever=retriever,
-                stemmer=stemmer,
-                dataset=dataset,
-                n=n,
-                alpha=alpha,
-                use_rephrased_questions=True,
-            )
-            print("=" * 50)
+                print(f"BX1 (k = {k}) with alpha={alpha} n={n}")
+                evaluate_benchmark(
+                    benchmark=context_benchmark,
+                    benchmark_type="context",
+                    k=k,
+                    collection=collection,
+                    retriever=retriever,
+                    stemmer=stemmer,
+                    dataset=dataset,
+                    n=n,
+                    alpha=alpha,
+                    use_rephrased_questions=False,
+                    dictionary_id_bm25=dictionary_id_bm25,
+                )
+                print("=" * 50)
+
+                print(f"BX2 (k = {k}) with alpha={alpha} n={n}")
+                evaluate_benchmark(
+                    benchmark=context_benchmark,
+                    benchmark_type="context",
+                    k=k,
+                    collection=collection,
+                    retriever=retriever,
+                    stemmer=stemmer,
+                    dataset=dataset,
+                    n=n,
+                    alpha=alpha,
+                    use_rephrased_questions=True,
+                    dictionary_id_bm25=dictionary_id_bm25,
+                )
+                print("=" * 50)
 
 
 if __name__ == "__main__":
     # Adjust
     ns = [5]
-    alphas = [0.7]
-    k = 1
+    alphas = [0.5]
+    ks = [1]
 
     dataset = "chembl"
     content_benchmark = read_jsonl(
@@ -242,7 +254,7 @@ if __name__ == "__main__":
         context_benchmark,
         alphas,
         ns,
-        k,
+        ks,
     )
 
     dataset = "adventure"
@@ -258,7 +270,7 @@ if __name__ == "__main__":
         context_benchmark,
         alphas,
         ns,
-        k,
+        ks,
     )
 
     dataset = "public"
@@ -274,7 +286,7 @@ if __name__ == "__main__":
         context_benchmark,
         alphas,
         ns,
-        k,
+        ks,
     )
 
     dataset = "chicago"
@@ -290,7 +302,7 @@ if __name__ == "__main__":
         context_benchmark,
         alphas,
         ns,
-        k,
+        ks,
     )
 
     dataset = "fetaqa"
@@ -306,5 +318,5 @@ if __name__ == "__main__":
         context_benchmark,
         alphas,
         ns,
-        k,
+        ks,
     )
