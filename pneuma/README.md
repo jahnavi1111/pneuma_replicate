@@ -36,11 +36,12 @@ git clone https://github.com/TheDataStation/Pneuma
 cd pneuma
 ```
 
-**(Recommended but not required) Create a virtual environment.**
-
+**Create a conda environment.**
 ```shell
-python -m venv venv
-env\Scripts\activate.bat
+conda create --name pneuma-sigmod python=3.12 -y
+conda activate pneuma-sigmod
+conda install -c nvidia cuda-toolkit -y
+export CUDA_HOME=$CONDA_PREFIX
 ```
 
 **Install required Python modules.**
@@ -48,6 +49,14 @@ env\Scripts\activate.bat
 ```shell
 pip install -r requirements.txt
 ```
+
+**Download required models.**
+
+Run downloader.ipynb at ./models.
+
+**(Optional) Download datasets**
+
+Follow the instructions at data_src to download datasets.
 
 ## Registration Module
 
