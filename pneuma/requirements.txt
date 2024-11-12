@@ -11,7 +11,7 @@ cachetools==5.4.0
 certifi==2024.7.4
 charset-normalizer==3.3.2
 chroma-hnswlib==0.7.6
-chromadb==0.5.5
+git+https://github.com/luthfibalaka/chroma.git@deterministic-index-building
 click==8.1.7
 colorama==0.4.6
 coloredlogs==15.0.1
