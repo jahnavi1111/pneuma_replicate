@@ -15,3 +15,10 @@ nohup python -u generate_content_summary_std.py >> generate_content_summary_std.
 Then, adjust the summaries for vector search to account for the limited context window of an embedding model.
 
 Note: Ensure that you have already downloaded the necessary models using `../models/downloader.ipynb`.
+
+## Terminology
+
+- `content_summary_std`: schema concatenation
+- `generate_content_summary_rows`: sample rows (by default 5)
+- `generate_content_summary_dbreader`: all rows
+- `generate_content_summary_llm`: schema narrations
