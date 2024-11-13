@@ -76,10 +76,6 @@ export CUDA_VISIBLE_DEVICES=0
 pip install -r requirements.txt
 ```
 
-### Download required models
-
-Run downloader.ipynb at ./models.
-
 ### (Optional) Download datasets
 
 Follow the instructions at data_src to download datasets.
