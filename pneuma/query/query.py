@@ -31,28 +31,15 @@ class Query:
     ):
         self.db_path = db_path
         self.connection = duckdb.connect(db_path)
-        self.embedding_model = SentenceTransformer(
-            "../models/bge-base", local_files_only=True
-        )
+        self.embedding_model = SentenceTransformer("BAAI/bge-base-en-v1.5")
         self.stemmer = Stemmer.Stemmer("english")
 
-        # Small model for local testing purposes
-        # self.embedding_model = SentenceTransformer(
-        #     "BAAI/bge-small-en-v1.5", trust_remote_code=True
-        # )
-
         self.pipe = initialize_pipeline(
-            "../models/qwen", torch.bfloat16, context_length=32768
+            "Qwen/Qwen2.5-7B-Instruct", torch.bfloat16, context_length=32768
         )
         # Specific setting for batching
         self.pipe.tokenizer.pad_token_id = self.pipe.model.config.eos_token_id
         self.pipe.tokenizer.padding_side = "left"
-
-        # Use small model for local testing
-        # self.pipe = initialize_pipeline("TinyLlama/TinyLlama_v1.1", torch.bfloat16)
-        # self.pipe.tokenizer.chat_template = "{% for message in messages %}{% if message['role'] == 'user' %}{{ ' ' }}{% endif %}{{ message['content'] }}{% if not loop.last %}{{ '  ' }}{% endif %}{% endfor %}{{ eos_token }}"
-        # self.pipe.tokenizer.pad_token_id = self.pipe.model.config.eos_token_id
-        # self.pipe.tokenizer.padding_side = "left"
 
         self.index_path = index_path
         self.vector_index_path = os.path.join(index_path, "vector")

@@ -32,15 +32,8 @@ class IndexGenerator:
     ):
         self.db_path = db_path
         self.connection = duckdb.connect(db_path)
-        self.embedding_model = SentenceTransformer(
-            "../models/bge-base", local_files_only=True
-        )
+        self.embedding_model = SentenceTransformer("BAAI/bge-base-en-v1.5")
         self.stemmer = Stemmer.Stemmer("english")
-
-        # Small model for local testing purposes
-        # self.embedding_model = SentenceTransformer(
-        #     "BAAI/bge-small-en-v1.5", trust_remote_code=True
-        # )
 
         self.index_path = index_path
         self.vector_index_path = os.path.join(index_path, "vector")

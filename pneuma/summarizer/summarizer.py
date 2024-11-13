@@ -40,22 +40,15 @@ class Summarizer:
         # [WARNING] '>' not supported between instances of 'int' and 'str'
         # And the LLM won't generate output for some reason.
         self.pipe = initialize_pipeline(
-            "../models/qwen", torch.bfloat16, context_length=32768
+            "Qwen/Qwen2.5-7B-Instruct", torch.bfloat16, context_length=32768
         )
         # Specific setting for batching
         self.pipe.tokenizer.pad_token_id = self.pipe.model.config.eos_token_id
         self.pipe.tokenizer.padding_side = "left"
 
         self.embedding_model = SentenceTransformer(
-            "../models/bge-base", local_files_only=True, device="cpu"
+            "BAAI/bge-base-en-v1.5", device="cpu"
         )
-
-        # Use small model for local testing
-        # self.pipe = initialize_pipeline("TinyLlama/TinyLlama_v1.1", torch.bfloat16)
-        # self.pipe.tokenizer.chat_template = "{% for message in messages %}{% if message['role'] == 'user' %}{{ ' ' }}{% endif %}{{ message['content'] }}{% if not loop.last %}{{ '  ' }}{% endif %}{% endfor %}{{ eos_token }}"
-        # self.pipe.tokenizer.pad_token_id = self.pipe.model.config.eos_token_id
-        # self.pipe.tokenizer.padding_side = "left"
-
         self.EMBEDDING_MAX_TOKENS = 512
 
     def summarize(self, table_id: str = None) -> str:
