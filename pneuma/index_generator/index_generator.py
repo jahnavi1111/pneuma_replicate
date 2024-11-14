@@ -332,6 +332,7 @@ class IndexGenerator:
     def __merge_contexts(self, contexts: list[tuple[str, str]]) -> list[str]:
         tokenizer = self.embedding_model.tokenizer
         table_contexts = [json.loads(context[1])["payload"] for context in contexts]
+        processed_contexts = []
 
         context_idx = 0
         while context_idx < len(table_contexts):
@@ -347,9 +348,9 @@ class IndexGenerator:
                     break
 
             context_idx += 1
-            table_contexts.append(current_context)
+            processed_contexts.append(current_context)
 
-        return table_contexts
+        return processed_contexts
 
     def __get_table_summaries(
         self, table_id: str, summary_type: SummaryType
