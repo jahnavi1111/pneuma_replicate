@@ -26,7 +26,7 @@ class Query:
         self,
         db_path: str = os.path.join(get_storage_path(), "storage.db"),
         index_path: str = os.path.join(get_storage_path(), "indexes"),
-        index_name: str = "benchmark_index",
+        index_name: str = None,
         hf_token: str = "",
     ):
         self.db_path = db_path
@@ -46,16 +46,10 @@ class Query:
         self.keyword_index_path = os.path.join(index_path, "keyword")
         self.chroma_client = chromadb.PersistentClient(self.vector_index_path)
 
-        self.index_name = index_name
-        self.retriever = bm25s.BM25.load(
-            os.path.join(self.keyword_index_path, self.index_name),
-            load_corpus=True,
-        )
-        self.dictionary_id_bm25 = {
-            datum["metadata"]["table"]: idx
-            for idx, datum in enumerate(self.retriever.corpus)
-        }
-        self.chroma_collection = self.chroma_client.get_collection(self.index_name)
+        if index_name is not None:
+            self.__init_index(index_name)
+        else:
+            self.index_name = None
 
     def query(
         self,
@@ -66,25 +60,11 @@ class Query:
         alpha: int = 0.5,
         dictionary_id_bm25=None,
     ) -> str:
+        if index_name != self.index_name:
+            self.__init_index(index_name)
+
         k = 1
         n = 5
-        increased_k = k * n
-
-        if index_name != self.index_name:
-            try:
-                self.chroma_collection = self.chroma_client.get_collection(index_name)
-            except ValueError:
-                return f"Index with name {index_name} does not exist."
-
-            self.retriever = bm25s.BM25.load(
-                os.path.join(self.keyword_index_path, index_name),
-                load_corpus=True,
-            )
-            self.dictionary_id_bm25 = dictionary_id_bm25 or {
-                datum["metadata"]["table"]: idx
-                for idx, datum in enumerate(self.retriever.corpus)
-            }
-            self.index_name = index_name
 
         query_tokens = bm25s.tokenize(query, stemmer=self.stemmer, show_progress=False)
         query_embedding = self.embedding_model.encode(
@@ -117,6 +97,22 @@ class Query:
             message=f"Query successful for index {index_name}.",
             data={"query": query, "response": all_nodes},
         ).to_json()
+
+    def __init_index(self, index_name: str):
+        try:
+            self.chroma_collection = self.chroma_client.get_collection(index_name)
+        except ValueError:
+            return f"Index with name {index_name} does not exist."
+
+        self.retriever = bm25s.BM25.load(
+            os.path.join(self.keyword_index_path, index_name),
+            load_corpus=True,
+        )
+        self.dictionary_id_bm25 = {
+            datum["metadata"]["table"]: idx
+            for idx, datum in enumerate(self.retriever.corpus)
+        }
+        self.index_name = index_name
 
     def __hybrid_retriever(
         self,
