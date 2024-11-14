@@ -78,6 +78,11 @@ pip install -r requirements.txt
 
 ### (Optional) Download datasets
 
+```shell
+python data_src/benchmarks/downloader.py
+python data_src/tables/downloader.py
+```
+
 Follow the instructions at data_src to download datasets.
 
 
