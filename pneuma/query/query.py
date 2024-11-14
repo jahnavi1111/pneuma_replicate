@@ -65,6 +65,7 @@ class Query:
 
         k = 1
         n = 5
+        increased_k = min(k * n, len(self.retriever.corpus))
 
         query_tokens = bm25s.tokenize(query, stemmer=self.stemmer, show_progress=False)
         query_embedding = self.embedding_model.encode(
