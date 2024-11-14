@@ -80,6 +80,9 @@ pip install -r requirements.txt
 
 Follow the instructions at data_src to download datasets.
 
+
+**Note: All commands in 'Example Usage' should be run from the Pneuma/pneuma folder**
+
 ## Registration Module
 
 This module is used to load data from various sources and context into DuckDB.
@@ -89,7 +92,7 @@ This module is used to load data from various sources and context into DuckDB.
 **Usage**:
 
 ```shell
-registration.py setup --db_path=PATH/TO/DATABASE_NAME.db
+python3 registration.py setup --db_path=PATH/TO/DATABASE_NAME.db
 ```
 
 **Description**: Initializes the database schema. Creates a DATABASE_NAME.db file in the specified path.
@@ -97,7 +100,7 @@ registration.py setup --db_path=PATH/TO/DATABASE_NAME.db
 **Example Usage**:
 
 ```shell
-registration.py setup --db_path=../out/storage.db
+python3 registration/registration.py setup --db_path=out/storage.db
 ```
 
 ### Add Table
@@ -105,13 +108,13 @@ registration.py setup --db_path=../out/storage.db
 **Usage**:
 
 ```shell
-registration.py add_table --db_path=PATH/TO/DATABASE_NAME.db [OPTION]... (PATH_TO_FOLDER/PATH_TO_FILE.(csv/parquet)) CREATOR_NAME
+python3 registration/registration.py add_tables --db_path=PATH/TO/DATABASE_NAME.db [OPTION]... (PATH_TO_FOLDER/PATH_TO_FILE.(csv/parquet)) CREATOR_NAME
 ```
 
 **Description**: Reads a table, formatted in CSV or PARQUET, from the local filesystem or an online storage bucket. If a file in a storage bucket is public, it can be read like a local file. The path of the table will be used as the ID.
 
 - PATH_TO_FOLDER / PATH_TO_FILE can be a path in the local filesystem or a bucket URI. If a folder path is inserted, all files in the folder will be processed.
-- CREATOR_NAME is the name of the person who runs this command (TODO: Authenticate automatically).
+- CREATOR_NAME is the name of the person who runs this command.
 
 **Options**:
 
@@ -130,7 +133,7 @@ registration.py add_table --db_path=PATH/TO/DATABASE_NAME.db [OPTION]... (PATH_T
 **Examples Usage**:
 
 ```shell
-registration.py add_table --db_path=../out/storage.db ../sample_data/5cq6-qygt.csv SampleUser
+python3 registration/registration.py add_tables --db_path=out/storage.db ../data_src/sample_data/csv/5cq6-qygt.csv SampleUser
 ```
 
 ### Add Metadata
@@ -138,7 +141,7 @@ registration.py add_table --db_path=../out/storage.db ../sample_data/5cq6-qygt.c
 **Usage**:
 
 ```shell
-registration.py add_metadata --db_path=PATH/TO/DATABASE_NAME.db (PATH_TO_FOLDER/PATH_TO_FILE.txt) (context/summary) [TABLE_ID]
+python3 registration/registration.py add_metadata --db_path=PATH/TO/DATABASE_NAME.db (PATH_TO_FOLDER/PATH_TO_FILE.txt) [context/summary] [TABLE_ID]
 ```
 
 **Description**: Creates a context or summary entry for the specified table. If the metadata file is a CSV, TABLE_ID is not needed.
@@ -146,7 +149,7 @@ registration.py add_metadata --db_path=PATH/TO/DATABASE_NAME.db (PATH_TO_FOLDER/
 **Example Usage**:
 
 ```shell
-registration.py add_metadata --db_path=../out/storage.db ../sample_data/context/sample_context.txt context ../sample_data/csv/5cq6-qygt.csv
+python3 registration/registration.py add_metadata --db_path=out/storage.db ../data_src/sample_data/context/sample_context.txt context ../data_src/sample_data/csv/5cq6-qygt.csv
 ```
 
 ## Summarizer Module
@@ -158,7 +161,7 @@ The summarized module generates content summaries of registered tables, which wi
 **Usage**:
 
 ```shell
-summarizer.py summarize --db_path=PATH/TO/DATABASE_NAME.db [OPTION]... [TABLE_ID]
+python3 summarizer.py summarize --db_path=PATH/TO/DATABASE_NAME.db [OPTION]... [TABLE_ID]
 ```
 
 **Description**: Generates summary entries for the specified table. If TABLE_ID is not provided, generate summaries for all unsummarized tables.
@@ -170,7 +173,7 @@ summarizer.py summarize --db_path=PATH/TO/DATABASE_NAME.db [OPTION]... [TABLE_ID
 **Example Usage**:
 
 ```shell
-summarizer.py summarize --db_path=../out/storage.db ../sample_data/5cq6-qygt.csv
+python3 summarizer/summarizer.py summarize --db_path=out/storage.db ../data_src/sample_data/csv/5cq6-qygt.csv
 ```
 
 ## Index Generation Module
@@ -182,7 +185,7 @@ We store registered context and generated summaries as documents in a searchable
 **Usage**:
 
 ```shell
-index_generator.py generate_index --db_path=PATH/TO/DATABASE_NAME.db INDEX_NAME ['TABLE_ID1','TABLEID2','TABLEID3',...]
+python3 index_generator.py generate_index --db_path=PATH/TO/DATABASE_NAME.db --index_path=PATH/TO/INDEXES/FOLDER INDEX_NAME ['TABLE_ID1','TABLEID2','TABLEID3',...]
 ```
 
 **Description**: Generates an index with the name INDEX_NAME containing context and summary entries from the tables listed. If the list of tables is not provided, generate an index from all tables.
@@ -190,7 +193,7 @@ index_generator.py generate_index --db_path=PATH/TO/DATABASE_NAME.db INDEX_NAME 
 **Example Usage**:
 
 ```shell
-index_generator.py generate_index --db_path=../out/storage.db sample_index '../sample_data/5cq6-qygt.csv','../sample_data/5n77-2d6a.csv'
+python3 index_generator/index_generator.py generate_index --db_path=out/storage.db --index_path=out/indexes sample_index ../data_src/sample_data/csv/5cq6-qygt.csv
 ```
 
 ## Query Module
@@ -202,7 +205,7 @@ The query module answers users’ queries by searching through the index generat
 **Usage**:
 
 ```shell
-query.py query --db_path=PATH/TO/DATABASE_NAME.db INDEX_NAME QUERY [OPTIONS]
+python3 query.py query --db_path=PATH/TO/DATABASE_NAME.db --index_path=PATH/TO/INDEXES/FOLDER INDEX_NAME QUERY [OPTIONS]
 ```
 
 **Description**: Queries an index with name INDEX_NAME with the query QUERY. Returns a list of potentially relevant tables.
@@ -224,5 +227,5 @@ query.py query --db_path=PATH/TO/DATABASE_NAME.db INDEX_NAME QUERY [OPTIONS]
 **Example Usage**:
 
 ```shell
-query.py query --db_path=../out/storage.db sample_index "Why was this dataset created?"
+python3 query/query.py query --db_path=out/storage.db --index_path=out/indexes sample_index "Why was this dataset created?"
 ```
