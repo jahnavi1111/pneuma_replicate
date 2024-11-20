@@ -94,10 +94,17 @@ class Pneuma:
             self.__init_index_generator()
         return self.index_generator.generate_index(index_name, table_ids)
 
-    def query_index(self, index_name: str, query: str, k: int = 10) -> str:
+    def query_index(
+        self,
+        index_name: str,
+        query: str,
+        k: int = 1,
+        n: int = 5,
+        alpha: int = 0.5,
+    ) -> str:
         if self.query is None:
             self.__init_query()
-        return self.query.query(index_name, query, k)
+        return self.query.query(index_name, query, k, n, alpha)
 
     def sanity_check(self) -> str:
         return "This works!"
