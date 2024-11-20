@@ -93,10 +93,16 @@ class Query:
             self.dictionary_id_bm25,
         )
 
+        all_nodes = all_nodes[:k]
+        tables = []
+        for table, score, content in all_nodes:
+            table = table.split("_SEP_")[0]
+            tables.append(table)
+
         return Response(
             status=ResponseStatus.SUCCESS,
             message=f"Query successful for index {index_name}.",
-            data={"query": query, "response": all_nodes},
+            data={"query": query, "response": tables},
         ).to_json()
 
     def __init_index(self, index_name: str):
