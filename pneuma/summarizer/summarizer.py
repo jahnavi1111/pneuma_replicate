@@ -65,6 +65,12 @@ class Summarizer:
         else:
             table_ids = [table_id.replace("'", "''")]
 
+        if len(table_ids) == 0:
+            return Response(
+                status=ResponseStatus.SUCCESS,
+                message="No unsummarized tables found.\n",
+                data={"table_ids": []},
+            ).to_json()
         if len(table_ids) == 1:
             all_summary_ids = self.__summarize_table_by_id(table_ids[0])
         else:
@@ -102,6 +108,7 @@ class Summarizer:
         ).to_json()
 
     def __summarize_table_by_id(self, table_id: str) -> list[str]:
+        # TODO: Handle case if table_id is invalid so status is a NoneType.
         status = self.connection.sql(
             f"SELECT status FROM table_status WHERE id = '{table_id}'"
         ).fetchone()[0]
