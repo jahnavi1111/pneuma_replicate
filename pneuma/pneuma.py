@@ -71,7 +71,7 @@ class Pneuma:
 
     def add_metadata(
         self,
-        metadata_path: str = "",
+        metadata_path: str,
         metadata_type: str = "",
         table_id: str = "",
     ) -> str:
