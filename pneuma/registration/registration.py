@@ -189,7 +189,8 @@ class Registration:
                     FROM read_csv(
                         '{path}',
                         auto_detect=True,
-                        header=True
+                        header=True,
+                        ignore_errors=True
                     )"""
             )
             table_hash = self.connection.sql(
@@ -197,7 +198,8 @@ class Registration:
                 FROM read_csv(
                     '{path}',
                     auto_detect=True,
-                    header=True
+                    header=True,
+                    ignore_errors=True
                 ) AS tbl"""
             ).fetchone()[0]
         elif file_type == "parquet":
