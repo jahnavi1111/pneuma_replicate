@@ -154,7 +154,6 @@ class Summarizer:
         return summary_ids
 
     def __batch_summarize_tables(self, table_ids: list[str]) -> list[str]:
-        print("BATCH SUMMARIZING")
         for table_id in table_ids:
             status = self.connection.sql(
                 f"SELECT status FROM table_status WHERE id = '{table_id}'"
