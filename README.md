@@ -57,7 +57,7 @@ Alternatively, you can pass the token directly, as instructed in [Summarize](#su
 
 ```shell
 git clone https://github.com/TheDataStation/Pneuma
-cd Pneuma/pneuma
+cd Pneuma
 ```
 
 ### Create a conda environment
