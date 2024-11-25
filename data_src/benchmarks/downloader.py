@@ -1,9 +1,13 @@
+import os
 import gdown
 import urllib.request
+from tqdm import tqdm
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Download content benchmarks
 url = "https://drive.google.com/drive/folders/1Cg69BWaD2vjLsvzNvOUAhqUMN4DFF6hy"
-gdown.download_folder(url, output="content")
+gdown.download_folder(url, output=os.path.join(script_dir, "content"))
 
 # Download context benchmarks
 contexts = [
@@ -14,8 +18,8 @@ contexts = [
     "pneuma_adventure_works_questions_annotated.jsonl",
 ]
 
-for context in contexts:
+for context in tqdm(contexts):
     urllib.request.urlretrieve(
         f"https://storage.googleapis.com/pneuma_open/{context}",
-        filename=f"context/{context}",
+        filename=os.path.join(script_dir, f"context/{context}"),
     )
