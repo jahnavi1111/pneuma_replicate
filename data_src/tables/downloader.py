@@ -1,5 +1,10 @@
-import urllib.request
+import os
 import tarfile
+import urllib.request
+from tqdm import tqdm
+
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
 
 
 def extract_tar(file_path, extract_path="."):
@@ -16,9 +21,9 @@ tables = [
     "pneuma_adventure_works.tar",
 ]
 
-for table in tables:
+for table in tqdm(tables):
     urllib.request.urlretrieve(
         f"https://storage.googleapis.com/pneuma_open/{table}",
-        filename=table,
+        filename=os.path.join(script_dir, table),
     )
-    extract_tar(table)
+    extract_tar(os.path.join(script_dir, table), script_dir)
