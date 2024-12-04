@@ -7,7 +7,7 @@ import sys
 import Stemmer
 import numpy as np
 
-sys.path.append("..")
+sys.path.append("../..")
 
 
 from transformers import set_seed
@@ -72,10 +72,10 @@ def produce_embeddings(
 if __name__ == "__main__":
     dataset = "public"
     content_benchmark = read_jsonl(
-        "../data_src/benchmarks/content/pneuma_public_bi_questions_annotated.jsonl"
+        "../../data_src/benchmarks/content/pneuma_public_bi_questions_annotated.jsonl"
     )
     context_benchmark = read_jsonl(
-        "../data_src/benchmarks/context/public/bx_public.jsonl"
+        "../../data_src/benchmarks/context/public/bx_public.jsonl"
     )
     produce_embeddings(dataset, content_benchmark, "content", embedding_model, False)
     produce_embeddings(dataset, content_benchmark, "content", embedding_model, True)
@@ -84,10 +84,10 @@ if __name__ == "__main__":
 
     dataset = "chembl"
     content_benchmark = read_jsonl(
-        "../data_src/benchmarks/content/pneuma_chembl_10K_questions_annotated.jsonl"
+        "../../data_src/benchmarks/content/pneuma_chembl_10K_questions_annotated.jsonl"
     )
     context_benchmark = read_jsonl(
-        "../data_src/benchmarks/context/chembl/bx_chembl.jsonl"
+        "../../data_src/benchmarks/context/chembl/bx_chembl.jsonl"
     )
     produce_embeddings(dataset, content_benchmark, "content", embedding_model, False)
     produce_embeddings(dataset, content_benchmark, "content", embedding_model, True)
@@ -96,10 +96,10 @@ if __name__ == "__main__":
 
     dataset = "adventure"
     content_benchmark = read_jsonl(
-        "../data_src/benchmarks/content/pneuma_adventure_works_questions_annotated.jsonl"
+        "../../data_src/benchmarks/content/pneuma_adventure_works_questions_annotated.jsonl"
     )
     context_benchmark = read_jsonl(
-        "../data_src/benchmarks/context/adventure/bx_adventure.jsonl"
+        "../../data_src/benchmarks/context/adventure/bx_adventure.jsonl"
     )
     produce_embeddings(dataset, content_benchmark, "content", embedding_model, False)
     produce_embeddings(dataset, content_benchmark, "content", embedding_model, True)
@@ -108,10 +108,10 @@ if __name__ == "__main__":
 
     dataset = "chicago"
     content_benchmark = read_jsonl(
-        "../data_src/benchmarks/content/pneuma_chicago_10K_questions_annotated.jsonl"
+        "../../data_src/benchmarks/content/pneuma_chicago_10K_questions_annotated.jsonl"
     )
     context_benchmark = read_jsonl(
-        "../data_src/benchmarks/context/chicago/bx_chicago.jsonl"
+        "../../data_src/benchmarks/context/chicago/bx_chicago.jsonl"
     )
     produce_embeddings(dataset, content_benchmark, "content", embedding_model, False)
     produce_embeddings(dataset, content_benchmark, "content", embedding_model, True)
@@ -120,10 +120,10 @@ if __name__ == "__main__":
 
     dataset = "fetaqa"
     content_benchmark = read_jsonl(
-        "../data_src/benchmarks/content/pneuma_fetaqa_questions_annotated.jsonl"
+        "../../data_src/benchmarks/content/pneuma_fetaqa_questions_annotated.jsonl"
     )
     context_benchmark = read_jsonl(
-        "../data_src/benchmarks/context/fetaqa/bx_fetaqa.jsonl"
+        "../../data_src/benchmarks/context/fetaqa/bx_fetaqa.jsonl"
     )
     produce_embeddings(dataset, content_benchmark, "content", embedding_model, False)
     produce_embeddings(dataset, content_benchmark, "content", embedding_model, True)
