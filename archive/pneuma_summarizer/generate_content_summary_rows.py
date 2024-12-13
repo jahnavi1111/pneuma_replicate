@@ -1,6 +1,6 @@
 import sys
 
-sys.path.append("..")
+sys.path.append("../..")
 
 
 import math
@@ -35,26 +35,26 @@ def generate_row_summaries(table_path: str, summary_path: str):
 
 if __name__ == "__main__":
     name = "chembl"
-    table_path = "../data_src/tables/pneuma_chembl_10K"
+    table_path = "../../data_src/tables/pneuma_chembl_10K"
     summary_path = f"summaries/rows/{name}.jsonl"
     generate_row_summaries(table_path, summary_path)
 
     name = "adventure"
-    table_path = "../data_src/tables/pneuma_adventure_works"
+    table_path = "../../data_src/tables/pneuma_adventure_works"
     summary_path = f"summaries/rows/{name}.jsonl"
     generate_row_summaries(table_path, summary_path)
 
     name = "public"
-    table_path = "../data_src/tables/pneuma_public_bi"
+    table_path = "../../data_src/tables/pneuma_public_bi"
     summary_path = f"summaries/rows/{name}.jsonl"
     generate_row_summaries(table_path, summary_path)
 
     name = "chicago"
-    table_path = "../data_src/tables/pneuma_chicago_10K"
+    table_path = "../../data_src/tables/pneuma_chicago_10K"
     summary_path = f"summaries/rows/{name}.jsonl"
     generate_row_summaries(table_path, summary_path)
 
     name = "fetaqa"
-    table_path = "../data_src/tables/pneuma_fetaqa"
+    table_path = "../../data_src/tables/pneuma_fetaqa"
     summary_path = f"summaries/rows/{name}.jsonl"
     generate_row_summaries(table_path, summary_path)
