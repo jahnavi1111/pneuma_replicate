@@ -110,7 +110,7 @@ def get_information(dataset: str):
     )
     row_contents = read_jsonl(f"../pneuma_summarizer/summaries/rows/{dataset}_merged.jsonl")
     contexts = read_jsonl(
-        f"../data_src/benchmarks/context/{dataset}/contexts_{dataset}_merged.jsonl"
+        f"../../data_src/benchmarks/context/{dataset}/contexts_{dataset}_merged.jsonl"
     )
     return [schema_contents, row_contents, contexts]
 
