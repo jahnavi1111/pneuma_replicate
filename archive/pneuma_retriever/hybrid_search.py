@@ -7,7 +7,7 @@ import bm25s
 import Stemmer
 import numpy as np
 
-sys.path.append("..")
+sys.path.append("../..")
 
 from tqdm import tqdm
 from transformers import set_seed
