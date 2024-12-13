@@ -9,7 +9,7 @@ import time
 import torch
 import pandas as pd
 
-sys.path.append("..")
+sys.path.append("../..")
 
 from tqdm import tqdm
 from collections import defaultdict
@@ -166,35 +166,35 @@ def generate_llm_narration_summaries(src_path: str, descriptions_path: str):
 
 if __name__ == "__main__":
     start = time.time()
-    src_path = "../data_src/tables/pneuma_chembl_10K"
+    src_path = "../../data_src/tables/pneuma_chembl_10K"
     descriptions_path = "chembl.jsonl"
     generate_llm_narration_summaries(src_path, descriptions_path)
     end = time.time()
     print(f"Total time: {end - start} seconds")
 
     start = time.time()
-    src_path = "../data_src/tables/pneuma_adventure_works"
+    src_path = "../../data_src/tables/pneuma_adventure_works"
     descriptions_path = "adventure.jsonl"
     generate_llm_narration_summaries(src_path, descriptions_path)
     end = time.time()
     print(f"Total time: {end - start} seconds")
 
     start = time.time()
-    src_path = "../data_src/tables/pneuma_fetaqa"
+    src_path = "../../data_src/tables/pneuma_fetaqa"
     descriptions_path = "fetaqa.jsonl"
     generate_llm_narration_summaries(src_path, descriptions_path)
     end = time.time()
     print(f"Total time: {end - start} seconds")
 
     start = time.time()
-    src_path = "../data_src/tables/pneuma_chicago_10K"
+    src_path = "../../data_src/tables/pneuma_chicago_10K"
     descriptions_path = "chicago.jsonl"
     generate_llm_narration_summaries(src_path, descriptions_path)
     end = time.time()
     print(f"Total time: {end - start} seconds")
 
     start = time.time()
-    src_path = "../data_src/tables/pneuma_public_bi"
+    src_path = "../../data_src/tables/pneuma_public_bi"
     descriptions_path = "public.jsonl"
     generate_llm_narration_summaries(src_path, descriptions_path)
     end = time.time()
