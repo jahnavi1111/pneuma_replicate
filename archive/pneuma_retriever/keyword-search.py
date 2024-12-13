@@ -2,7 +2,7 @@ import sys
 import bm25s
 import Stemmer
 
-sys.path.append("..")
+sys.path.append("../..")
 
 from tqdm import tqdm
 from benchmark_generator.context.utils.jsonl import read_jsonl, write_jsonl
