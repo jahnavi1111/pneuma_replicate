@@ -111,45 +111,45 @@ if __name__ == "__main__":
 
     dataset = "chembl"
     content_benchmark = read_jsonl(
-        "../data_src/benchmarks/content/pneuma_chembl_10K_questions_annotated.jsonl"
+        "../../data_src/benchmarks/content/pneuma_chembl_10K_questions_annotated.jsonl"
     )
     context_benchmark = read_jsonl(
-        f"../data_src/benchmarks/context/{dataset}/bx_{dataset}.jsonl"
+        f"../../data_src/benchmarks/context/{dataset}/bx_{dataset}.jsonl"
     )
     start(dataset, content_benchmark, context_benchmark, ks)
 
     dataset = "adventure"
     content_benchmark = read_jsonl(
-        "../data_src/benchmarks/content/pneuma_adventure_works_questions_annotated.jsonl"
+        "../../data_src/benchmarks/content/pneuma_adventure_works_questions_annotated.jsonl"
     )
     context_benchmark = read_jsonl(
-        f"../data_src/benchmarks/context/{dataset}/bx_{dataset}.jsonl"
+        f"../../data_src/benchmarks/context/{dataset}/bx_{dataset}.jsonl"
     )
     start(dataset, content_benchmark, context_benchmark, ks)
 
     dataset = "public"
     content_benchmark = read_jsonl(
-        "../data_src/benchmarks/content/pneuma_public_bi_questions_annotated.jsonl"
+        "../../data_src/benchmarks/content/pneuma_public_bi_questions_annotated.jsonl"
     )
     context_benchmark = read_jsonl(
-        f"../data_src/benchmarks/context/{dataset}/bx_{dataset}.jsonl"
+        f"../../data_src/benchmarks/context/{dataset}/bx_{dataset}.jsonl"
     )
     start(dataset, content_benchmark, context_benchmark, ks)
 
     dataset = "chicago"
     content_benchmark = read_jsonl(
-        "../data_src/benchmarks/content/pneuma_chicago_10K_questions_annotated.jsonl"
+        "../../data_src/benchmarks/content/pneuma_chicago_10K_questions_annotated.jsonl"
     )
     context_benchmark = read_jsonl(
-        f"../data_src/benchmarks/context/{dataset}/bx_{dataset}.jsonl"
+        f"../../data_src/benchmarks/context/{dataset}/bx_{dataset}.jsonl"
     )
     start(dataset, content_benchmark, context_benchmark, ks)
 
     dataset = "fetaqa"
     content_benchmark = read_jsonl(
-        "../data_src/benchmarks/content/pneuma_fetaqa_questions_annotated.jsonl"
+        "../../data_src/benchmarks/content/pneuma_fetaqa_questions_annotated.jsonl"
     )
     context_benchmark = read_jsonl(
-        f"../data_src/benchmarks/context/{dataset}/bx_{dataset}.jsonl"
+        f"../../data_src/benchmarks/context/{dataset}/bx_{dataset}.jsonl"
     )
     start(dataset, content_benchmark, context_benchmark, ks)
