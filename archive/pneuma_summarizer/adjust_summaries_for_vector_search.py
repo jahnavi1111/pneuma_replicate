@@ -1,6 +1,6 @@
 import sys
 
-sys.path.append("..")
+sys.path.append("../..")
 
 from sentence_transformers import SentenceTransformer
 from sentence_transformers.SentenceTransformer import SentenceTransformer
