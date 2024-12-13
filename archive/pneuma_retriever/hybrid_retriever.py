@@ -1,7 +1,7 @@
 import sys
 import bm25s
 
-sys.path.append("..")
+sys.path.append("../..")
 
 from scipy.spatial.distance import cosine
 from enum import Enum
