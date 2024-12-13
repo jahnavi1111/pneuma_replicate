@@ -3,7 +3,7 @@ import time
 import sys
 import chromadb
 
-sys.path.append("..")
+sys.path.append("../..")
 
 from transformers import set_seed
 from chromadb.api.client import Client
