@@ -32,10 +32,10 @@ def generate_sample_rows_summaries(table_path: str, summary_path: str):
             )
     SAMPLE_ROWS_PATH = "summaries/rows"
     try:
-        write_jsonl(content_summaries, f"{SAMPLE_ROWS_PATH}/{summaries_name}.jsonl")
+        write_jsonl(content_summaries, f"{SAMPLE_ROWS_PATH}/{summary_path}.jsonl")
     except FileNotFoundError:
         os.mkdir(SAMPLE_ROWS_PATH)
-        write_jsonl(content_summaries, f"{SAMPLE_ROWS_PATH}/{summaries_name}.jsonl")
+        write_jsonl(content_summaries, f"{SAMPLE_ROWS_PATH}/{summary_path}.jsonl")
 
 
 if __name__ == "__main__":
