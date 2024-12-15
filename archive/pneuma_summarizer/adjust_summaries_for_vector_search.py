@@ -49,9 +49,7 @@ def split_schema_summaries(
             )
     print(f"Num of content summaries (BEFORE): {len(contents)}")
     print(f"Num of content summaries (AFTER): {len(processed_contents)}")
-    write_jsonl(
-        processed_contents, f"summaries/{summary_type}/{name}_splitted.jsonl"
-    )
+    write_jsonl(processed_contents, f"summaries/{summary_type}/{name}_splitted.jsonl")
 
 
 def merge_row_summaries(rows: list[dict[str, str]], name: str, summary_type: str):
@@ -138,12 +136,20 @@ if __name__ == "__main__":
         constants: dict[str, any] = json.load(file)
         DATA_SRC = constants["data_src"]
         TABLE_NAMES = constants["tables"].keys()
-    
-    for table_name in TABLE_NAMES:
-        narration_contents = read_jsonl(f"summaries/narrations/{table_name}.jsonl")
-        row_contents = read_jsonl(f"summaries/rows/{table_name}.jsonl")
-        contexts = read_jsonl(f"{DATA_SRC}benchmarks/context/{table_name}/contexts_{table_name}.jsonl")
 
-        split_schema_summaries(narration_contents, "narrations", table_name)
-        merge_row_summaries(row_contents, table_name, "rows")
+    for table_name in TABLE_NAMES:
+        schema_narrations = read_jsonl(
+            f"summaries/schema_narrations/{table_name}.jsonl"
+        )
+        schema_concat = read_jsonl(f"summaries/schema_concat/{table_name}.jsonl")
+        sample_rows = read_jsonl(f"summaries/sample_rows/{table_name}.jsonl")
+        dbreader = read_jsonl(f"summaries/dbreader/{table_name}.jsonl")
+        contexts = read_jsonl(
+            f"{DATA_SRC}benchmarks/context/{table_name}/contexts_{table_name}.jsonl"
+        )
+
+        split_schema_summaries(schema_narrations, "schema_narrations", table_name)
+        split_schema_summaries(schema_concat, "schema_concat", table_name)
+        merge_row_summaries(sample_rows, "sample_rows", "sample_rows")
+        merge_row_summaries(dbreader, "dbreader", "dbreader")
         merge_context_summaries(contexts, table_name)
