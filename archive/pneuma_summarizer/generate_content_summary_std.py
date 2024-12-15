@@ -1,5 +1,7 @@
 import os
 import sys
+import json
+import argparse
 import pandas as pd
 
 sys.path.append("../..")
@@ -29,22 +31,30 @@ def generate_std_summaries(tables_path: str, summaries_name: str):
 
 
 if __name__ == "__main__":
-    tables_path = "../data_src/tables/pneuma_chembl_10K"
-    summaries_name = "chembl.jsonl"
-    generate_std_summaries(tables_path, summaries_name)
+    parser = argparse.ArgumentParser(
+        description="This program generates SchemaConcat summaries, which is\
+                    basically the concatenation of a table columns.",
+        epilog="Alternatively, you may download the generated summaries from\
+                the `summaries` directory.",
+    )
+    parser.add_argument("-d", "--dataset", default="all")
+    dataset = parser.parse_args().dataset
 
-    tables_path = "../data_src/tables/pneuma_adventure_works"
-    summaries_name = "adventure.jsonl"
-    generate_std_summaries(tables_path, summaries_name)
+    with open("constants.json") as file:
+        constants: dict[str, any] = json.load(file)
 
-    tables_path = "../data_src/tables/pneuma_public_bi"
-    summaries_name = "public.jsonl"
-    generate_std_summaries(tables_path, summaries_name)
+    TABLES_SRC: str = constants["tables_src"]
+    TABLES: dict[str, str] = constants["tables"]
 
-    tables_path = "../data_src/tables/pneuma_chicago_10K"
-    summaries_name = "chicago.jsonl"
-    generate_std_summaries(tables_path, summaries_name)
-
-    tables_path = "../data_src/tables/pneuma_fetaqa"
-    summaries_name = "fetaqa.jsonl"
-    generate_std_summaries(tables_path, summaries_name)
+    if dataset == "all":
+        for table_info in TABLES.items():
+            summaries_name, table_name = table_info
+            tables_path = TABLES_SRC + table_name
+            generate_std_summaries(tables_path, summaries_name)
+    else:
+        try:
+            table_name = TABLES[dataset]
+            tables_path = TABLES_SRC + table_name
+            generate_std_summaries(tables_path, dataset)
+        except KeyError:
+            print(f"Dataset {dataset} not found! Please define the path in `constants.json`.")
