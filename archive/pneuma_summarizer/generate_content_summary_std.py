@@ -27,11 +27,12 @@ def generate_std_summaries(tables_path: str, summaries_name: str):
         }
         content_summaries.append(summary)
 
+    SCHEMA_CONCAT_PATH = "summaries/schemaconcat"
     try:
-        write_jsonl(content_summaries, f"summaries/schemaconcat/{summaries_name}.jsonl")
+        write_jsonl(content_summaries, f"{SCHEMA_CONCAT_PATH}/{summaries_name}.jsonl")
     except FileNotFoundError:
-        os.mkdir("summaries/schemaconcat/")
-        write_jsonl(content_summaries, f"summaries/schemaconcat/{summaries_name}.jsonl")
+        os.mkdir(SCHEMA_CONCAT_PATH)
+        write_jsonl(content_summaries, f"{SCHEMA_CONCAT_PATH}/{summaries_name}.jsonl")
 
 
 if __name__ == "__main__":
@@ -61,4 +62,6 @@ if __name__ == "__main__":
             tables_path = TABLES_SRC + table_name
             generate_std_summaries(tables_path, dataset)
         except KeyError:
-            print(f"Dataset {dataset} not found! Please define the path in `constants.json`.")
+            print(
+                f"Dataset {dataset} not found! Please define the path in `constants.json`."
+            )
