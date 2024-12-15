@@ -27,7 +27,7 @@ def generate_schema_concat_summaries(tables_path: str, summaries_name: str):
         }
         content_summaries.append(summary)
 
-    SCHEMA_CONCAT_PATH = "summaries/schemaconcat"
+    SCHEMA_CONCAT_PATH = "summaries/schema_concat"
     try:
         write_jsonl(content_summaries, f"{SCHEMA_CONCAT_PATH}/{summaries_name}.jsonl")
     except FileNotFoundError:

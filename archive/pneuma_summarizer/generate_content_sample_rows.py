@@ -30,7 +30,7 @@ def generate_sample_rows_summaries(table_path: str, summary_path: str):
                     "summary": formatted_row,
                 }
             )
-    SAMPLE_ROWS_PATH = "summaries/rows"
+    SAMPLE_ROWS_PATH = "summaries/sample_rows"
     try:
         write_jsonl(content_summaries, f"{SAMPLE_ROWS_PATH}/{summary_path}.jsonl")
     except FileNotFoundError:
