@@ -195,7 +195,7 @@ if __name__ == "__main__":
     with open("constants.json") as file:
         constants: dict[str, any] = json.load(file)
 
-    TABLES_SRC: str = constants["tables_src"]
+    TABLES_SRC: str = constants["data_src"] + "tables/"
     TABLES: dict[str, str] = constants["tables"]
 
     if dataset == "all":

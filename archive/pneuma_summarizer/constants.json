@@ -1,5 +1,5 @@
 {
-    "tables_src": "../../data_src/tables/",
+    "data_src": "../../data_src/",
     "tables": {
         "chembl": "pneuma_chembl_10K/",
         "adventure_works": "pneuma_adventure_works/",
