@@ -2,7 +2,7 @@ import os
 import sys
 import pandas as pd
 
-sys.path.append("..")
+sys.path.append("../..")
 
 from tqdm import tqdm
 from benchmark_generator.context.utils.jsonl import write_jsonl
