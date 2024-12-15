@@ -27,7 +27,11 @@ def generate_std_summaries(tables_path: str, summaries_name: str):
         }
         content_summaries.append(summary)
 
-    write_jsonl(content_summaries, f"summaries/standard/{summaries_name}")
+    try:
+        write_jsonl(content_summaries, f"summaries/schemaconcat/{summaries_name}.jsonl")
+    except FileNotFoundError:
+        os.mkdir("summaries/schemaconcat/")
+        write_jsonl(content_summaries, f"summaries/schemaconcat/{summaries_name}.jsonl")
 
 
 if __name__ == "__main__":
