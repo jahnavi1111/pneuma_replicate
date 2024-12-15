@@ -14,11 +14,15 @@ sys.path.append("../..")
 from tqdm import tqdm
 from collections import defaultdict
 from benchmark_generator.context.utils.pipeline_initializer import initialize_pipeline
-from benchmark_generator.context.utils.prompting_interface import prompt_pipeline, prompt_pipeline_robust
+from benchmark_generator.context.utils.prompting_interface import (
+    prompt_pipeline,
+    prompt_pipeline_robust,
+)
 from benchmark_generator.context.utils.jsonl import write_jsonl, read_jsonl
 
 pipe = initialize_pipeline("../models/qwen", torch.bfloat16, context_length=32768)
-# Specific setting for batching
+
+# Specific settings for batching
 pipe.tokenizer.pad_token_id = pipe.model.config.eos_token_id
 pipe.tokenizer.padding_side = "left"
 
@@ -30,9 +34,12 @@ def get_col_description_prompt(columns: str, column: str):
 */
 Describe very briefly what the {column} column represents. If not possible, simply state "No description.\""""
 
+
 def get_special_indices(texts: list[str], batch_size: int):
     # Step 1: Sort the conversations (indices) in decreasing order
-    sorted_indices = sorted(range(len(texts)), key=lambda x: len(texts[x]), reverse=True)
+    sorted_indices = sorted(
+        range(len(texts)), key=lambda x: len(texts[x]), reverse=True
+    )
 
     # Step 2: Interleave the indices (longest, shortest, second longest, second shortest, ...)
     final_indices = []
@@ -54,11 +61,12 @@ def get_special_indices(texts: list[str], batch_size: int):
                 break
     return final_indices
 
+
 def is_fit_in_memory(conversations, batch_size: int):
     special_indices = get_special_indices(conversations, batch_size)
     adjusted_conversations = [conversations[i] for i in special_indices]
 
-    conv_low_idx = len(adjusted_conversations)//2 - batch_size // 2
+    conv_low_idx = len(adjusted_conversations) // 2 - batch_size // 2
     conv_high_idx = conv_low_idx + batch_size
     output = prompt_pipeline(
         pipe,
@@ -68,7 +76,7 @@ def is_fit_in_memory(conversations, batch_size: int):
         max_new_tokens=1,
         temperature=None,
         top_p=None,
-        top_k=None
+        top_k=None,
     )
 
     torch.cuda.empty_cache()
@@ -81,9 +89,12 @@ def is_fit_in_memory(conversations, batch_size: int):
         del output
         return True
 
+
 def get_optimal_batch_size(conversations):
     print("Looking for an optimal batch size")
-    max_batch_size = 50  # Change to a higher value if you have more capacity to explore batch size
+    max_batch_size = (
+        50  # Change to a higher value if you have more capacity to explore batch size
+    )
     min_batch_size = 1
     while min_batch_size < max_batch_size:
         mid_batch_size = (min_batch_size + max_batch_size) // 2
@@ -96,16 +107,11 @@ def get_optimal_batch_size(conversations):
     print(f"Optimal batch size: {optimal_batch_size}")
     return optimal_batch_size
 
-def generate_llm_narration_summaries(src_path: str, descriptions_path: str):
-    tables = sorted([file[:-4] for file in os.listdir(src_path)])
-    try:
-        summaries = read_jsonl(descriptions_path)
-    except FileNotFoundError:
-        summaries: list[dict[str, str]] = []
 
-    conversations = []
-    conv_tables = []
-    conv_cols = []
+def parse_tables(tables: list[str]):
+    conversations: list[str] = []
+    conv_tables: list[str] = []
+    conv_cols: list[str] = []
     for table in tqdm(tables):
         # Skip already summarized tables
         if table in [summary["table"] for summary in summaries]:
@@ -117,7 +123,15 @@ def generate_llm_narration_summaries(src_path: str, descriptions_path: str):
             conversations.append([{"role": "user", "content": prompt}])
             conv_tables.append(table)
             conv_cols.append(col)
+    return conversations, conv_tables, conv_cols
 
+
+
+def generate_llm_narration_summaries(src_path: str, descriptions_path: str):
+    tables = sorted([file[:-4] for file in os.listdir(src_path)])
+    summaries: list[dict[str, str]] = []
+
+    conversations, conv_tables, conv_cols = parse_tables(tables)
     optimal_batch_size = get_optimal_batch_size(conversations)
     sorted_indices = get_special_indices(conversations, optimal_batch_size)
 
@@ -132,7 +146,7 @@ def generate_llm_narration_summaries(src_path: str, descriptions_path: str):
         for i in tqdm(range(0, len(conversations), max_batch_size)):
             llm_output = prompt_pipeline_robust(
                 pipe,
-                conversations[i:i+max_batch_size],
+                conversations[i : i + max_batch_size],
                 batch_size=optimal_batch_size,
                 context_length=32768,
                 max_new_tokens=400,
@@ -145,57 +159,62 @@ def generate_llm_narration_summaries(src_path: str, descriptions_path: str):
             if llm_output[1] == optimal_batch_size:
                 same_batch_size_counter += 1
                 if same_batch_size_counter % 10 == 0:
-                    optimal_batch_size = min(optimal_batch_size+2, max_batch_size)
+                    optimal_batch_size = min(optimal_batch_size + 2, max_batch_size)
             else:
                 optimal_batch_size = llm_output[1]
                 same_batch_size_counter = 0
 
-        col_narrations: dict[str,list[str]] = defaultdict(list)
+        col_narrations: dict[str, list[str]] = defaultdict(list)
         for output_idx, output in enumerate(outputs):
-            col_narrations[conv_tables[output_idx]] += [f"{conv_cols[output_idx]}: {output[-1]["content"]}"]
+            col_narrations[conv_tables[output_idx]] += [
+                f"{conv_cols[output_idx]}: {output[-1]["content"]}"
+            ]
 
         for table in tables:
-            summaries.append({
-                "id": f"{table}_SEP_contents_SEP_schema",
-                "table": table,
-                "summary": " | ".join(col_narrations[table]),
-            })
-            write_jsonl(summaries, descriptions_path)
+            summaries.append(
+                {
+                    "id": f"{table}_SEP_contents_SEP_schema",
+                    "table": table,
+                    "summary": " | ".join(col_narrations[table]),
+                }
+            )
+            write_jsonl(summaries, f"{descriptions_path}.jsonl")
     summaries = sorted(summaries, key=lambda x: x["table"])
-    write_jsonl(summaries, descriptions_path)
+    write_jsonl(summaries, f"{descriptions_path}.jsonl")
+
 
 if __name__ == "__main__":
     start = time.time()
     src_path = "../../data_src/tables/pneuma_chembl_10K"
-    descriptions_path = "chembl.jsonl"
+    descriptions_path = "chembl"
     generate_llm_narration_summaries(src_path, descriptions_path)
     end = time.time()
     print(f"Total time: {end - start} seconds")
 
     start = time.time()
     src_path = "../../data_src/tables/pneuma_adventure_works"
-    descriptions_path = "adventure.jsonl"
+    descriptions_path = "adventure"
     generate_llm_narration_summaries(src_path, descriptions_path)
     end = time.time()
     print(f"Total time: {end - start} seconds")
 
     start = time.time()
     src_path = "../../data_src/tables/pneuma_fetaqa"
-    descriptions_path = "fetaqa.jsonl"
+    descriptions_path = "fetaqa"
     generate_llm_narration_summaries(src_path, descriptions_path)
     end = time.time()
     print(f"Total time: {end - start} seconds")
 
     start = time.time()
     src_path = "../../data_src/tables/pneuma_chicago_10K"
-    descriptions_path = "chicago.jsonl"
+    descriptions_path = "chicago"
     generate_llm_narration_summaries(src_path, descriptions_path)
     end = time.time()
     print(f"Total time: {end - start} seconds")
 
     start = time.time()
     src_path = "../../data_src/tables/pneuma_public_bi"
-    descriptions_path = "public.jsonl"
+    descriptions_path = "public"
     generate_llm_narration_summaries(src_path, descriptions_path)
     end = time.time()
     print(f"Total time: {end - start} seconds")
