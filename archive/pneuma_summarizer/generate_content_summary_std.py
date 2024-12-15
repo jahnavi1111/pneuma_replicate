@@ -10,7 +10,7 @@ from tqdm import tqdm
 from benchmark_generator.context.utils.jsonl import write_jsonl
 
 
-def generate_std_summaries(tables_path: str, summaries_name: str):
+def generate_schema_concat_summaries(tables_path: str, summaries_name: str):
     content_summaries: list[dict[str, str]] = []
     tables = [
         table[:-4]
@@ -55,12 +55,12 @@ if __name__ == "__main__":
         for table_info in TABLES.items():
             summaries_name, table_name = table_info
             tables_path = TABLES_SRC + table_name
-            generate_std_summaries(tables_path, summaries_name)
+            generate_schema_concat_summaries(tables_path, summaries_name)
     else:
         try:
             table_name = TABLES[dataset]
             tables_path = TABLES_SRC + table_name
-            generate_std_summaries(tables_path, dataset)
+            generate_schema_concat_summaries(tables_path, dataset)
         except KeyError:
             print(
                 f"Dataset {dataset} not found! Please define the path in `constants.json`."
