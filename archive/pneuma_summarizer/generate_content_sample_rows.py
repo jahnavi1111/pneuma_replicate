@@ -1,10 +1,11 @@
 import os
 import sys
 import math
+import json
+import argparse
 import pandas as pd
 
 sys.path.append("../..")
-
 
 from tqdm import tqdm
 from benchmark_generator.context.utils.jsonl import write_jsonl
@@ -29,31 +30,41 @@ def generate_sample_rows_summaries(table_path: str, summary_path: str):
                     "summary": formatted_row,
                 }
             )
-    write_jsonl(content_summaries, summary_path)
+    SAMPLE_ROWS_PATH = "summaries/rows"
+    try:
+        write_jsonl(content_summaries, f"{SAMPLE_ROWS_PATH}/{summaries_name}.jsonl")
+    except FileNotFoundError:
+        os.mkdir(SAMPLE_ROWS_PATH)
+        write_jsonl(content_summaries, f"{SAMPLE_ROWS_PATH}/{summaries_name}.jsonl")
 
 
 if __name__ == "__main__":
-    name = "chembl"
-    table_path = "../../data_src/tables/pneuma_chembl_10K"
-    summary_path = f"summaries/rows/{name}.jsonl"
-    generate_sample_rows_summaries(table_path, summary_path)
+    parser = argparse.ArgumentParser(
+        description="This program generates SampleRows summaries, which is\
+                    basically all rows of the tables.",
+        epilog="Alternatively, you may download the generated summaries from\
+                the `summaries` directory.",
+    )
+    parser.add_argument("-d", "--dataset", default="all")
+    dataset = parser.parse_args().dataset
 
-    name = "adventure"
-    table_path = "../../data_src/tables/pneuma_adventure_works"
-    summary_path = f"summaries/rows/{name}.jsonl"
-    generate_sample_rows_summaries(table_path, summary_path)
+    with open("constants.json") as file:
+        constants: dict[str, any] = json.load(file)
+    
+    TABLES_SRC: str = constants["tables_src"]
+    TABLES: dict[str, str] = constants["tables"]
 
-    name = "public"
-    table_path = "../../data_src/tables/pneuma_public_bi"
-    summary_path = f"summaries/rows/{name}.jsonl"
-    generate_sample_rows_summaries(table_path, summary_path)
-
-    name = "chicago"
-    table_path = "../../data_src/tables/pneuma_chicago_10K"
-    summary_path = f"summaries/rows/{name}.jsonl"
-    generate_sample_rows_summaries(table_path, summary_path)
-
-    name = "fetaqa"
-    table_path = "../../data_src/tables/pneuma_fetaqa"
-    summary_path = f"summaries/rows/{name}.jsonl"
-    generate_sample_rows_summaries(table_path, summary_path)
+    if dataset == "all":
+        for table_info in TABLES.items():
+            summaries_name, table_name = table_info
+            tables_path = TABLES_SRC + table_name
+            generate_sample_rows_summaries(tables_path, summaries_name)
+    else:
+        try:
+            table_name = TABLES[dataset]
+            tables_path = TABLES_SRC + table_name
+            generate_sample_rows_summaries(tables_path, dataset)
+        except KeyError:
+            print(
+                f"Dataset {dataset} not found! Please define the path in `constants.json`."
+            )
