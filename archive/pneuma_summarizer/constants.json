@@ -2,9 +2,9 @@
     "data_src": "../../data_src/",
     "tables": {
         "chembl": "pneuma_chembl_10K/",
-        "adventure_works": "pneuma_adventure_works/",
-        "public_bi": "pneuma_public_bi/",
-        "chicago_data": "pneuma_chicago_10K/",
+        "adventure": "pneuma_adventure_works/",
+        "public": "pneuma_public_bi/",
+        "chicago": "pneuma_chicago_10K/",
         "fetaqa": "pneuma_fetaqa/"
     }
 }
