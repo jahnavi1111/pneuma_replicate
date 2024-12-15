@@ -113,31 +113,31 @@ if __name__ == "__main__":
         {
             "name": "chembl",
             "content_benchmark": read_jsonl(
-                "../../data_src/benchmarks/content/pneuma_chembl_10K_questions_annotated.jsonl"
+                "../../../data_src/benchmarks/content/pneuma_chembl_10K_questions_annotated.jsonl"
             ),
         },
         {
             "name": "adventure",
             "content_benchmark": read_jsonl(
-                "../../data_src/benchmarks/content/pneuma_adventure_works_questions_annotated.jsonl"
+                "../../../data_src/benchmarks/content/pneuma_adventure_works_questions_annotated.jsonl"
             ),
         },
         {
             "name": "public",
             "content_benchmark": read_jsonl(
-                "../../data_src/benchmarks/content/pneuma_public_bi_questions_annotated.jsonl"
+                "../../../data_src/benchmarks/content/pneuma_public_bi_questions_annotated.jsonl"
             ),
         },
         {
             "name": "chicago",
             "content_benchmark": read_jsonl(
-                "../../data_src/benchmarks/content/pneuma_chicago_10K_questions_annotated.jsonl"
+                "../../../data_src/benchmarks/content/pneuma_chicago_10K_questions_annotated.jsonl"
             ),
         },
         {
             "name": "fetaqa",
             "content_benchmark": read_jsonl(
-                "../../data_src/benchmarks/content/pneuma_fetaqa_questions_annotated.jsonl"
+                "../../../data_src/benchmarks/content/pneuma_fetaqa_questions_annotated.jsonl"
             ),
         },
     ]
@@ -147,7 +147,7 @@ if __name__ == "__main__":
             dataset["name"],
             dataset["content_benchmark"],
             read_jsonl(
-                f"../../data_src/benchmarks/context/{dataset['name']}/bx_{dataset['name']}.jsonl"
+                f"../../../data_src/benchmarks/context/{dataset['name']}/bx_{dataset['name']}.jsonl"
             ),
             ks,
         )
