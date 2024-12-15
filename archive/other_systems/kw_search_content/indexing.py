@@ -36,7 +36,7 @@ def index_dataset(dataset_path: str, dataset_name: str):
     stemmer = Stemmer.Stemmer("english")
     corpus_json: list[dict] = []
     contexts = read_jsonl(
-        f"../../data_src/benchmarks/context/{dataset_name}/contexts_{dataset_name}.jsonl"
+        f"../../../data_src/benchmarks/context/{dataset_name}/contexts_{dataset_name}.jsonl"
     )
 
     for table in sorted(os.listdir(dataset_path)):
@@ -59,23 +59,23 @@ def index_dataset(dataset_path: str, dataset_name: str):
 if __name__ == "__main__":
     datasets = [
         {
-            "path": "../../data_src/tables/pneuma_chembl_10K",
+            "path": "../../../data_src/tables/pneuma_chembl_10K",
             "name": "chembl",
         },
         {
-            "path": "../../data_src/tables/pneuma_adventure_works",
+            "path": "../../../data_src/tables/pneuma_adventure_works",
             "name": "adventure",
         },
         {
-            "path": "../../data_src/tables/pneuma_public_bi",
+            "path": "../../../data_src/tables/pneuma_public_bi",
             "name": "public",
         },
         {
-            "path": "../../data_src/tables/pneuma_chicago_10K",
+            "path": "../../../data_src/tables/pneuma_chicago_10K",
             "name": "chicago",
         },
         {
-            "path": "../../data_src/tables/pneuma_fetaqa",
+            "path": "../../../data_src/tables/pneuma_fetaqa",
             "name": "fetaqa",
         },
     ]
