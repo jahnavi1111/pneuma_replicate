@@ -108,7 +108,7 @@ def get_optimal_batch_size(conversations):
     return optimal_batch_size
 
 
-def parse_tables(tables: list[str]):
+def parse_tables(tables: list[str], summaries: list[dict[str, str]]):
     conversations: list[str] = []
     conv_tables: list[str] = []
     conv_cols: list[str] = []
@@ -131,7 +131,7 @@ def generate_llm_narration_summaries(src_path: str, descriptions_path: str):
     tables = sorted([file[:-4] for file in os.listdir(src_path)])
     summaries: list[dict[str, str]] = []
 
-    conversations, conv_tables, conv_cols = parse_tables(tables)
+    conversations, conv_tables, conv_cols = parse_tables(tables, summaries)
     optimal_batch_size = get_optimal_batch_size(conversations)
     sorted_indices = get_special_indices(conversations, optimal_batch_size)
 
