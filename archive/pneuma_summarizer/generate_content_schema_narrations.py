@@ -185,7 +185,7 @@ def generate_schema_narration_summaries(tables_path: str, summaries_name: str):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="This program generates SchemaNarrations summaries, which is\
-                    basically all rows of the tables.",
+                    basically descriptions of schemas.",
         epilog="Alternatively, you may download the generated summaries from\
                 the `summaries` directory.",
     )
