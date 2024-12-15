@@ -24,7 +24,13 @@ def generate_dbreader_summaries(
         for i in range(len(documents)):
             content_summaries.append({"table": table, "summary": documents[i].text})
 
-    write_jsonl(content_summaries, f"summaries/dbreader/{summaries_name}")
+    DBREADER_PATH = "summaries/dbreader"
+    try:
+        write_jsonl(content_summaries, f"{DBREADER_PATH}/{summaries_name}")
+    except FileNotFoundError:
+        os.mkdir(DBREADER_PATH)
+        write_jsonl(content_summaries, f"{DBREADER_PATH}/{summaries_name}")
+
 
 
 if __name__ == "__main__":
