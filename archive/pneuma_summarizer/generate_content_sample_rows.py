@@ -1,17 +1,16 @@
+import os
 import sys
+import math
+import pandas as pd
 
 sys.path.append("../..")
 
-
-import math
-import os
-import pandas as pd
 
 from tqdm import tqdm
 from benchmark_generator.context.utils.jsonl import write_jsonl
 
 
-def generate_row_summaries(table_path: str, summary_path: str):
+def generate_sample_rows_summaries(table_path: str, summary_path: str):
     content_summaries = []
     tables = sorted(os.listdir(table_path))
     for table_idx, table in enumerate(tqdm(tables)):
@@ -37,24 +36,24 @@ if __name__ == "__main__":
     name = "chembl"
     table_path = "../../data_src/tables/pneuma_chembl_10K"
     summary_path = f"summaries/rows/{name}.jsonl"
-    generate_row_summaries(table_path, summary_path)
+    generate_sample_rows_summaries(table_path, summary_path)
 
     name = "adventure"
     table_path = "../../data_src/tables/pneuma_adventure_works"
     summary_path = f"summaries/rows/{name}.jsonl"
-    generate_row_summaries(table_path, summary_path)
+    generate_sample_rows_summaries(table_path, summary_path)
 
     name = "public"
     table_path = "../../data_src/tables/pneuma_public_bi"
     summary_path = f"summaries/rows/{name}.jsonl"
-    generate_row_summaries(table_path, summary_path)
+    generate_sample_rows_summaries(table_path, summary_path)
 
     name = "chicago"
     table_path = "../../data_src/tables/pneuma_chicago_10K"
     summary_path = f"summaries/rows/{name}.jsonl"
-    generate_row_summaries(table_path, summary_path)
+    generate_sample_rows_summaries(table_path, summary_path)
 
     name = "fetaqa"
     table_path = "../../data_src/tables/pneuma_fetaqa"
     summary_path = f"summaries/rows/{name}.jsonl"
-    generate_row_summaries(table_path, summary_path)
+    generate_sample_rows_summaries(table_path, summary_path)
