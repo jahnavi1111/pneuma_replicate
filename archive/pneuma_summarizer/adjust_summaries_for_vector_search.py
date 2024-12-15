@@ -1,4 +1,5 @@
 import sys
+import json
 
 sys.path.append("../..")
 
@@ -133,47 +134,16 @@ def merge_context_summaries(contexts: list[dict[str, str]], name: str):
 
 
 if __name__ == "__main__":
-    name = f"chembl"
-    narration_contents = read_jsonl(f"summaries/narrations/{name}.jsonl")
-    row_contents = read_jsonl(f"summaries/rows/{name}.jsonl")
-    contexts = read_jsonl(f"../data_src/benchmarks/context/{name}/contexts_{name}.jsonl")
+    with open("constants.json") as file:
+        constants: dict[str, any] = json.load(file)
+        DATA_SRC = constants["data_src"]
+        TABLE_NAMES = constants["tables"].keys()
+    
+    for table_name in TABLE_NAMES:
+        narration_contents = read_jsonl(f"summaries/narrations/{table_name}.jsonl")
+        row_contents = read_jsonl(f"summaries/rows/{table_name}.jsonl")
+        contexts = read_jsonl(f"{DATA_SRC}benchmarks/context/{table_name}/contexts_{table_name}.jsonl")
 
-    split_schema_summaries(narration_contents, "narrations", name)
-    merge_row_summaries(row_contents, name, "rows")
-    merge_context_summaries(contexts, name)
-
-    name = f"adventure"
-    narration_contents = read_jsonl(f"summaries/narrations/{name}.jsonl")
-    row_contents = read_jsonl(f"summaries/rows/{name}.jsonl")
-    contexts = read_jsonl(f"../data_src/benchmarks/context/{name}/contexts_{name}.jsonl")
-
-    split_schema_summaries(narration_contents, "narrations", name)
-    merge_row_summaries(row_contents, name, "rows")
-    merge_context_summaries(contexts, name)
-
-    name = f"public"
-    narration_contents = read_jsonl(f"summaries/narrations/{name}.jsonl")
-    row_contents = read_jsonl(f"summaries/rows/{name}.jsonl")
-    contexts = read_jsonl(f"../data_src/benchmarks/context/{name}/contexts_{name}.jsonl")
-
-    split_schema_summaries(narration_contents, "narrations", name)
-    merge_row_summaries(row_contents, name, "rows")
-    merge_context_summaries(contexts, name)
-
-    name = f"chicago"
-    narration_contents = read_jsonl(f"summaries/narrations/{name}.jsonl")
-    row_contents = read_jsonl(f"summaries/rows/{name}.jsonl")
-    contexts = read_jsonl(f"../data_src/benchmarks/context/{name}/contexts_{name}.jsonl")
-
-    split_schema_summaries(narration_contents, "narrations", name)
-    merge_row_summaries(row_contents, name, "rows")
-    merge_context_summaries(contexts, name)
-
-    name = f"fetaqa"
-    narration_contents = read_jsonl(f"summaries/narrations/{name}.jsonl")
-    row_contents = read_jsonl(f"summaries/rows/{name}.jsonl")
-    contexts = read_jsonl(f"../data_src/benchmarks/context/{name}/contexts_{name}.jsonl")
-
-    split_schema_summaries(narration_contents, "narrations", name)
-    merge_row_summaries(row_contents, name, "rows")
-    merge_context_summaries(contexts, name)
+        split_schema_summaries(narration_contents, "narrations", table_name)
+        merge_row_summaries(row_contents, table_name, "rows")
+        merge_context_summaries(contexts, table_name)
