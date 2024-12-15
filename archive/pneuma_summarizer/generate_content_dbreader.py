@@ -1,5 +1,7 @@
 import os
 import sys
+import json
+import argparse
 
 sys.path.append("../..")
 
@@ -26,35 +28,39 @@ def generate_dbreader_summaries(
 
     DBREADER_PATH = "summaries/dbreader"
     try:
-        write_jsonl(content_summaries, f"{DBREADER_PATH}/{summaries_name}")
+        write_jsonl(content_summaries, f"{DBREADER_PATH}/{summaries_name}.jsonl")
     except FileNotFoundError:
         os.mkdir(DBREADER_PATH)
-        write_jsonl(content_summaries, f"{DBREADER_PATH}/{summaries_name}")
-
+        write_jsonl(content_summaries, f"{DBREADER_PATH}/{summaries_name}.jsonl")
 
 
 if __name__ == "__main__":
-    tables_path = "../data_src/tables/pneuma_chembl_10K"
-    duckdb_filename = "chembl"
-    summaries_name = f"{duckdb_filename}.jsonl"
-    generate_dbreader_summaries(tables_path, duckdb_filename, summaries_name)
+    parser = argparse.ArgumentParser(
+        description="This program generates DBReader summaries, which is\
+                    basically all rows of the tables.",
+        epilog="Alternatively, you may download the generated summaries from\
+                the `summaries` directory.",
+    )
+    parser.add_argument("-d", "--dataset", default="all")
+    dataset = parser.parse_args().dataset
 
-    tables_path = "../data_src/tables/pneuma_adventure_works"
-    duckdb_filename = "adventure"
-    summaries_name = f"{duckdb_filename}.jsonl"
-    generate_dbreader_summaries(tables_path, duckdb_filename, summaries_name)
+    with open("constants.json") as file:
+        constants: dict[str, any] = json.load(file)
 
-    tables_path = "../data_src/tables/pneuma_public_bi"
-    duckdb_filename = "public"
-    summaries_name = f"{duckdb_filename}.jsonl"
-    generate_dbreader_summaries(tables_path, duckdb_filename, summaries_name)
+    TABLES_SRC: str = constants["tables_src"]
+    TABLES: dict[str, str] = constants["tables"]
 
-    tables_path = "../data_src/tables/pneuma_chicago_10K"
-    duckdb_filename = "chicago"
-    summaries_name = f"{duckdb_filename}.jsonl"
-    generate_dbreader_summaries(tables_path, duckdb_filename, summaries_name)
-
-    tables_path = "../data_src/tables/pneuma_fetaqa"
-    duckdb_filename = "fetaqa"
-    summaries_name = f"{duckdb_filename}.jsonl"
-    generate_dbreader_summaries(tables_path, duckdb_filename, summaries_name)
+    if dataset == "all":
+        for table_info in TABLES.items():
+            summaries_name, table_name = table_info
+            tables_path = TABLES_SRC + table_name
+            generate_dbreader_summaries(tables_path, summaries_name, summaries_name)
+    else:
+        try:
+            table_name = TABLES[dataset]
+            tables_path = TABLES_SRC + table_name
+            generate_dbreader_summaries(tables_path, dataset, dataset)
+        except KeyError:
+            print(
+                f"Dataset {dataset} not found! Please define the path in `constants.json`."
+            )
