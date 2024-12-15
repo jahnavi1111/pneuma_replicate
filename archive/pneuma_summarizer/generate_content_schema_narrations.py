@@ -5,8 +5,9 @@ os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 import sys
-import time
+import json
 import torch
+import argparse
 import pandas as pd
 
 sys.path.append("../..")
@@ -108,15 +109,12 @@ def get_optimal_batch_size(conversations):
     return optimal_batch_size
 
 
-def parse_tables(tables: list[str], summaries: list[dict[str, str]]):
+def parse_tables(tables: list[str], tables_path: str):
     conversations: list[str] = []
     conv_tables: list[str] = []
     conv_cols: list[str] = []
     for table in tqdm(tables):
-        # Skip already summarized tables
-        if table in [summary["table"] for summary in summaries]:
-            continue
-        df = pd.read_csv(f"{src_path}/{table}.csv", nrows=0)
+        df = pd.read_csv(f"{tables_path}/{table}.csv", nrows=0)
         cols = df.columns
         for col in cols:
             prompt = get_col_description_prompt(" | ".join(cols), col)
@@ -126,18 +124,19 @@ def parse_tables(tables: list[str], summaries: list[dict[str, str]]):
     return conversations, conv_tables, conv_cols
 
 
-
-def generate_llm_narration_summaries(src_path: str, descriptions_path: str):
-    tables = sorted([file[:-4] for file in os.listdir(src_path)])
+def generate_schema_narration_summaries(tables_path: str, summaries_name: str):
+    tables = sorted([file[:-4] for file in os.listdir(tables_path)])
     summaries: list[dict[str, str]] = []
 
-    conversations, conv_tables, conv_cols = parse_tables(tables, summaries)
+    conversations, conv_tables, conv_cols = parse_tables(tables, tables_path)
     optimal_batch_size = get_optimal_batch_size(conversations)
     sorted_indices = get_special_indices(conversations, optimal_batch_size)
 
     conversations = [conversations[i] for i in sorted_indices]
     conv_tables = [conv_tables[i] for i in sorted_indices]
     conv_cols = [conv_cols[i] for i in sorted_indices]
+
+    SCHEMA_NARRATIONS_PATH = "summaries/schema_narrations"
 
     if len(conversations) > 0:
         outputs = []
@@ -178,43 +177,38 @@ def generate_llm_narration_summaries(src_path: str, descriptions_path: str):
                     "summary": " | ".join(col_narrations[table]),
                 }
             )
-            write_jsonl(summaries, f"{descriptions_path}.jsonl")
+            write_jsonl(summaries, f"{SCHEMA_NARRATIONS_PATH}/{summaries_name}.jsonl")
     summaries = sorted(summaries, key=lambda x: x["table"])
-    write_jsonl(summaries, f"{descriptions_path}.jsonl")
+    write_jsonl(summaries, f"{SCHEMA_NARRATIONS_PATH}/{summaries_name}.jsonl")
 
 
 if __name__ == "__main__":
-    start = time.time()
-    src_path = "../../data_src/tables/pneuma_chembl_10K"
-    descriptions_path = "chembl"
-    generate_llm_narration_summaries(src_path, descriptions_path)
-    end = time.time()
-    print(f"Total time: {end - start} seconds")
+    parser = argparse.ArgumentParser(
+        description="This program generates SchemaNarrations summaries, which is\
+                    basically all rows of the tables.",
+        epilog="Alternatively, you may download the generated summaries from\
+                the `summaries` directory.",
+    )
+    parser.add_argument("-d", "--dataset", default="all")
+    dataset = parser.parse_args().dataset
 
-    start = time.time()
-    src_path = "../../data_src/tables/pneuma_adventure_works"
-    descriptions_path = "adventure"
-    generate_llm_narration_summaries(src_path, descriptions_path)
-    end = time.time()
-    print(f"Total time: {end - start} seconds")
+    with open("constants.json") as file:
+        constants: dict[str, any] = json.load(file)
 
-    start = time.time()
-    src_path = "../../data_src/tables/pneuma_fetaqa"
-    descriptions_path = "fetaqa"
-    generate_llm_narration_summaries(src_path, descriptions_path)
-    end = time.time()
-    print(f"Total time: {end - start} seconds")
+    TABLES_SRC: str = constants["tables_src"]
+    TABLES: dict[str, str] = constants["tables"]
 
-    start = time.time()
-    src_path = "../../data_src/tables/pneuma_chicago_10K"
-    descriptions_path = "chicago"
-    generate_llm_narration_summaries(src_path, descriptions_path)
-    end = time.time()
-    print(f"Total time: {end - start} seconds")
-
-    start = time.time()
-    src_path = "../../data_src/tables/pneuma_public_bi"
-    descriptions_path = "public"
-    generate_llm_narration_summaries(src_path, descriptions_path)
-    end = time.time()
-    print(f"Total time: {end - start} seconds")
+    if dataset == "all":
+        for table_info in TABLES.items():
+            summaries_name, table_name = table_info
+            tables_path = TABLES_SRC + table_name
+            generate_schema_narration_summaries(tables_path, summaries_name)
+    else:
+        try:
+            table_name = TABLES[dataset]
+            tables_path = TABLES_SRC + table_name
+            generate_schema_narration_summaries(tables_path, dataset)
+        except KeyError:
+            print(
+                f"Dataset {dataset} not found! Please define the path in `constants.json`."
+            )
