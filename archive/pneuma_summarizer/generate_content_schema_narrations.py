@@ -82,7 +82,7 @@ def is_fit_in_memory(conversations, batch_size: int):
         return True
 
 def get_optimal_batch_size(conversations):
-    print(f"Looking for an optimal batch size")
+    print("Looking for an optimal batch size")
     max_batch_size = 50  # Change to a higher value if you have more capacity to explore batch size
     min_batch_size = 1
     while min_batch_size < max_batch_size:
@@ -100,7 +100,7 @@ def generate_llm_narration_summaries(src_path: str, descriptions_path: str):
     tables = sorted([file[:-4] for file in os.listdir(src_path)])
     try:
         summaries = read_jsonl(descriptions_path)
-    except:
+    except FileNotFoundError:
         summaries: list[dict[str, str]] = []
 
     conversations = []
