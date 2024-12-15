@@ -3,7 +3,7 @@ import sys
 import bm25s
 import Stemmer
 
-sys.path.append("../..")
+sys.path.append("../../..")
 
 from tqdm import tqdm
 
