@@ -5,6 +5,7 @@
         "adventure": "pneuma_adventure_works/",
         "public": "pneuma_public_bi/",
         "chicago": "pneuma_chicago_10K/",
-        "fetaqa": "pneuma_fetaqa/"
+        "fetaqa": "pneuma_fetaqa/",
+        "bird": "pneuma_bird/"
     }
 }
