@@ -150,6 +150,6 @@ if __name__ == "__main__":
 
         split_schema_summaries(schema_narrations, "schema_narrations", table_name)
         split_schema_summaries(schema_concat, "schema_concat", table_name)
-        merge_row_summaries(sample_rows, "sample_rows", "sample_rows")
-        merge_row_summaries(dbreader, "dbreader", "dbreader")
+        merge_row_summaries(sample_rows, "table_name", "sample_rows")
+        merge_row_summaries(dbreader, table_name, "dbreader")
         merge_context_summaries(contexts, table_name)
