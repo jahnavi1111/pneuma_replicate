@@ -106,9 +106,9 @@ def get_information(dataset: str):
     Return the contents, contexts, and context benchmarks of a dataset
     """
     schema_contents = read_jsonl(
-        f"../pneuma_summarizer/summaries/narrations/{dataset}_splitted.jsonl"
+        f"../pneuma_summarizer/summaries/schema_narrations/{dataset}_splitted.jsonl"
     )
-    row_contents = read_jsonl(f"../pneuma_summarizer/summaries/rows/{dataset}_merged.jsonl")
+    row_contents = read_jsonl(f"../pneuma_summarizer/summaries/sample_rows/{dataset}_merged.jsonl")
     contexts = read_jsonl(
         f"../../data_src/benchmarks/context/{dataset}/contexts_{dataset}_merged.jsonl"
     )
