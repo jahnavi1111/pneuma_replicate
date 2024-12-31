@@ -35,7 +35,7 @@ def create_tables(db_folder, table_id_dict, out_dir):
         connection.close()
 
 def main():
-    out_dir = 'TABLES'
+    out_dir = 'tables'
     if os.path.isdir(out_dir):
         print(f'{out_dir} already exists')
         return
