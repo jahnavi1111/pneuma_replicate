@@ -9,8 +9,15 @@ def main():
 
     sql_4 = 'select max("total_regents_%_of_grads") as "max_total_regents_percentage", max("tasc_(ged)_%_of_cohort") as "max_ged_percentage" from "2001- 2013 Graduation Outcomes Borough- ALL STUDENTS,SWD,GENDER,ELL,ETHNICITY,EVER ELL" where "dropout_#" between 2618 and 3724'
 
-    stmt = sql_parser.parse_sql(sql_4)
-    import pdb; pdb.set_trace()
+    sql_5 = "SELECT movie_release_year, director_name FROM movies WHERE movie_release_year IS NOT NULL ORDER BY movie_release_year ASC LIMIT 1"
+
+    sql_6 = "SELECT COUNT(email) FROM client WHERE email NOT LIKE '%@gmail.com'"
+
+    sql_7 = "SELECT train_id FROM cars WHERE shape IN ('elipse', 'bucket') GROUP BY train_id"
+    sql_8 = "SELECT COUNT(outcome) FROM callcenterlogs WHERE outcome != 'AGENT'"
+
+    stmt = sql_parser.parse_sql(sql_8)
+
     # stmt.args: 'expressions', 'where', 'group', 'having', 'order', 'limit',
     print("select  ", sql_parser.get_select(stmt))
     print("where  ", sql_parser.get_where(stmt))

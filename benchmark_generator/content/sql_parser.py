@@ -46,7 +46,13 @@ def get_op_types():
         sql_exp.Between,
         sql_exp.EQ,
         sql_exp.GT,
-        sql_exp.LT
+        sql_exp.GTE,
+        sql_exp.LT,
+        sql_exp.LTE,
+        sql_exp.Is,
+        sql_exp.Like,
+        sql_exp.In,
+        sql_exp.NEQ
     )
     return op_types
 
@@ -78,9 +84,33 @@ def get_where(stmt):
             col_name = cond_expr.this.name
             op = '>'
             val = cond_expr.expression.name
+        elif type(cond_expr) is sql_exp.GTE:
+            col_name = cond_expr.this.name
+            op = '>='
+            val = cond_expr.expression.name
         elif type(cond_expr) is sql_exp.LT:
             col_name = cond_expr.this.name
             op = '<'
+            val = cond_expr.expression.name
+        elif type(cond_expr) is sql_exp.LTE:
+            col_name = cond_expr.this.name
+            op = '<='
+            val = cond_expr.expression.name
+        elif type(cond_expr) is sql_exp.Is:
+            col_name = cond_expr.this.name
+            op = 'is'
+            val = cond_expr.expression.name
+        elif type(cond_expr) is sql_exp.Like:
+            col_name = cond_expr.this.name
+            op = 'like'
+            val = cond_expr.expression.name
+        elif type(cond_expr) is sql_exp.In:
+            col_name = cond_expr.this.name
+            op = 'in'
+            val = [a.name for a in cond_expr.expressions]
+        elif type(cond_expr) is sql_exp.NEQ:
+            col_name = cond_expr.this.name
+            op = '!='
             val = cond_expr.expression.name
         else:
             expected = False
