@@ -71,48 +71,50 @@ def get_where(stmt):
         expected = True
         if type(cond_expr) is sql_exp.Between:
             #import pdb; pdb.set_trace()
-            col_name = cond_expr.this.name
+            col_name = cond_expr.this.name if type(cond_expr.this) == sql_exp.Column else ''
             op = 'between'
             val = cond_expr.args['low'].name
             val_2 = cond_expr.args['high'].name
 
         elif type(cond_expr) is sql_exp.EQ:
-            col_name = cond_expr.this.name
+            col_name = cond_expr.this.name if type(cond_expr.this) == sql_exp.Column else ''
             op = '='
             val = cond_expr.expression.name
         elif type(cond_expr) is sql_exp.GT:
-            col_name = cond_expr.this.name
+            col_name = cond_expr.this.name if type(cond_expr.this) == sql_exp.Column else ''
             op = '>'
             val = cond_expr.expression.name
         elif type(cond_expr) is sql_exp.GTE:
-            col_name = cond_expr.this.name
+            col_name = cond_expr.this.name if type(cond_expr.this) == sql_exp.Column else ''
             op = '>='
             val = cond_expr.expression.name
         elif type(cond_expr) is sql_exp.LT:
-            col_name = cond_expr.this.name
+            col_name = cond_expr.this.name if type(cond_expr.this) == sql_exp.Column else ''
             op = '<'
             val = cond_expr.expression.name
         elif type(cond_expr) is sql_exp.LTE:
-            col_name = cond_expr.this.name
+            col_name = cond_expr.this.name if type(cond_expr.this) == sql_exp.Column else ''
             op = '<='
             val = cond_expr.expression.name
         elif type(cond_expr) is sql_exp.Is:
-            col_name = cond_expr.this.name
+            col_name = cond_expr.this.name if type(cond_expr.this) == sql_exp.Column else ''
             op = 'is'
             val = cond_expr.expression.name
         elif type(cond_expr) is sql_exp.Like:
-            col_name = cond_expr.this.name
+            col_name = cond_expr.this.name if type(cond_expr.this) == sql_exp.Column else ''
             op = 'like'
             val = cond_expr.expression.name
         elif type(cond_expr) is sql_exp.In:
-            col_name = cond_expr.this.name
+            col_name = cond_expr.this.name if type(cond_expr.this) == sql_exp.Column else ''
             op = 'in'
             val = [a.name for a in cond_expr.expressions]
         elif type(cond_expr) is sql_exp.NEQ:
-            col_name = cond_expr.this.name
+            col_name = cond_expr.this.name if type(cond_expr.this) == sql_exp.Column else ''
             op = '!='
             val = cond_expr.expression.name
         else:
+            expected = False
+        if col_name is None or col_name == '':
             expected = False
         if expected:
             cond_info = {
@@ -129,9 +131,13 @@ def get_group_by(stmt):
     group_node = stmt.args.get('group', None)
     if group_node is None:
         return None
-    expr  = group_node.expressions[0]
+    
+    col_node = group_node.find(sql_exp.Column)
+    if col_node is None:
+        return None
+    col_name  = col_node.name
     group_by = {
-        'col_name':expr.name
+        'col_name':col_name
     }
     return group_by
 
@@ -180,7 +186,10 @@ def get_order_by(stmt):
     order_node = stmt.args.get('order', None)
     if order_node is None:
         return None
-    col_name = order_node.expressions[0].this.name
+    col_node = order_node.expressions[0].find(sql_exp.Column)
+    if col_node is None:
+        return None
+    col_name = col_node.this.name
     direction = 'desc' if order_node.expressions[0].args['desc'] else 'asc'
     order_by = {
         'col_name':col_name,

@@ -37,7 +37,7 @@ def convert_to_jsonl(data: list, out_dir: str):
 
 def get_table_id(db_id, table_name):
     db_table_sep = '-#-'
-    table_id = db_id + db_table_sep + table_name
+    table_id = (db_id + db_table_sep + table_name).lower()
     return table_id
 
 def get_sql_meta(sql, db_id, f_err):
@@ -47,37 +47,37 @@ def get_sql_meta(sql, db_id, f_err):
     err_text = ''
     
     select_struct = None
-    if ' SELECT ' in sql:
+    if 'SELECT ' in sql:
         select_struct = sql_parser.get_select(stmt)
         if not select_struct:
             err_text += ' SELECT err'
     
     where_struct = None
-    if ' WHERE ' in sql:
+    if 'WHERE ' in sql:
         where_struct = sql_parser.get_where(stmt)
         if not where_struct:
             err_text += ' WHERE err'
 
     group_struct = None
-    if ' GROUP ' in sql:
+    if 'GROUP ' in sql:
         group_struct = sql_parser.get_group_by(stmt)
         if not group_struct:
             err_text += ' GROUP err'
     
     having_struct = None
-    if ' HAVING ' in sql:
+    if 'HAVING ' in sql:
         having_struct = sql_parser.get_having(stmt)
         if not having_struct:
             err_text += ' HAVING err'
     
     order_struct = None
-    if ' ORDER ' in sql:
+    if 'ORDER ' in sql:
         order_struct = sql_parser.get_order_by(stmt)
         if not order_struct:
             err_text += ' ORDER err'
 
     limit_struct = None
-    if ' LIMIT ' in sql:
+    if 'LIMIT ' in sql:
         limit_struct = sql_parser.get_limit(stmt)
         if not limit_struct:
             err_text += ' LIMIT err'
@@ -94,15 +94,20 @@ def get_sql_meta(sql, db_id, f_err):
             'sql_struct':{
                 'options':{
                     'use_title':0
-                },
-                'select':select_struct,
-                'where':where_struct,
-                'group_by':group_struct,
-                'having':having_struct,
-                'order_by':order_struct,
-                'limit':limit_struct
+                }
             }
         }
+        sql_struct = sql_meta['sql_struct']
+        if select_struct:
+            sql_struct['select'] = select_struct
+        if where_struct:
+            sql_struct['where'] = where_struct
+        if group_struct:
+            sql_struct['group_by'] = group_struct
+        if order_struct:
+            sql_struct['order_by'] = order_struct
+        if limit_struct:
+            sql_struct['limit'] = limit_struct
         return sql_meta
 
 def find_one(text, sub_str):

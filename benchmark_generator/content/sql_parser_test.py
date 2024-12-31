@@ -16,8 +16,22 @@ def main():
     sql_7 = "SELECT train_id FROM cars WHERE shape IN ('elipse', 'bucket') GROUP BY train_id"
     sql_8 = "SELECT COUNT(outcome) FROM callcenterlogs WHERE outcome != 'AGENT'"
 
-    stmt = sql_parser.parse_sql(sql_8)
+    sql_9 = 'SELECT movie_title FROM movies WHERE movie_release_year = 1945 ORDER BY movie_popularity DESC LIMIT 1'
 
+    sql_10 = 'SELECT COUNT(*) FROM lists WHERE SUBSTR(list_update_timestamp_utc, 1, 4) - SUBSTR(list_creation_timestamp_utc, 1, 4) > 10'
+    
+    sql = "SELECT list_title FROM lists WHERE strftime('%Y', list_update_timestamp_utc) = '2016' ORDER BY list_update_timestamp_utc DESC LIMIT 1"
+    
+    sql = "SELECT course_id FROM taughtBy WHERE course_id = 11 OR course_id = 18 GROUP BY course_id ORDER BY COUNT(course_id) DESC LIMIT 1"
+
+    sql = "SELECT STRFTIME('%Y', t1.paymentDate), COUNT(t1.customerNumber) FROM payments AS t1 WHERE t1.amount < 10000 GROUP BY STRFTIME('%Y', t1.paymentDate)"
+    
+    sql = "SELECT App FROM playstore WHERE Price = 0 ORDER BY CAST(REPLACE(REPLACE(Installs, ',', ''), '+', '') AS INTEGER) DESC LIMIT 5"
+
+    sql = "SELECT App FROM playstore WHERE Price = 0 ORDER BY Installs DESC LIMIT 5"
+
+    stmt = sql_parser.parse_sql(sql)
+    import pdb; pdb.set_trace()
     # stmt.args: 'expressions', 'where', 'group', 'having', 'order', 'limit',
     print("select  ", sql_parser.get_select(stmt))
     print("where  ", sql_parser.get_where(stmt))

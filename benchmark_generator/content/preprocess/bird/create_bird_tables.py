@@ -18,7 +18,7 @@ def create_tables(db_folder, table_id_dict, out_dir):
         for table_name_tuple in table_name_lst:
             table_name = table_name_tuple[0]
             assert db_table_sep not in folder
-            table_id = f"{folder}{db_table_sep}{table_name}"
+            table_id = (f"{folder}{db_table_sep}{table_name}").lower()
             if table_id not in table_id_dict:
                 table_id_dict[table_id] = True
             else:

@@ -86,7 +86,7 @@ def update_shared_tables(q_data, col_table_map):
 
 def get_sel_columns(sql_struct):
     sel_lst = sql_struct.get('select', [])
-    col_name_lst = [util.norm_text(a['col_name']) for a in sel_lst]
+    col_name_lst = [util.norm_text(a['col_name']) for a in sel_lst if 'col_name' in a]
     return col_name_lst
 
 def get_where_columns(sql_struct):
