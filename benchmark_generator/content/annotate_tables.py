@@ -212,7 +212,7 @@ def filter_by_cell(q_item, refer_table_dict):
     for cond_offset in eq_cond_offsets:
         cond_item = cond_lst[cond_offset]
         other_answer_table_row_dict[cond_offset] = set()
-        cond_row = cond_item['row']
+        cond_row = cond_item.get('row', -1)
         table_row = f'{src_table_id}@{cond_row}'
         src_table_row_set.add(table_row)
         col_name = util.norm_text(cond_item['col_name'])

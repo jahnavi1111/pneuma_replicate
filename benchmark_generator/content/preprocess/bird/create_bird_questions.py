@@ -3,6 +3,9 @@ import os
 import sql_parser
 import re
 import sqlglot
+from tqdm import tqdm
+from annotate_tables import get_schema_col_names
+import util
 
 def write_jsonl(data: list[dict[str,str]], out_dir: str):
     f_o_sql = open(out_dir + '/bird_sql.jsonl', 'w')
@@ -13,10 +16,16 @@ def write_jsonl(data: list[dict[str,str]], out_dir: str):
             f_o_sql.write(str(offset + 1) + '.  ' + item['sql'] + '\n\n\n')
     f_o_sql.close()
 
+def check_refer_cols(refer_col_names, col_table_map):
+    for refer_col in refer_col_names:
+        if refer_col not in col_table_map:
+            return False
+    return True
+
 def convert_to_jsonl(data: list, out_dir: str):
     res = []
     f_err = open(out_dir + '/bird_sql_err.txt', 'w')
-    
+    table_dict = index_tables()
     datum_idx = 0
     for datum in data:
         db_id = datum["db_id"]
@@ -24,6 +33,15 @@ def convert_to_jsonl(data: list, out_dir: str):
         meta = get_sql_meta(sql, db_id, f_err)
         if meta is None:
             continue
+        
+        refer_col_names = get_schema_col_names(meta)
+        table_id = meta['table_id']
+        if table_id not in table_dict:
+            continue
+        col_dict = table_dict[table_id]
+        if not check_refer_cols(refer_col_names, col_dict):
+            continue
+
         datum_idx += 1
         res.append({
             "id": datum_idx,
@@ -134,6 +152,27 @@ def check_simple(sql):
     if len(table_text.split(',')) > 1:
         print(table_text)
     return True
+
+def index_table_by_col(table_data):
+    col_dict = {}
+    col_data = table_data['columns']
+    for col_info in col_data:
+        col_text = util.norm_text(col_info['text'])
+        if col_text != '':
+            if col_text not in col_dict:
+                col_dict[col_text] = True
+    return col_dict
+            
+def index_tables():
+    table_file = '/home/cc/code/Pneuma/benchmark_generator/data/bird/tables/tables.jsonl'
+    table_dict = {}
+    with open(table_file) as f:
+        for line in tqdm(f):
+            table_data = json.loads(line)
+            table_id = table_data['tableId']
+            col_dict = index_table_by_col(table_data)
+            table_dict[table_id] = col_dict
+    return table_dict
 
 def main():
     out_dir = 'questions'
