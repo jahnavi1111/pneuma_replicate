@@ -1,43 +1,37 @@
+import argparse
 import sys
 
-sys.path.append("../..")
+sys.path.append("..")
 
 import bm25s
 import time
 import Stemmer
-from benchmark_generator.context.utils.jsonl import read_jsonl
+from commons import DATASETS, str_to_bool, get_documents
+
 
 stemmer = Stemmer.Stemmer("english")
 
 
 def indexing_keyword(
     stemmer,
-    schema_contents: list[dict[str, str]],
-    row_contents: list[dict[str, str]],
+    contents: list[dict[str, str]],
     contexts: list[dict[str, str]],
+    content_types: list[str],
+    include_contexts: bool,
 ):
+    start = time.time()
     corpus_json = []
-    tables = sorted({content["table"] for content in schema_contents})
+    tables = sorted({content["table"] for content in contents})
     for table in tables:
-        table_schema_contents = [content for content in schema_contents if content["table"] == table]
-        table_row_contents = [content for content in row_contents if content["table"] == table]
+        table_contents = [content for content in contents if content["table"] == table]
+        for content_idx, content in enumerate(table_contents):
+            corpus_json.append(
+                {
+                    "text": content["summary"],
+                    "metadata": {"table": f"{table}_SEP_contents_SEP_{content_idx}"},
+                }
+            )
 
-        for idx, schema_content in enumerate(table_schema_contents):
-            corpus_json.append(
-                {
-                    "text": schema_content["summary"],
-                    "metadata": {"table": f"{table}_SEP_contents_SEP_schema-{idx}"},
-                }
-            )
-        
-        for idx, row_content in enumerate(table_row_contents):
-            corpus_json.append(
-                {
-                    "text": row_content["summary"],
-                    "metadata": {"table": f"{table}_SEP_contents_SEP_row-{idx}"},
-                }
-            )
-        
         if contexts is not None:
             table_contexts = [
                 context for context in contexts if context["table"] == table
@@ -57,57 +51,47 @@ def indexing_keyword(
 
     retriever = bm25s.BM25(corpus=corpus_json)
     retriever.index(corpus_tokens, show_progress=True)
-    retriever.save(f"indices/keyword-index-{dataset}-pneuma-summarizer")
-
-
-def get_information(dataset: str):
-    """
-    Return the contents and contexts of a dataset
-    """
-    schema_contents = read_jsonl(
-        f"../pneuma_summarizer/summaries/schema_narrations/{dataset}_splitted.jsonl"
+    retriever.save(
+        f"indices/fulltext-index-{dataset}-{'-'.join(content_types)}{'-context' if include_contexts else ''}"
     )
-    row_contents = read_jsonl(
-        f"../pneuma_summarizer/summaries/sample_rows/{dataset}_merged.jsonl"
-    )
-    contexts = read_jsonl(
-        f"../../data_src/benchmarks/context/{dataset}/contexts_{dataset}_merged.jsonl"
-    )
-    return [schema_contents, row_contents, contexts]
+    end = time.time()
+    print(f"Indexing time of dataset {dataset}: {end-start} seconds")
 
 
 if __name__ == "__main__":
-    start = time.time()
-    dataset = "chembl"
-    schema_contents, row_contents, contexts = get_information(dataset)
-    indexing_keyword(stemmer, schema_contents, row_contents, contexts)
-    end = time.time()
-    print(f"Indexing time: {end-start} seconds")
+    parser = argparse.ArgumentParser(
+        description="This program indexes content and context documents.",
+    )
+    parser.add_argument(
+        "-d",
+        "--dataset",
+        default="all",
+        choices=["chembl", "adventure", "public", "chicago", "fetaqa", "bird"],
+    )
+    parser.add_argument(
+        "-ctn",
+        "--content-types",
+        nargs="+",
+        default=["sample_rows", "schema_narrations"],
+        choices=["sample_rows", "schema_narrations", "schema_concat", "dbreader"],
+    )
+    parser.add_argument(
+        "-ctx",
+        "--include-contexts",
+        type=str_to_bool,
+        default=False,
+        choices=[True, False],
+    )
+    dataset: str = parser.parse_args().dataset
+    content_types: list[str] = parser.parse_args().content_types
+    include_contexts: bool = parser.parse_args().include_contexts
 
-    start = time.time()
-    dataset = "adventure"
-    schema_contents, row_contents, contexts = get_information(dataset)
-    indexing_keyword(stemmer, schema_contents, row_contents, contexts)
-    end = time.time()
-    print(f"Indexing time: {end-start} seconds")
-
-    start = time.time()
-    dataset = "public"
-    schema_contents, row_contents, contexts = get_information(dataset)
-    indexing_keyword(stemmer, schema_contents, row_contents, contexts)
-    end = time.time()
-    print(f"Indexing time: {end-start} seconds")
-
-    start = time.time()
-    dataset = "chicago"
-    schema_contents, row_contents, contexts = get_information(dataset)
-    indexing_keyword(stemmer, schema_contents, row_contents, contexts)
-    end = time.time()
-    print(f"Indexing time: {end-start} seconds")
-
-    start = time.time()
-    dataset = "fetaqa"
-    schema_contents, row_contents, contexts = get_information(dataset)
-    indexing_keyword(stemmer, schema_contents, row_contents, contexts)
-    end = time.time()
-    print(f"Indexing time: {end-start} seconds")
+    if dataset == "all":
+        for dataset in DATASETS.keys():
+            contents, contexts = get_documents(dataset, content_types, include_contexts)
+            indexing_keyword(
+                stemmer, contents, contexts, content_types, include_contexts
+            )
+    else:
+        contents, contexts = get_documents(dataset, content_types, include_contexts)
+        indexing_keyword(stemmer, contents, contexts, content_types, include_contexts)
