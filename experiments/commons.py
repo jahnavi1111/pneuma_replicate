@@ -11,12 +11,6 @@ DATASETS = {
     "fetaqa": "pneuma_fetaqa",
     "bird": "pneuma_bird",
 }
-CONTENT_BLOCK_PROCESSING_TYPE = {
-    "schema_narrations": "splitted",
-    "schema_concat": "splitted",
-    "sample_rows": "merged",
-    "dbreader": "merged",
-}
 
 
 def read_jsonl(file_path: str):
@@ -43,19 +37,26 @@ def str_to_bool(value: str) -> bool:
         raise ValueError("Invalid boolean value")
 
 
-def get_documents(dataset: str, content_types: list[str], include_contexts: bool):
+def get_documents(
+    dataset: str, schema_content_type: str, row_content_type: str, include_contexts: bool
+):
     """
     Return contents (row & schema) and optionally contexts of a dataset
     """
-    contents = []
-    for content_type in content_types:
-        content_file_name = f"{dataset}_{CONTENT_BLOCK_PROCESSING_TYPE[content_type]}"
-        contents.extend(read_jsonl(
-            f"../{CONTENTS_PATH}/{content_type}/{content_file_name}.jsonl"
-        ))
+    schema_contents = None
+    row_contents = None
     contexts = None
+
+    if schema_content_type != "none":
+        schema_contents = read_jsonl(
+            f"../{CONTENTS_PATH}/{schema_content_type}/{dataset}_splitted.jsonl"
+        )
+    if row_content_type != "none":
+        row_contents = read_jsonl(
+            f"../{CONTENTS_PATH}/{row_content_type}/{dataset}_merged.jsonl"
+        )
     if include_contexts:
         contexts = read_jsonl(
             f"../{DATA_SRC}/benchmark/context/{dataset}/contexts_{dataset}_merged.jsonl"
         )
-    return [contents, contexts]
+    return [schema_contents, row_contents, contexts]
