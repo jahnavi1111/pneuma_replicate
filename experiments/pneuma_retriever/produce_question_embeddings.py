@@ -1,20 +1,20 @@
-import setproctitle
-
-setproctitle.setproctitle("python3.12")
+import argparse
+import json
 import os
-import time
 import sys
-import Stemmer
+import time
+
 import numpy as np
+import Stemmer
 
 sys.path.append("../..")
 
 
-from transformers import set_seed
 from sentence_transformers import SentenceTransformer
 from sentence_transformers.SentenceTransformer import SentenceTransformer
-from benchmark_generator.context.utils.jsonl import read_jsonl
+from transformers import set_seed
 
+from benchmark_generator.context.utils.jsonl import read_jsonl
 
 os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
@@ -28,26 +28,23 @@ stemmer = Stemmer.Stemmer("english")
 def get_question_key(benchmark_type: str, use_rephrased_questions: bool):
     if benchmark_type == "content":
         if not use_rephrased_questions:
-            print("Processing BC1")
+            print("Processing non-rephrased content questions")
             question_key = "question_from_sql_1"
         else:
-            print("Processing BC2")
+            print("Processing rephrased content questions")
             question_key = "question"
     else:
         if not use_rephrased_questions:
-            print("Processing BX1")
+            print("Processing non-rephrased context questions")
             question_key = "question_bx1"
         else:
-            print("Processing BX2")
+            print("Processing rephrased context questions")
             question_key = "question_bx2"
     return question_key
 
 
 def produce_embeddings(
-    dataset: str,
-    benchmark: list[dict[str, str]],
-    benchmark_type: str,
-    embedding_model: SentenceTransformer,
+    dataset: str, benchmark: list[dict[str, str]], benchmark_type: str,
     use_rephrased_questions=False,
 ):
     start = time.time()
@@ -69,63 +66,68 @@ def produce_embeddings(
     print(f"Embedding production time: {end - start} seconds")
 
 
+def start_produce_embeddings(
+    dataset: str, dataset_long_name: str,
+    question_types: list[str], use_rephrased_questions: bool,
+):
+    if "content" in question_types:
+        content_benchmark = read_jsonl(
+            f"{QUESTIONS_PATH}/content/{dataset_long_name}_questions_annotated.jsonl"
+        )
+        produce_embeddings(
+            dataset, content_benchmark, "content", use_rephrased_questions
+        )
+
+    if "context" in question_types:
+        context_benchmark = read_jsonl(
+            f"{QUESTIONS_PATH}/context/{dataset}/bx_{dataset}.jsonl"
+        )
+        produce_embeddings(
+            dataset, context_benchmark, "context", use_rephrased_questions
+        )
+
+
+def str_to_bool(value: str) -> bool:
+    if value.lower() in ['true', '1', 't', 'y', 'yes']:
+        return True
+    elif value.lower() in ['false', '0', 'f', 'n', 'no']:
+        return False
+    else:
+        raise ValueError("Invalid boolean value")
+
+
 if __name__ == "__main__":
-    dataset = "public"
-    content_benchmark = read_jsonl(
-        "../../data_src/benchmarks/content/pneuma_public_bi_questions_annotated.jsonl"
+    parser = argparse.ArgumentParser(
+        description="This program produces embeddings for questions, reducing \
+            the needs to produce them again and again for experiments.",
     )
-    context_benchmark = read_jsonl(
-        "../../data_src/benchmarks/context/public/bx_public.jsonl"
+    parser.add_argument(
+        "-d", "--dataset", default="all",
+        choices=["chembl", "adventure", "public", "chicago", "fetaqa", "bird"],
     )
-    produce_embeddings(dataset, content_benchmark, "content", embedding_model, False)
-    produce_embeddings(dataset, content_benchmark, "content", embedding_model, True)
-    produce_embeddings(dataset, context_benchmark, "context", embedding_model, False)
-    produce_embeddings(dataset, context_benchmark, "context", embedding_model, True)
+    parser.add_argument(
+        "-q", "--question-types", nargs="+",
+        default=["content", "context"], choices=["content", "context"]
+    )
+    parser.add_argument(
+        "-r", "--use-rephrased-questions", nargs="+", type=str_to_bool,
+        default=[True, False], choices=[True, False]
+    )
+    dataset = parser.parse_args().dataset
+    question_types = parser.parse_args().question_types
+    use_rephrased_questions = parser.parse_args().use_rephrased_questions
 
-    dataset = "chembl"
-    content_benchmark = read_jsonl(
-        "../../data_src/benchmarks/content/pneuma_chembl_10K_questions_annotated.jsonl"
-    )
-    context_benchmark = read_jsonl(
-        "../../data_src/benchmarks/context/chembl/bx_chembl.jsonl"
-    )
-    produce_embeddings(dataset, content_benchmark, "content", embedding_model, False)
-    produce_embeddings(dataset, content_benchmark, "content", embedding_model, True)
-    produce_embeddings(dataset, context_benchmark, "context", embedding_model, False)
-    produce_embeddings(dataset, context_benchmark, "context", embedding_model, True)
+    with open("../constants.json") as file:
+        CONSTANTS = json.load(file)
+        QUESTIONS_PATH = f"../{CONSTANTS['data_src']}/benchmarks"
+        DATASETS: dict[str,str] = CONSTANTS["datasets"]
 
-    dataset = "adventure"
-    content_benchmark = read_jsonl(
-        "../../data_src/benchmarks/content/pneuma_adventure_works_questions_annotated.jsonl"
-    )
-    context_benchmark = read_jsonl(
-        "../../data_src/benchmarks/context/adventure/bx_adventure.jsonl"
-    )
-    produce_embeddings(dataset, content_benchmark, "content", embedding_model, False)
-    produce_embeddings(dataset, content_benchmark, "content", embedding_model, True)
-    produce_embeddings(dataset, context_benchmark, "context", embedding_model, False)
-    produce_embeddings(dataset, context_benchmark, "context", embedding_model, True)
-
-    dataset = "chicago"
-    content_benchmark = read_jsonl(
-        "../../data_src/benchmarks/content/pneuma_chicago_10K_questions_annotated.jsonl"
-    )
-    context_benchmark = read_jsonl(
-        "../../data_src/benchmarks/context/chicago/bx_chicago.jsonl"
-    )
-    produce_embeddings(dataset, content_benchmark, "content", embedding_model, False)
-    produce_embeddings(dataset, content_benchmark, "content", embedding_model, True)
-    produce_embeddings(dataset, context_benchmark, "context", embedding_model, False)
-    produce_embeddings(dataset, context_benchmark, "context", embedding_model, True)
-
-    dataset = "fetaqa"
-    content_benchmark = read_jsonl(
-        "../../data_src/benchmarks/content/pneuma_fetaqa_questions_annotated.jsonl"
-    )
-    context_benchmark = read_jsonl(
-        "../../data_src/benchmarks/context/fetaqa/bx_fetaqa.jsonl"
-    )
-    produce_embeddings(dataset, content_benchmark, "content", embedding_model, False)
-    produce_embeddings(dataset, content_benchmark, "content", embedding_model, True)
-    produce_embeddings(dataset, context_benchmark, "context", embedding_model, False)
-    produce_embeddings(dataset, context_benchmark, "context", embedding_model, True)
+    if dataset == "all":
+        for dataset in DATASETS.keys():
+            for i in use_rephrased_questions:
+                start_produce_embeddings(
+                    dataset, DATASETS[dataset], question_types, i
+                )
+    else:
+        for i in use_rephrased_questions:
+            start_produce_embeddings(dataset, DATASETS[dataset], question_types, i)
