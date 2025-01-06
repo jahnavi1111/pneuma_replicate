@@ -57,6 +57,6 @@ def get_documents(
         )
     if include_contexts:
         contexts = read_jsonl(
-            f"../{DATA_SRC}/benchmark/context/{dataset}/contexts_{dataset}_merged.jsonl"
+            f"../{DATA_SRC}/benchmarks/context/{dataset}/contexts_{dataset}_merged.jsonl"
         )
     return [schema_contents, row_contents, contexts]
