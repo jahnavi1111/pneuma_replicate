@@ -28,7 +28,7 @@ def indexing_keyword(
             corpus_json.append(
                 {
                     "text": content["summary"],
-                    "metadata": {"table": f"{table}_SEP_contents_SEP_{content_idx}"},
+                    "metadata": {"table": f"{table}_SEP_contents-{content_idx}"},
                 }
             )
 
