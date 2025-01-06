@@ -21,7 +21,7 @@ if __name__ == "__main__":
     parser.add_argument("-d", "--dataset", default="all")
     dataset = parser.parse_args().dataset
 
-    with open("constants.json") as file:
+    with open("../constants.json") as file:
         constants: dict[str, any] = json.load(file)
 
     TABLES_SRC: str = constants["data_src"] + "tables/"
