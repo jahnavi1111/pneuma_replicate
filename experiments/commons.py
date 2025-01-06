@@ -6,10 +6,10 @@ CONTENTS_PATH = "pneuma_summarizer/summaries"
 DATASETS = {
     "chembl": "pneuma_chembl_10K",
     "adventure": "pneuma_adventure_works",
-    # "public": "pneuma_public_bi",
-    # "chicago": "pneuma_chicago_10K",
-    # "fetaqa": "pneuma_fetaqa",
-    # "bird": "pneuma_bird",
+    "public": "pneuma_public_bi",
+    "chicago": "pneuma_chicago_10K",
+    "fetaqa": "pneuma_fetaqa",
+    "bird": "pneuma_bird",
 }
 CONTENT_BLOCK_PROCESSING_TYPE = {
     "schema_narrations": "splitted",
