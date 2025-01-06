@@ -1,3 +1,4 @@
+import argparse
 import sys
 import json
 
@@ -13,6 +14,16 @@ embedding_model = SentenceTransformer(
 )
 
 EMBEDDING_MAX_TOKENS = 512
+
+
+def validate_summary_type(value):
+    valid_chars = {"n", "c", "s", "d", "x"}
+    for char in value:
+        if char not in valid_chars:
+            raise argparse.ArgumentTypeError(
+                f"Invalid summary type: '{char}'. Allowed characters are 'n', 'c', 's', 'd', and 'x'."
+            )
+    return value
 
 
 def split_schema_summaries(
@@ -131,25 +142,56 @@ def merge_context_summaries(contexts: list[dict[str, str]], name: str):
     )
 
 
+def start_conversion(summary_type: str, table_name: str):
+    if 'n' in summary_type:
+        schema_narrations = read_jsonl(
+            f"summaries/schema_narrations/{table_name}.jsonl"
+        )
+        split_schema_summaries(schema_narrations, "schema_narrations", table_name)
+
+    if 'c' in summary_type:
+        schema_concat = read_jsonl(f"summaries/schema_concat/{table_name}.jsonl")
+        split_schema_summaries(schema_concat, "schema_concat", table_name)
+    
+    if 's' in summary_type:
+        sample_rows = read_jsonl(f"summaries/sample_rows/{table_name}.jsonl")
+        merge_row_summaries(sample_rows, table_name, "sample_rows")
+    
+    if 'd' in summary_type:
+        dbreader = read_jsonl(f"summaries/dbreader/{table_name}.jsonl")
+        merge_row_summaries(dbreader, table_name, "dbreader")
+    
+    if 'x' in summary_type:
+        contexts = read_jsonl(
+            f"{DATA_SRC}benchmarks/context/{table_name}/contexts_{table_name}.jsonl"
+        )
+        merge_context_summaries(contexts, table_name)
+
+
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="This program converts summaries to blocks for indexing purposes",
+    )
+    parser.add_argument("-d", "--dataset", default="all")
+    parser.add_argument(
+        "-s", "--summary-type", default="ncsdx", type=validate_summary_type,
+        help="A combination of any of the characters 'n', 'c', 's', 'd', and 'x'"
+    )
+    dataset = parser.parse_args().dataset
+    summary_type = parser.parse_args().summary_type
+
     with open("constants.json") as file:
         constants: dict[str, any] = json.load(file)
         DATA_SRC = constants["data_src"]
         TABLE_NAMES = constants["tables"].keys()
 
-    for table_name in TABLE_NAMES:
-        schema_narrations = read_jsonl(
-            f"summaries/schema_narrations/{table_name}.jsonl"
-        )
-        schema_concat = read_jsonl(f"summaries/schema_concat/{table_name}.jsonl")
-        sample_rows = read_jsonl(f"summaries/sample_rows/{table_name}.jsonl")
-        dbreader = read_jsonl(f"summaries/dbreader/{table_name}.jsonl")
-        contexts = read_jsonl(
-            f"{DATA_SRC}benchmarks/context/{table_name}/contexts_{table_name}.jsonl"
-        )
-
-        split_schema_summaries(schema_narrations, "schema_narrations", table_name)
-        split_schema_summaries(schema_concat, "schema_concat", table_name)
-        merge_row_summaries(sample_rows, "table_name", "sample_rows")
-        merge_row_summaries(dbreader, table_name, "dbreader")
-        merge_context_summaries(contexts, table_name)
+    if dataset == "all":
+        for table_name in TABLE_NAMES:
+            start_conversion(summary_type, table_name)
+    else:
+        try:
+            start_conversion(summary_type, dataset)
+        except KeyError:
+            print(
+                f"Dataset {dataset} not found! Please define the path in `constants.json`."
+            )
