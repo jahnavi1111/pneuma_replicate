@@ -56,12 +56,23 @@ class Query:
     def query(
         self,
         index_name: str,
-        query: str,
+        query: str = None,
         k: int = 1,
         n: int = 5,
         alpha: int = 0.5,
         dictionary_id_bm25=None,
     ) -> str:
+        if query is None:
+            while True:
+                query = input("Enter query: ")
+                if query == "exit" or query == "":
+                    break
+                print(self.query(index_name, query, k, n, alpha))
+            return Response(
+                status=ResponseStatus.SUCCESS,
+                message=f"Interactive querying successful for index {index_name}.",
+            ).to_json()
+
         if index_name != self.index_name:
             self.__init_index(index_name)
 
