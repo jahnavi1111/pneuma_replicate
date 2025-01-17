@@ -76,15 +76,37 @@ export CUDA_VISIBLE_DEVICES=0
 pip install -r requirements.txt
 ```
 
-### (Optional) Download datasets
-
+### Download datasets and benchmarks
 ```shell
-python data_src/benchmarks/downloader.py
-python data_src/tables/downloader.py
+python3 data_src/tables/downloader.py
+python3 data_src/benchmarks/downloader.py
 ```
 
-Follow the instructions at data_src to download datasets.
+### Quick start on the ChEMBL Dataset
+The following commands are used to setup Pneuma on ChEMBL dataset without context.
+More detailed instructions on each modules can be found at [Registration Module](#registration-module) and below.
 
+Go to the pneuma directory
+```shell
+cd pneuma
+```
+
+Register the tables
+```shell
+python3 registration/registration.py setup --db_path=out_chembl/chembl.db
+python3 registration/registration.py add_tables --db_path=out_chembl/chembl.db ../data_src/tables/pneuma_chembl_10K SampleUser
+```
+
+Summarize the tables and generate indices
+```shell
+python3 summarizer/summarizer.py summarize --db_path=out_chembl/chembl.db
+python3 index_generator/index_generator.py generate_index --db_path=out_chembl/chembl.db sample_index
+```
+
+Query the index
+```shell
+python3 query/query.py query --db_path=out_chembl/chembl.db sample_index "Design a data-driven framework to monitor and scrutinize the performance of account executives, enabling informed strategic choices and optimized resource allocation."
+```
 
 **Note: All commands in 'Example Usage' should be run from the Pneuma/pneuma folder**
 
