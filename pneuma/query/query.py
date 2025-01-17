@@ -25,7 +25,7 @@ class Query:
     def __init__(
         self,
         db_path: str = os.path.join(get_storage_path(), "storage.db"),
-        index_path: str = os.path.join(get_storage_path(), "indexes"),
+        index_path: str = None,
         index_name: str = None,
         hf_token: str = "",
     ):
@@ -41,6 +41,8 @@ class Query:
         self.pipe.tokenizer.pad_token_id = self.pipe.model.config.eos_token_id
         self.pipe.tokenizer.padding_side = "left"
 
+        if index_path is None:
+            index_path = os.path.join(os.path.dirname(db_path), "indexes")
         self.index_path = index_path
         self.vector_index_path = os.path.join(index_path, "vector")
         self.keyword_index_path = os.path.join(index_path, "keyword")

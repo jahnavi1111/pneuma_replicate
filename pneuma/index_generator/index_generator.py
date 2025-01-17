@@ -28,13 +28,15 @@ class IndexGenerator:
     def __init__(
         self,
         db_path: str = os.path.join(get_storage_path(), "storage.db"),
-        index_path: str = os.path.join(get_storage_path(), "indexes"),
+        index_path: str = None,
     ):
         self.db_path = db_path
         self.connection = duckdb.connect(db_path)
         self.embedding_model = SentenceTransformer("BAAI/bge-base-en-v1.5")
         self.stemmer = Stemmer.Stemmer("english")
 
+        if index_path is None:
+            index_path = os.path.join(os.path.dirname(db_path), "indexes")
         self.index_path = index_path
         self.vector_index_path = os.path.join(index_path, "vector")
         self.keyword_index_path = os.path.join(index_path, "keyword")
