@@ -2,21 +2,15 @@
 
 Pneuma is a data discovery system for tabular data. A table may be relevant to a data problem because of its content, i.e., columns and rows in tabular data. A table may also be relevant to a data problem because of its context e.g., documentation explaining how the data was collected. Pneuma retrieves tables from table repositories based on both their content and context. It consists of multiple components that can be utilized separately.
 
-## Table Summarizer
+# Directory Structure
 
-This component, which corresponds to the `pneuma_summarizer` directory, produces content summaries to be indexed by retrievers such as `Table Retrieval`.
-
-## Table Retrieval
-
-This component, which corresponds to the `pneuma_retriever` directory, indexes content and context summaries. Then, given a question, it produces a ranking of summaries.
-
-## Pneuma
-
-Our implementation of Pneuma, which combines the previous two components, is available in the `pneuma` directory.
-
-## Benchmark Generators
-
-The benchmark generators are available in the `benchmark_generator` directory. You may download the generated benchmarks in the `data_src` directory, which also provides a way to download the datasets.
+```
+📂 Pneuma
+├── 📂 benchmark_generator  # Content and context benchmark generators
+├── 📂 data_src  # Relevant datasets and benchmarks
+├── 📂 experiments  # Experiments in the paper
+├── 📂 pneuma  # The implementation of Pneuma
+```
 
 # Quick Start
 
@@ -40,18 +34,18 @@ The benchmark generators are available in the `benchmark_generator` directory. Y
 
 ## Getting Started
 
-This setup guide is written on a Windows environment with Python version 3.10.6.
+You may want to directly access the [demo notebook](pneuma/pneuma_demo.ipynb) to quickly understand how Pneuma works. Alternatively, you may read the following information.
 
 ### Gain Access to Gated Models
 
-For the summarizer module, you may want to access private/gated models such as `Qwen2.5-7B-Instruct`, as used in the paper. To do this, create a user access token in HuggingFace, then login using the following commands:
+If you want to access private/gated models such as `meta-llama/Meta-Llama-3-8B-Instruct`, you should create a user access token in HuggingFace. After that, you may login using the following commands:
 
 ```shell
 pip install -U "huggingface_hub[cli]"
 huggingface-cli login [your_token]
 ```
 
-Alternatively, you can pass the token directly, as instructed in [Summarize](#summarize).
+Alternatively, you may pass the token directly, as instructed in [Summarize](#summarize).
 
 ### Clone the repository
 
@@ -108,7 +102,7 @@ Query the index
 python3 query/query.py query --db_path=out_chembl/chembl.db sample_index "Design a data-driven framework to monitor and scrutinize the performance of account executives, enabling informed strategic choices and optimized resource allocation."
 ```
 
-**Note: All commands in 'Example Usage' should be run from the Pneuma/pneuma folder**
+**Note: All commands in 'Example Usage' should be run from the `pneuma` directory.**
 
 ## Registration Module
 
