@@ -6,7 +6,7 @@ from datetime import datetime
 
 import torch
 
-sys.path.append("../..")
+sys.path.append("../../..")
 
 
 from huggingface_hub import login
@@ -28,12 +28,14 @@ set_seed(42, deterministic=True)
 def get_documents(path: str, duckdb_filename=""):
     engine = create_engine(f"duckdb:///{duckdb_filename}.duckdb")
     contexts = read_jsonl(
-        f"../../data_src/benchmarks/context/{duckdb_filename}/contexts_{duckdb_filename}.jsonl"
+        f"../../../data_src/benchmarks/context/{duckdb_filename}/contexts_{duckdb_filename}.jsonl"
     )
     db_reader = DatabaseReader(engine)
     final_documents = []
 
-    for table in sorted([table[:-4] for table in os.listdir(path)]):
+    for table in tqdm(
+        sorted([table[:-4] for table in os.listdir(path)]), desc="Process tables"
+    ):
         # Inserting contents
         documents = db_reader.load_data(f"select * from {table}")
         for i in range(len(documents)):
@@ -64,7 +66,7 @@ short_name = "adventure"
 results = {}
 
 start_time = time.time()
-documents = get_documents(f"../../data_src/tables/{long_name}", short_name)
+documents = get_documents(f"../../../data_src/tables/{long_name}", short_name)
 end_time = time.time()
 results["ingestion"] = {
     "file_count": len(documents),
@@ -72,10 +74,10 @@ results["ingestion"] = {
 }
 
 ctx_benchmark = read_jsonl(
-    f"../../data_src/benchmarks/context/{short_name}/bx_{short_name}.jsonl"
+    f"../../../data_src/benchmarks/context/{short_name}/bx_{short_name}.jsonl"
 )
 ctn_benchmark = read_jsonl(
-    f"../../data_src/benchmarks/content/{long_name}_questions_annotated.jsonl"
+    f"../../../data_src/benchmarks/content/{long_name}_questions.jsonl"
 )
 
 
