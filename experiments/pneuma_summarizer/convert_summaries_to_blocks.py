@@ -17,11 +17,11 @@ EMBEDDING_MAX_TOKENS = 512
 
 
 def validate_summary_type(value):
-    valid_chars = {"n", "c", "s", "d", "x"}
+    valid_chars = {"n", "c", "s", "d", "x", "t", "th"}
     for char in value:
         if char not in valid_chars:
             raise argparse.ArgumentTypeError(
-                f"Invalid summary type: '{char}'. Allowed characters are 'n', 'c', 's', 'd', and 'x'."
+                f"Invalid summary type: '{char}'. Allowed characters are 'n', 'c', 's', 'd', 'x', 't', and 'th'."
             )
     return value
 
@@ -149,18 +149,30 @@ def start_conversion(summary_type: str, table_name: str):
         )
         split_schema_summaries(schema_narrations, "schema_narrations", table_name)
 
+    if 't' in summary_type:
+        schema_narrations = read_jsonl(
+            f"summaries/temperature-1.5-instruct/{table_name}.jsonl"
+        )
+        split_schema_summaries(schema_narrations, "temperature-1.5-instruct", table_name)
+
+    if 'th' in summary_type:
+        schema_narrations = read_jsonl(
+            f"summaries/temperature-1.5-none/{table_name}.jsonl"
+        )
+        split_schema_summaries(schema_narrations, "temperature-1.5-none", table_name)
+
     if 'c' in summary_type:
         schema_concat = read_jsonl(f"summaries/schema_concat/{table_name}.jsonl")
         split_schema_summaries(schema_concat, "schema_concat", table_name)
-    
+
     if 's' in summary_type:
         sample_rows = read_jsonl(f"summaries/sample_rows/{table_name}.jsonl")
         merge_row_summaries(sample_rows, table_name, "sample_rows")
-    
+
     if 'd' in summary_type:
         dbreader = read_jsonl(f"summaries/dbreader/{table_name}.jsonl")
         merge_row_summaries(dbreader, table_name, "dbreader")
-    
+
     if 'x' in summary_type:
         contexts = read_jsonl(
             f"{DATA_SRC}benchmarks/context/{table_name}/contexts_{table_name}.jsonl"
@@ -174,8 +186,8 @@ if __name__ == "__main__":
     )
     parser.add_argument("-d", "--dataset", default="all")
     parser.add_argument(
-        "-s", "--summary-type", default="ncsdx", type=validate_summary_type,
-        help="A combination of any of the characters 'n', 'c', 's', 'd', and 'x'"
+        "-s", "--summary-type", default="ncsdxtth", type=validate_summary_type,
+        help="A combination of any of the characters 'n', 'c', 's', 'd', 'x', 't', and 'th'"
     )
     dataset = parser.parse_args().dataset
     summary_type = parser.parse_args().summary_type
