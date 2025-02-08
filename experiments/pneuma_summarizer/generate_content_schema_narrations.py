@@ -21,12 +21,6 @@ from benchmark_generator.context.utils.prompting_interface import (
 )
 from benchmark_generator.context.utils.jsonl import write_jsonl, read_jsonl
 
-pipe = initialize_pipeline("../models/qwen", torch.bfloat16, context_length=32768)
-
-# Specific settings for batching
-pipe.tokenizer.pad_token_id = pipe.model.config.eos_token_id
-pipe.tokenizer.padding_side = "left"
-
 
 def get_col_description_prompt(columns: str, column: str):
     return f"""A table has the following columns:
@@ -34,6 +28,15 @@ def get_col_description_prompt(columns: str, column: str):
 {columns}
 */
 Describe very briefly what the {column} column represents. If not possible, simply state "No description.\""""
+
+
+def str_to_bool(value: str) -> bool:
+    if value.lower() in ['true', '1', 't', 'y', 'yes']:
+        return True
+    elif value.lower() in ['false', '0', 'f', 'n', 'no']:
+        return False
+    else:
+        raise ValueError("Invalid boolean value")
 
 
 def get_special_indices(texts: list[str], batch_size: int):
@@ -63,22 +66,34 @@ def get_special_indices(texts: list[str], batch_size: int):
     return final_indices
 
 
-def is_fit_in_memory(conversations, batch_size: int):
+def is_fit_in_memory(conversations, batch_size: int, hallucinate: bool):
     special_indices = get_special_indices(conversations, batch_size)
     adjusted_conversations = [conversations[i] for i in special_indices]
 
     conv_low_idx = len(adjusted_conversations) // 2 - batch_size // 2
     conv_high_idx = conv_low_idx + batch_size
-    output = prompt_pipeline(
+
+    if hallucinate:
+        output = prompt_pipeline(
         pipe,
         adjusted_conversations[conv_low_idx:conv_high_idx],
         batch_size=batch_size,
         context_length=32768,
         max_new_tokens=1,
-        temperature=None,
-        top_p=None,
-        top_k=None,
+        do_sample=True,
+        temperature=1.5,
     )
+    else:
+        output = prompt_pipeline(
+            pipe,
+            adjusted_conversations[conv_low_idx:conv_high_idx],
+            batch_size=batch_size,
+            context_length=32768,
+            max_new_tokens=1,
+            temperature=None,
+            top_k=None,
+            top_p=None,
+        )
 
     torch.cuda.empty_cache()
     gc.collect()
@@ -91,7 +106,7 @@ def is_fit_in_memory(conversations, batch_size: int):
         return True
 
 
-def get_optimal_batch_size(conversations):
+def get_optimal_batch_size(conversations, hallucinate: bool):
     print("Looking for an optimal batch size")
     max_batch_size = (
         50  # Change to a higher value if you have more capacity to explore batch size
@@ -100,7 +115,7 @@ def get_optimal_batch_size(conversations):
     while min_batch_size < max_batch_size:
         mid_batch_size = (min_batch_size + max_batch_size) // 2
         print(f"Current mid batch size: {mid_batch_size}")
-        if is_fit_in_memory(conversations, mid_batch_size):
+        if is_fit_in_memory(conversations, mid_batch_size, hallucinate):
             min_batch_size = mid_batch_size + 1
         else:
             max_batch_size = mid_batch_size - 1
@@ -124,12 +139,14 @@ def parse_tables(tables: list[str], tables_path: str):
     return conversations, conv_tables, conv_cols
 
 
-def generate_schema_narration_summaries(tables_path: str, summaries_name: str):
+def generate_schema_narration_summaries(
+    tables_path: str, summaries_name: str, hallucinate: bool,
+):
     tables = sorted([file[:-4] for file in os.listdir(tables_path)])
     summaries: list[dict[str, str]] = []
 
     conversations, conv_tables, conv_cols = parse_tables(tables, tables_path)
-    optimal_batch_size = get_optimal_batch_size(conversations)
+    optimal_batch_size = get_optimal_batch_size(conversations, hallucinate)
     sorted_indices = get_special_indices(conversations, optimal_batch_size)
 
     conversations = [conversations[i] for i in sorted_indices]
@@ -137,22 +154,36 @@ def generate_schema_narration_summaries(tables_path: str, summaries_name: str):
     conv_cols = [conv_cols[i] for i in sorted_indices]
 
     SCHEMA_NARRATIONS_PATH = "summaries/schema_narrations"
+    if hallucinate:
+        SCHEMA_NARRATIONS_PATH = "summaries/hallucinate"
 
     if len(conversations) > 0:
         outputs = []
         max_batch_size = optimal_batch_size
         same_batch_size_counter = 0
         for i in tqdm(range(0, len(conversations), max_batch_size)):
-            llm_output = prompt_pipeline_robust(
-                pipe,
-                conversations[i : i + max_batch_size],
-                batch_size=optimal_batch_size,
-                context_length=32768,
-                max_new_tokens=400,
-                temperature=None,
-                top_p=None,
-                top_k=None,
-            )
+            if hallucinate:
+                llm_output = prompt_pipeline_robust(
+                    pipe,
+                    conversations[i : i + max_batch_size],
+                    batch_size=optimal_batch_size,
+                    context_length=32768,
+                    max_new_tokens=400,
+                    do_sample=True,
+                    temperature=1.5,
+                )
+            else:
+                llm_output = prompt_pipeline_robust(
+                    pipe,
+                    conversations[i : i + max_batch_size],
+                    batch_size=optimal_batch_size,
+                    context_length=32768,
+                    max_new_tokens=400,
+                    do_sample=False,
+                    temperature=None,
+                    top_k=None,
+                    top_p=None,
+                )
             outputs += llm_output[0]
 
             if llm_output[1] == optimal_batch_size:
@@ -190,7 +221,25 @@ if __name__ == "__main__":
                 the `summaries` directory.",
     )
     parser.add_argument("-d", "--dataset", default="all")
-    dataset = parser.parse_args().dataset
+    parser.add_argument(
+        "-hal",
+        "--hallucinate",
+        type=str_to_bool,
+        default=False,
+        choices=[True, False],
+    )
+    dataset: str = parser.parse_args().dataset
+    hallucinate: bool = parser.parse_args().hallucinate
+
+    model_name = "qwen"
+    if hallucinate:
+        model_name += "-hallucinate"
+
+    pipe = initialize_pipeline(f"../models/{model_name}", torch.bfloat16, context_length=32768)
+
+    # Specific settings for batching
+    pipe.tokenizer.pad_token_id = pipe.model.config.eos_token_id
+    pipe.tokenizer.padding_side = "left"
 
     with open("constants.json") as file:
         constants: dict[str, any] = json.load(file)
@@ -202,12 +251,12 @@ if __name__ == "__main__":
         for table_info in TABLES.items():
             summaries_name, table_name = table_info
             tables_path = TABLES_SRC + table_name
-            generate_schema_narration_summaries(tables_path, summaries_name)
+            generate_schema_narration_summaries(tables_path, summaries_name, hallucinate)
     else:
         try:
             table_name = TABLES[dataset]
             tables_path = TABLES_SRC + table_name
-            generate_schema_narration_summaries(tables_path, dataset)
+            generate_schema_narration_summaries(tables_path, dataset, hallucinate)
         except KeyError:
             print(
                 f"Dataset {dataset} not found! Please define the path in `constants.json`."
