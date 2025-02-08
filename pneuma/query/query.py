@@ -28,14 +28,16 @@ class Query:
         index_path: str = None,
         index_name: str = None,
         hf_token: str = "",
+        llm_path: str = "Qwen/Qwen2.5-7B-Instruct",
+        embed_path: str = "BAAI/bge-base-en-v1.5",
     ):
         self.db_path = db_path
         self.connection = duckdb.connect(db_path)
-        self.embedding_model = SentenceTransformer("BAAI/bge-base-en-v1.5")
+        self.embedding_model = SentenceTransformer(embed_path)
         self.stemmer = Stemmer.Stemmer("english")
 
         self.pipe = initialize_pipeline(
-            "Qwen/Qwen2.5-7B-Instruct", torch.bfloat16, context_length=32768
+            llm_path, torch.bfloat16, context_length=32768
         )
         # Specific setting for batching
         self.pipe.tokenizer.pad_token_id = self.pipe.model.config.eos_token_id

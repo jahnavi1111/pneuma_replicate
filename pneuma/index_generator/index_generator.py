@@ -29,10 +29,11 @@ class IndexGenerator:
         self,
         db_path: str = os.path.join(get_storage_path(), "storage.db"),
         index_path: str = None,
+        embed_path: str = "BAAI/bge-base-en-v1.5",
     ):
         self.db_path = db_path
         self.connection = duckdb.connect(db_path)
-        self.embedding_model = SentenceTransformer("BAAI/bge-base-en-v1.5")
+        self.embedding_model = SentenceTransformer(embed_path)
         self.stemmer = Stemmer.Stemmer("english")
 
         if index_path is None:

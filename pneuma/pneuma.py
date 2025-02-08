@@ -14,12 +14,17 @@ class Pneuma:
         self,
         out_path: str = get_storage_path(),
         hf_token: str = "",
+        llm_path: str = "Qwen/Qwen2.5-7B-Instruct",
+        embed_path: str = "BAAI/bge-base-en-v1.5",
     ):
         os.makedirs(out_path, exist_ok=True)
         self.out_path = out_path
         self.db_path = out_path + "/storage.db"
         self.index_location = out_path + "/indexes"
+
         self.hf_token = hf_token
+        self.llm_path = llm_path
+        self.embed_path = embed_path
 
         self.registration = None
         self.summarizer = None
@@ -30,16 +35,27 @@ class Pneuma:
         self.registration = Registration(db_path=self.db_path)
 
     def __init_summarizer(self):
-        self.summarizer = Summarizer(db_path=self.db_path, hf_token=self.hf_token)
+        self.summarizer = Summarizer(
+            db_path=self.db_path,
+            hf_token=self.hf_token,
+            llm_path=self.llm_path,
+            embed_path=self.embed_path,
+        )
 
     def __init_index_generator(self):
         self.index_generator = IndexGenerator(
-            db_path=self.db_path, index_path=self.index_location
+            db_path=self.db_path,
+            index_path=self.index_location, 
+            embed_path=self.embed_path,
         )
 
     def __init_query(self):
         self.query = Query(
-            db_path=self.db_path, index_path=self.index_location, hf_token=self.hf_token
+            db_path=self.db_path,
+            index_path=self.index_location,
+            hf_token=self.hf_token,
+            llm_path=self.llm_path,
+            embed_path=self.embed_path,
         )
 
     def setup(self) -> str:
