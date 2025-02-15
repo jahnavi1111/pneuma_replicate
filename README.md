@@ -36,7 +36,7 @@ $ pip install -r requirements.txt
 
 ## Quick Start
 
-The simplest way to explore `Pneuma` is by running the [quickstart Jupyter notebook](quickstart.ipynb). Below is a snippet of the notebook's contents.
+The simplest way to explore `Pneuma` is by running the [quickstart Jupyter notebook](quickstart.ipynb). This notebook walks you through `Pneuma`'s full workflow, from **data registration** to **querying**. For those eager to dive in, here’s a snippet showcasing its functionality:
 
 ```python
 from pneuma import Pneuma
@@ -75,6 +75,6 @@ query = response["data"]["query"]
 retrieved_tables = response["data"]["response"]
 ```
 
-# Pneuma's CLI
+## Pneuma's CLI
 
 To use `Pneuma` via the command line, refer to the [CLI reference documentation](pneuma/cli.md) for detailed instructions.
