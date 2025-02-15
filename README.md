@@ -8,7 +8,7 @@
 
 ## Getting Started
 
-To ensure smooth installation and usage, we **strongly recommend** installing `Miniconda`. Then, create a new environment and install the CUDA Toolkit:
+To ensure smooth installation and usage, we **strongly recommend** installing `Miniconda` (follow [this](https://docs.anaconda.com/miniconda/install/)). Then, create a new environment and install the CUDA Toolkit:
 
 ```bash
 $ conda create --name pneuma python=3.12.2 -y
