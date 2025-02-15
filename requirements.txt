@@ -132,7 +132,7 @@ PySocks==1.7.1
 PyStemmer==2.2.0.1
 python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
-python-multipart==0.0.9
+python-multipart==0.0.20
 pytz==2024.1
 PyYAML==6.0.2
 pyzmq==26.2.0
