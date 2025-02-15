@@ -1,11 +1,14 @@
 import os
 
-import duckdb
 import fire
+from huggingface_hub import login
+from sentence_transformers import SentenceTransformer
 from index_generator.index_generator import IndexGenerator
 from query.query import Query
 from registration.registration import Registration
 from summarizer.summarizer import Summarizer
+from torch import bfloat16
+from utils.pipeline_initializer import initialize_pipeline
 from utils.storage_config import get_storage_path
 
 
@@ -26,37 +29,64 @@ class Pneuma:
         self.llm_path = llm_path
         self.embed_path = embed_path
 
+        self.__hf_login()
+
         self.registration = None
         self.summarizer = None
         self.index_generator = None
         self.query = None
+        self.llm = None
+        self.embed_model = None
+
+    def __hf_login(self):
+        if self.hf_token != "":
+            try:
+                login(self.hf_token)
+            except ValueError:
+                pass
 
     def __init_registration(self):
         self.registration = Registration(db_path=self.db_path)
 
     def __init_summarizer(self):
+        self.__init_llm()
+        self.__init_embed_model()
         self.summarizer = Summarizer(
+            llm=self.llm,
+            embed_model=self.embed_model,
             db_path=self.db_path,
-            hf_token=self.hf_token,
-            llm_path=self.llm_path,
-            embed_path=self.embed_path,
         )
 
     def __init_index_generator(self):
+        self.__init_embed_model()
         self.index_generator = IndexGenerator(
+            embed_model=self.embed_model,
             db_path=self.db_path,
-            index_path=self.index_location, 
-            embed_path=self.embed_path,
+            index_path=self.index_location,
         )
 
     def __init_query(self):
+        self.__init_llm()
+        self.__init_embed_model()
         self.query = Query(
+            llm=self.llm,
+            embed_model=self.embed_model,
             db_path=self.db_path,
             index_path=self.index_location,
-            hf_token=self.hf_token,
-            llm_path=self.llm_path,
-            embed_path=self.embed_path,
         )
+
+    def __init_llm(self):
+        if self.llm is None:
+            self.llm = initialize_pipeline(
+                self.llm_path, bfloat16, context_length=32768,
+            )
+            # Specific setting for batching
+            self.llm.tokenizer.pad_token_id = self.llm.model.config.eos_token_id
+            self.llm.tokenizer.padding_side = "left"
+    
+    def __init_embed_model(self):
+        if self.embed_model is None:
+            self.embed_model = SentenceTransformer(self.embed_path)
 
     def setup(self) -> str:
         if self.registration is None:

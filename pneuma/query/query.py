@@ -1,6 +1,5 @@
 import os
 import sys
-from collections import defaultdict
 from pathlib import Path
 
 import bm25s
@@ -24,24 +23,17 @@ from utils.storage_config import get_storage_path
 class Query:
     def __init__(
         self,
+        llm,
+        embed_model,
         db_path: str = os.path.join(get_storage_path(), "storage.db"),
         index_path: str = None,
         index_name: str = None,
-        hf_token: str = "",
-        llm_path: str = "Qwen/Qwen2.5-7B-Instruct",
-        embed_path: str = "BAAI/bge-base-en-v1.5",
     ):
+        self.pipe = llm
+        self.embedding_model = embed_model
         self.db_path = db_path
         self.connection = duckdb.connect(db_path)
-        self.embedding_model = SentenceTransformer(embed_path)
         self.stemmer = Stemmer.Stemmer("english")
-
-        self.pipe = initialize_pipeline(
-            llm_path, torch.bfloat16, context_length=32768
-        )
-        # Specific setting for batching
-        self.pipe.tokenizer.pad_token_id = self.pipe.model.config.eos_token_id
-        self.pipe.tokenizer.padding_side = "left"
 
         if index_path is None:
             index_path = os.path.join(os.path.dirname(db_path), "indexes")
