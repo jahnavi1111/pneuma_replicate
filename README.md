@@ -8,6 +8,10 @@
 
 ## Getting Started
 
+If you would like to try `Pneuma` without installation, you can use our [Colab notebook](https://colab.research.google.com/github/TheDataStation/Pneuma/blob/main/quickstart.ipynb). For local installation, you will need a **GPU with at least 20 GB of VRAM** to load and prompt both the LLM and embedding model. Support for third-party APIs such as OpenAI is currently a work in progress (WIP).
+
+### Local Installation
+
 To ensure smooth installation and usage, we **strongly recommend** installing `Miniconda` (follow [this](https://docs.anaconda.com/miniconda/install/)). Then, create a new environment and install the CUDA Toolkit:
 
 ```bash
@@ -15,8 +19,6 @@ $ conda create --name pneuma python=3.12.2 -y
 $ conda activate pneuma
 $ conda install -c nvidia cuda-toolkit -y
 ```
-
-### Installation
 
 To install the latest stable release from PyPI:
 
