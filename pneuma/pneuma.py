@@ -19,6 +19,7 @@ class Pneuma:
         hf_token: str = "",
         llm_path: str = "Qwen/Qwen2.5-7B-Instruct",
         embed_path: str = "BAAI/bge-base-en-v1.5",
+        max_llm_batch_size: int = 50,
     ):
         os.makedirs(out_path, exist_ok=True)
         self.out_path = out_path
@@ -28,6 +29,7 @@ class Pneuma:
         self.hf_token = hf_token
         self.llm_path = llm_path
         self.embed_path = embed_path
+        self.max_llm_batch_size = max_llm_batch_size
 
         self.__hf_login()
 
@@ -55,6 +57,7 @@ class Pneuma:
             llm=self.llm,
             embed_model=self.embed_model,
             db_path=self.db_path,
+            max_llm_batch_size=self.max_llm_batch_size,
         )
 
     def __init_index_generator(self):

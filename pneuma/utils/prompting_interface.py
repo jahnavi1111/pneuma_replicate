@@ -1,6 +1,7 @@
 import logging
 
 import torch
+from torch.cuda import OutOfMemoryError
 from transformers import set_seed
 from transformers.pipelines.text_generation import TextGenerationPipeline
 from transformers.tokenization_utils_base import PreTrainedTokenizerBase
@@ -155,6 +156,7 @@ def prompt_pipeline_robust(
         "pad_token_id": pipe.tokenizer.eos_token_id,
     }
     remove_unset_generation_configs(generation_configs)
+    batch_size_1_counter = 0
     while True:
         try:
             for i in range(len(conversations)):
@@ -174,8 +176,14 @@ def prompt_pipeline_robust(
             for answer in answers:
                 results.append(answer[0]["generated_text"])
             return (results, batch_size)
-        except:
+        except OutOfMemoryError:
             batch_size = max(batch_size - 10, 1)
+            if batch_size == 1:
+                batch_size_1_counter += 1
+            if batch_size_1_counter == 5:
+                raise OutOfMemoryError(
+                    "Your GPU memory is probably limited. Try reducing max_batch_size when initializing Pneuma"
+                )
             torch.cuda.empty_cache()
             logger.warning(f"Reducing batch size to {batch_size}")
 

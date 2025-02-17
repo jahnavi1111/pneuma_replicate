@@ -11,12 +11,10 @@ import duckdb
 import fire
 import pandas as pd
 import torch
-from sentence_transformers.SentenceTransformer import SentenceTransformer
 from tqdm import tqdm
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from utils.logging_config import configure_logging
-from utils.pipeline_initializer import initialize_pipeline
 from utils.prompting_interface import prompt_pipeline, prompt_pipeline_robust
 from utils.response import Response, ResponseStatus
 from utils.storage_config import get_storage_path
@@ -33,12 +31,14 @@ class Summarizer:
         llm,
         embed_model,        
         db_path: str = os.path.join(get_storage_path(), "storage.db"),
+        max_llm_batch_size: int = 50,
     ):
         self.db_path = db_path
         self.connection = duckdb.connect(db_path)
         self.pipe = llm
         self.embedding_model = embed_model
         self.EMBEDDING_MAX_TOKENS = 512
+        self.MAX_LLM_BATCH_SIZE = max_llm_batch_size
 
     def summarize(self, table_id: str = None) -> str:
         if table_id is None or table_id == "":
@@ -291,7 +291,7 @@ class Summarizer:
 Describe briefly what the {column} column represents. If not possible, simply state "No description.\""""
 
     def __get_optimal_batch_size(self, conversations: list[dict[str, str]]):
-        max_batch_size = 50
+        max_batch_size = self.MAX_LLM_BATCH_SIZE
         min_batch_size = 1
         while min_batch_size < max_batch_size:
             mid_batch_size = (min_batch_size + max_batch_size) // 2
