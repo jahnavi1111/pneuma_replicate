@@ -51,14 +51,14 @@ pneuma = Pneuma(
 )
 pneuma.setup()
 
-# Register dataset & its context
+# Register dataset & summarize it
 data_path = "data_src/sample_data/csv"
-metadata_path = "data_src/sample_data/metadata.csv"
 pneuma.add_tables(path=data_path, creator="demo_user")
-pneuma.add_metadata(metadata_path=metadata_path)
-
-# Summarize dataset
 pneuma.summarize()
+
+# Add context (metadata) if available
+metadata_path = "data_src/sample_data/metadata.csv"
+pneuma.add_metadata(metadata_path=metadata_path)
 
 # Generate index
 pneuma.generate_index(index_name="demo_index")
