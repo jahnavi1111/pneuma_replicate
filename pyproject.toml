@@ -1,0 +1,68 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pneuma"
+dynamic = ["0.1"]
+description = 'Pneuma is an LLM-powered data discovery system for tabular data.'
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+keywords = ["llm", "data discovery", "tabular data"]
+authors = [
+  { name = "Pneuma Team", email = "luthfibalaka@gmail.com" },
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+  "accelerate==0.33.0",
+  "bm25s==0.1.10",
+  "chroma-hnswlib==0.7.6",
+  "duckdb==1.1.0",
+  "fire==0.6.0",
+  "git+https://github.com/luthfibalaka/chroma.git@deterministic-index-building",
+  "jax==0.4.33",
+  "pandas==2.2.3",
+  "peft==0.12.0",
+  "PyStemmer==2.2.0.1",
+  "sentence-transformers==3.0.1",
+  "torch==2.4.0",
+  "transformers==4.48.3",
+]
+
+[project.urls]
+Documentation = "https://github.com/TheDataStation/pneuma#readme"
+Issues = "https://github.com/TheDataStation/pneuma/issues"
+Source = "https://github.com/TheDataStation/pneuma"
+
+[tool.hatch.envs.types]
+extra-dependencies = [
+  "mypy>=1.0.0",
+]
+[tool.hatch.envs.types.scripts]
+check = "mypy --install-types --non-interactive {args:src/pneuma tests}"
+
+[tool.coverage.run]
+source_pkgs = ["pneuma", "tests"]
+branch = true
+parallel = true
+omit = [
+  "src/pneuma/__about__.py",
+]
+
+[tool.coverage.paths]
+pneuma = ["src/pneuma", "*/pneuma/src/pneuma"]
+tests = ["tests", "*/pneuma/tests"]
+
+[tool.coverage.report]
+exclude_lines = [
+  "no cov",
+  "if __name__ == .__main__.:",
+  "if TYPE_CHECKING:",
+]
