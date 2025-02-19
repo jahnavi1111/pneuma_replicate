@@ -1,4 +1,4 @@
-![pneuma-banner](pneuma/pneuma-architecture.png)
+![pneuma-banner](data_src/assets/pneuma-architecture.png)
 
 # Pneuma
 [![Colab Demo](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/TheDataStation/Pneuma/blob/main/quickstart-colab.ipynb)
@@ -40,7 +40,7 @@ $ pip install -r requirements.txt
 The simplest way to explore `Pneuma` is by running the [quickstart Jupyter notebook](quickstart.ipynb). This notebook walks you through `Pneuma`'s full workflow, from **data registration** to **querying**. For those eager to dive in, here’s a snippet showcasing its functionality:
 
 ```python
-from pneuma import Pneuma
+from src.pneuma import Pneuma
 
 # Initialize Pneuma
 out_path = "out_demo/storage"
@@ -78,4 +78,4 @@ retrieved_tables = response["data"]["response"]
 
 ## Pneuma's CLI
 
-To use `Pneuma` via the command line, refer to the [CLI reference documentation](pneuma/cli.md) for detailed instructions.
+To use `Pneuma` via the command line, refer to the [CLI reference documentation](cli.md) for detailed instructions.
