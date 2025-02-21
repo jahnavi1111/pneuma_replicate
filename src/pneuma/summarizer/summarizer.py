@@ -10,12 +10,15 @@ from pathlib import Path
 import duckdb
 import fire
 import pandas as pd
+import tiktoken
 import torch
+from openai import OpenAI
 from tqdm import tqdm
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from utils.logging_config import configure_logging
-from utils.prompting_interface import prompt_pipeline, prompt_pipeline_robust
+from utils.prompting_interface import (prompt_openai_llm, prompt_pipeline,
+                                       prompt_pipeline_robust)
 from utils.response import Response, ResponseStatus
 from utils.storage_config import get_storage_path
 from utils.summary_types import SummaryType
@@ -37,8 +40,12 @@ class Summarizer:
         self.connection = duckdb.connect(db_path)
         self.pipe = llm
         self.embedding_model = embed_model
-        self.EMBEDDING_MAX_TOKENS = 512
         self.MAX_LLM_BATCH_SIZE = max_llm_batch_size
+
+        if isinstance(self.embedding_model, OpenAI):
+            self.EMBEDDING_MAX_TOKENS = 8191
+        else:
+            self.EMBEDDING_MAX_TOKENS = 512
 
     def summarize(self, table_id: str = None) -> str:
         if table_id is None or table_id == "":
@@ -203,16 +210,23 @@ class Summarizer:
             conversations.append([{"role": "user", "content": prompt}])
 
         if len(conversations) > 0:
-            outputs = prompt_pipeline(
-                self.pipe,
-                conversations,
-                batch_size=2,
-                context_length=32768,
-                max_new_tokens=400,
-                temperature=None,
-                top_p=None,
-                top_k=None,
-            )
+            if isinstance(self.pipe, OpenAI):
+                outputs = prompt_openai_llm(
+                    llm=self.pipe,
+                    conversations=conversations,
+                    max_new_tokens=400,
+                )
+            else:
+                outputs = prompt_pipeline(
+                    self.pipe,
+                    conversations,
+                    batch_size=2,
+                    context_length=32768,
+                    max_new_tokens=400,
+                    temperature=None,
+                    top_p=None,
+                    top_k=None,
+                )
 
             col_narrations: list[str] = []
             for output_idx, output in enumerate(outputs):
@@ -240,37 +254,48 @@ class Summarizer:
                 conv_tables.append(table_id)
                 conv_cols.append(col)
 
-        optimal_batch_size = self.__get_optimal_batch_size(conversations)
-        sorted_indices = self.__get_special_indices(conversations, optimal_batch_size)
+        if isinstance(self.pipe, OpenAI):
+            optimal_batch_size = 1
+            sorted_indices = list(range(len(conversations)))
+        else:
+            optimal_batch_size = self.__get_optimal_batch_size(conversations)
+            sorted_indices = self.__get_special_indices(conversations, optimal_batch_size)
 
         conversations = [conversations[i] for i in sorted_indices]
         conv_tables = [conv_tables[i] for i in sorted_indices]
         conv_cols = [conv_cols[i] for i in sorted_indices]
 
         if len(conversations) > 0:
-            outputs = []
-            max_batch_size = optimal_batch_size
-            same_batch_size_counter = 0
-            print(f"Optimal batch size: {optimal_batch_size}")
-            for i in tqdm(range(0, len(conversations), optimal_batch_size)):
-                llm_output = prompt_pipeline_robust(
-                    self.pipe,
-                    conversations[i : i + optimal_batch_size],
-                    batch_size=optimal_batch_size,
-                    context_length=32768,
+            if isinstance(self.pipe, OpenAI):
+                outputs = prompt_openai_llm(
+                    llm=self.pipe,
+                    conversations=conversations,
                     max_new_tokens=400,
-                    temperature=None,
-                    top_p=None,
                 )
-                outputs += llm_output[0]
+            else:
+                outputs: list[list[dict[str, str]]] = []
+                max_batch_size = optimal_batch_size
+                same_batch_size_counter = 0
+                print(f"Optimal batch size: {optimal_batch_size}")
+                for i in tqdm(range(0, len(conversations), optimal_batch_size)):
+                    llm_output = prompt_pipeline_robust(
+                        self.pipe,
+                        conversations[i : i + optimal_batch_size],
+                        batch_size=optimal_batch_size,
+                        context_length=32768,
+                        max_new_tokens=400,
+                        temperature=None,
+                        top_p=None,
+                    )
+                    outputs += llm_output[0]
 
-                if llm_output[1] == optimal_batch_size:
-                    same_batch_size_counter += 1
-                    if same_batch_size_counter % 10 == 0:
-                        optimal_batch_size = min(optimal_batch_size + 2, max_batch_size)
-                else:
-                    optimal_batch_size = llm_output[1]
-                    same_batch_size_counter = 0
+                    if llm_output[1] == optimal_batch_size:
+                        same_batch_size_counter += 1
+                        if same_batch_size_counter % 10 == 0:
+                            optimal_batch_size = min(optimal_batch_size + 2, max_batch_size)
+                    else:
+                        optimal_batch_size = llm_output[1]
+                        same_batch_size_counter = 0
 
             col_narrations: dict[str, list[str]] = defaultdict(list)
             for output_idx, output in enumerate(outputs):
@@ -356,7 +381,10 @@ Describe briefly what the {column} column represents. If not possible, simply st
         return final_indices
 
     def __merge_column_descriptions(self, column_narrations: list[str]) -> list[str]:
-        tokenizer = self.embedding_model.tokenizer
+        if isinstance(self.embedding_model, OpenAI):
+            tokenizer = tiktoken.encoding_for_model("gpt-4o")
+        else:
+            tokenizer = self.embedding_model.tokenizer
         merged_column_descriptions = []
 
         col_idx = 0
@@ -393,7 +421,10 @@ Describe briefly what the {column} column represents. If not possible, simply st
         return merged_row_summaries
 
     def __merge_row_summaries(self, row_summaries: list[str]) -> list[str]:
-        tokenizer = self.embedding_model.tokenizer
+        if isinstance(self.embedding_model, OpenAI):
+            tokenizer = tiktoken.encoding_for_model("gpt-4o")
+        else:
+            tokenizer = self.embedding_model.tokenizer
         merged_row_summaries = []
 
         row_idx = 0
