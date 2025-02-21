@@ -10,7 +10,7 @@
 
 ## Getting Started
 
-If you would like to try `Pneuma` without installation, you can use our [Colab notebook](https://colab.research.google.com/github/TheDataStation/pneuma/blob/main/quickstart.ipynb). For local installation, you will need a **GPU with at least 20 GB of VRAM** to load and prompt both the LLM and embedding model. Support for third-party APIs such as OpenAI is currently a work in progress (WIP).
+If you would like to try `Pneuma` without installation, you can use our [Colab notebook](https://colab.research.google.com/github/TheDataStation/pneuma/blob/main/quickstart.ipynb). For local installation, you may use an OpenAI API token or a local GPU **with at least 20 GB of VRAM** (to load and prompt both the LLM and embedding model).
 
 To install the latest stable release from PyPI:
 
