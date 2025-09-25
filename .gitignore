@@ -21,6 +21,7 @@ share/python-wheels/
 *.out
 *.duckdb
 out_demo*
+pneuma_env/
 
 .idea
 .vscode
