@@ -1,7 +1,7 @@
 import os
 import tiktoken
 import gpt
-from openai import OpenAI
+from openai import OpenAI, AzureOpenAI
 from question_gen import QuestionGenerator
 from datetime import datetime
 from constant import GenConstant
@@ -18,7 +18,11 @@ class ChatgptGenerator(QuestionGenerator):
         api_key = os.getenv('OPENAI_API_KEY', None)
         if api_key is None:
             raise ValueError('Need to set environment variable OPENAI_API_KEY')
-        self.client = OpenAI(api_key=api_key)
+        self.client = AzureOpenAI(
+                api_version="2024-12-01-preview",
+                azure_endpoint="https://jahnavi-dbcontext.openai.azure.com/",
+                api_key=api_key
+            )
     
     def init_messages(self):
         self.messages = [

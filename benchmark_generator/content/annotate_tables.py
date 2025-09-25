@@ -5,7 +5,7 @@ import glob
 import util
 from tqdm import tqdm
 import gpt
-from openai import OpenAI
+from openai import OpenAI, AzureOpenAI
 import numpy as np
 from datetime import datetime
 
@@ -314,7 +314,11 @@ def init_llm(args):
     if api_key is None:
         raise ValueError('Need to set environment variable OPENAI_API_KEY')
     global llm_client
-    llm_client = OpenAI(api_key=api_key)
+    llm_client = AzureOpenAI(
+    api_version="2024-12-01-preview",
+    azure_endpoint="https://jahnavi-dbcontext.openai.azure.com/",
+    api_key=api_key
+)
 
     global llm_messages
     llm_messages = [

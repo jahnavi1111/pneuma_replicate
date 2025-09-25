@@ -1,4 +1,4 @@
-from openai import OpenAI
+from openai import OpenAI, AzureOpenAI
 import gpt
 import os
 
@@ -11,7 +11,11 @@ def main():
     api_key = os.getenv('OPENAI_API_KEY', None)
     if api_key is None:
         raise ValueError('Need to set environment variable OPENAI_API_KEY')
-    client = OpenAI(api_key=api_key)
+    client = AzureOpenAI(
+                api_version="2024-12-01-preview",
+                azure_endpoint="https://jahnavi-dbcontext.openai.azure.com/",
+                api_key=api_key
+            )
 
     messages = [
         {"role": "system", "content": "You are a helpful assistant."},

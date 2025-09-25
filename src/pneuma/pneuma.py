@@ -10,7 +10,7 @@ from typing import Optional
 
 import fire
 from huggingface_hub import login
-from openai import OpenAI
+from openai import OpenAI, AzureOpenAI
 from sentence_transformers import SentenceTransformer
 from transformers import TextGenerationPipeline
 from torch import bfloat16
@@ -148,7 +148,11 @@ class Pneuma:
                 self.llm.tokenizer.pad_token_id = self.llm.model.config.eos_token_id
                 self.llm.tokenizer.padding_side = "left"
             else:
-                self.llm = OpenAI(api_key=self.openai_api_key)
+                self.llm = AzureOpenAI(
+                        api_version="2024-12-01-preview",
+                        azure_endpoint="https://jahnavi-dbcontext.openai.azure.com/",
+                        api_key=self.openai_api_key
+                    )
 
     def __init_embed_model(self):
         """Initializes the embedding model."""
@@ -156,7 +160,11 @@ class Pneuma:
             if self.use_local_model:
                 self.embed_model = SentenceTransformer(self.embed_path)
             else:
-                self.embed_model = OpenAI(api_key=self.openai_api_key)
+                self.embed_model = AzureOpenAI(
+                    api_version="2024-12-01-preview",
+                    azure_endpoint="https://jahnavi-dbcontext.openai.azure.com/",
+                    api_key=self.openai_api_key
+                )
 
     def setup(self) -> str:
         """Setup Pneuma through its `Registrar` module."""
