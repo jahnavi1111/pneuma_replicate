@@ -8,9 +8,9 @@ def read_input():
     return prompt
 
 def main():
-    api_key = os.getenv('OPENAI_API_KEY', None)
+    api_key = os.getenv('AZURE_OPENAI_API_KEY', None)
     if api_key is None:
-        raise ValueError('Need to set environment variable OPENAI_API_KEY')
+        raise ValueError('Need to set environment variable AZURE_OPENAI_API_KEY')
     client = AzureOpenAI(
                 api_version="2024-12-01-preview",
                 azure_endpoint="https://jahnavi-dbcontext.openai.azure.com/",

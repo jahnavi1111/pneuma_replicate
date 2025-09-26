@@ -310,9 +310,9 @@ def read_referred_tables(args, q_data):
     return refer_table_dict
 
 def init_llm(args):
-    api_key = os.getenv('OPENAI_API_KEY', None)
+    api_key = os.getenv('AZURE_OPENAI_API_KEY', None)
     if api_key is None:
-        raise ValueError('Need to set environment variable OPENAI_API_KEY')
+        raise ValueError('Need to set environment variable AZURE_OPENAI_API_KEY')
     global llm_client
     llm_client = AzureOpenAI(
     api_version="2024-12-01-preview",

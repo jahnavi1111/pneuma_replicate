@@ -282,7 +282,7 @@ class Pneuma:
 
 def main():
     print("Hello from Pneuma's main method!")
-    api_key = os.getenv("OPENAI_API_KEY")
+    api_key = os.getenv("AZURE_OPENAI_API_KEY")
     pneuma_openAI = Pneuma(openai_api_key=api_key, use_local_model=False)
     fire.Fire(pneuma_openAI)
 
